@@ -4,7 +4,7 @@ const morgan = require("morgan");
 
 const adminRoutes = require("./routes/orders.routes");
 const orderRoutes = require("./routes/admin.routes");
-const errorHandler = require("./middleware/error.middleware");
+const { errorHandler } = require("./middleware");
 
 const app = express();
 
