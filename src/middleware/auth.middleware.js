@@ -1,7 +1,5 @@
 // Middleware: verifyToken
-// Purpose:  Authenticate requests using Firebase ID tokens
-
-const { auth } = require("../config/firebase.config");
+// Purpose:  Authenticate requests using passport strategy
 
 async function verifyToken(req, res, next) {
   // Expecting Authorization header in format: 'Bearer <idToken>'
@@ -13,12 +11,7 @@ async function verifyToken(req, res, next) {
       .json({ message: "No token provided or format is incorrect" });
   }
 
-  const idToken = authHeader.split("Bearer ")[1];
-  // Verify token using Firebase Admin SDK and attach identity info
   try {
-    const decodedToken = await auth.verifyIdToken(idToken);
-    // Attach decoded user info to req.user
-    req.user = decodedToken; // Includes uid, email, etc.
     next();
   } catch (error) {
     // Handle missing/invalid token and send appropriate response
