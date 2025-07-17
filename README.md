@@ -57,7 +57,7 @@ npm start
 
 Authentication is handled using Passport.js and JWT. Role-based access control is enforced via middleware.
 
-> For migration progress and implementation details, see [Migration Issue #3](https://github.com/anorme/misqabbi-store/issues/3)
+> For migration progress and implementation details, see [Migration Issue #3](https://github.com/anorme/misqabbi-backend/issues/3)
 
 ---
 
