@@ -17,7 +17,7 @@ Thanks for your interest in contributing to **Misqabbi Store**! We appreciate yo
    ```
 
 3. **Make Your Changes**  
-   Code, test, document as needed. For work related to authentication or middleware, refer to [Migration Issue #1](https://github.com/anorme/misqabbi-store/issues/1) for current implementation notes.
+   Code, test, document as needed. For work related to authentication or middleware, refer to [Migration Issue #3](https://github.com/anorme/misqabbi-backend/issues/3) for current implementation notes.
 
 4. **Commit with a Meaningful Message**  
    Follow our commit message convention (see below).

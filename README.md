@@ -57,25 +57,7 @@ npm start
 
 Authentication is handled using Passport.js and JWT. Role-based access control is enforced via middleware.
 
-> For migration progress and implementation details, see [Migration Issue #1](https://github.com/anorme/misqabbi-store/issues/1)
-
-### 🔧 Middleware Under Development
-
-- `verifyToken`: Verifies JWTs and attaches user info to `req.user`
-- `checkAdmin`: Checks user role and allows access if `role === 'admin'`
-
-### 🛠️ How to Contribute
-
-If you're collaborating on this feature, here's how to get involved:
-
-- Review and refactor the following middleware files:
-  - `src/middleware/auth.middleware.js`
-  - `src/middleware/rbac.middleware.js`
-- Use `jsonwebtoken` to issue and verify tokens
-- Use Mongoose to query user roles from the `User` model
-- Test with the `/api/admin/dashboard` route
-
-> 🔄 This section will be updated once the migration is complete. For now, treat it as a living guide to help coordinate contributions.
+> For migration progress and implementation details, see [Migration Issue #3](https://github.com/anorme/misqabbi-store/issues/3)
 
 ---
 
