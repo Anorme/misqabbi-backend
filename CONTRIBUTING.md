@@ -7,14 +7,17 @@ Thanks for your interest in contributing to **Misqabbi Store**! We appreciate yo
 ## 🚀 Getting Started
 
 1. **Report Issues**  
-   Use [GitHub Issues](https://github.com/anorme/misqabbi-store/issues)to report bugs, suggest enhancements, or ask questions.
+   Use [GitHub Issues](https://github.com/anorme/misqabbi-backend/issues) to report bugs, suggest enhancements, or ask questions.
 
 2. **Fork the Repository**  
-   Clone your fork and create a new branch:  
-   `git checkout -b feature/amazing-feature`
+   Clone your fork and create a new branch:
+
+   ```bash
+   git checkout -b feature/amazing-feature
+   ```
 
 3. **Make Your Changes**  
-   Code, test, document as needed.
+   Code, test, document as needed. For work related to authentication or middleware, refer to [Migration Issue #1](https://github.com/anorme/misqabbi-store/issues/1) for current implementation notes.
 
 4. **Commit with a Meaningful Message**  
    Follow our commit message convention (see below).
@@ -47,15 +50,15 @@ We use conventional commits to keep our Git history readable and consistent. Fol
 
 ### Scope
 
-Optional but helpful. Examples: `auth`, `firebase`, `checkout-ui`, `cart`, etc.
+Optional but helpful. Examples: `auth`, `middleware`, `checkout-ui`, `cart`, `products`, etc.
 
 ### Examples
 
 ```
-feat(firebase): initialize service entry point
+feat(auth): implement JWT-based login flow
 fix(cart): prevent crash on empty product list
 style(layout): adjust footer spacing on mobile
-docs(readme): add project setup instructions
+docs(readme): update project setup instructions
 ```
 
 ---
