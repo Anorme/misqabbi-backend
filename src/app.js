@@ -2,6 +2,8 @@ const express = require("express");
 const helmet = require("helmet");
 const morgan = require("morgan");
 
+require("./config/passport");
+
 const adminRoutes = require("./routes/orders.routes");
 const orderRoutes = require("./routes/admin.routes");
 const { errorHandler } = require("./middleware");
