@@ -1,6 +1,4 @@
 /* eslint-disable no-undef */
-jest.mock("../src/config/firebase.config");
-
 const request = require("supertest");
 const app = require("../src/app");
 
