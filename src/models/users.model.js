@@ -1,3 +1,4 @@
+const { Types } = require("mongoose");
 const User = require("./users.mongo");
 
 /**
@@ -27,11 +28,21 @@ async function findUserByEmail(email) {
 /**
  * Find a user by their MongoDB ObjectId.
  *
- * @param {string|ObjectId} id - User ID
+ * - Accepts either a string or a valid ObjectId instance
+ * - Returns null if the input is not a valid ObjectId format
+ * - Logs a warning for invalid input to aid debugging
+ *
+ * @param {string|ObjectId} id - User ID to lookup
  * @returns {Promise<Object|null>} - User document if found, otherwise null
+ *
+ * @throws {none} - Gracefully returns null for invalid input
  */
 async function findUserById(id) {
-  return await User.findById({ id });
+  if (typeof id !== "string" && !Types.ObjectId.isValid(id)) {
+    console.warn("Invalid ID passed to findUserById:", id);
+    return null;
+  }
+  return await User.findById(id);
 }
 
 module.exports = {
