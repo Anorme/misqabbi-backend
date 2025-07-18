@@ -19,7 +19,7 @@ router.post("/signup", async (req, res) => {
   const { email, password, displayName } = req.body;
   try {
     const existingUser = await findUserByEmail(email);
-    if (!existingUser)
+    if (existingUser)
       return res.status(400).json({ message: "Invalid user credentials" });
 
     const user = await createUser({ email, password, displayName });
