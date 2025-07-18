@@ -57,7 +57,7 @@ const userSchema = new Schema({
   cartItems: [cartItemSchema], // Embedded for fast access and frequent updates
   previousOrders: [
     {
-      orderId: Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "Order", // Referenced for historical lookup and scalability
     },
   ],
