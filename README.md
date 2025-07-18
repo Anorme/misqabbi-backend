@@ -122,8 +122,6 @@ Authentication is handled using Passport.js and JWT. Role-based access control i
 We love contributions! To get started, please read our  
 [Contributing Guide](CONTRIBUTING.md) for coding standards, commit conventions, and submission steps.
 
-If you're collaborating on the RBAC or authentication features, check the section above for implementation notes and TODOs.
-
 ---
 
 ## 📄 License
