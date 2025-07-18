@@ -52,8 +52,5 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Setup Firebase Admin Credentials
-        run: echo "${{ secrets.FIREBASE_ADMIN_JSON}}" > firebase-admin.json
-
       - name: Run Tests
         run: npm test
