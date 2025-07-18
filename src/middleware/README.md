@@ -1,10 +1,6 @@
 # Middleware Summary
 
-This folder contains authentication and authorization middleware for the Misqabbi backend, now powered by JWT and MongoDB.
-
----
-
-## `authenticateToken`
+## `verifyToken`
 
 **Purpose:** Authenticate requests using JWT tokens.
 
