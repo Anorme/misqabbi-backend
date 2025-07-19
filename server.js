@@ -1,9 +1,9 @@
-require("dotenv").config();
+import dotenv from "dotenv";
+import http from "http";
+import app from "./src/app.js";
+import { mongoConnect } from "./src/services/mongo.js";
 
-const http = require("http");
-const app = require("./src/app");
-
-const { mongoConnect } = require("./src/services/mongo");
+dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 
@@ -18,11 +18,11 @@ async function startServer() {
   try {
     await mongoConnect();
     // TODO: Load initial data if needed
-    // await loadInitialData()
+    // await loadInitialData();
 
     const server = http.createServer(app);
     server.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
+      console.log(`Server running at http://localhost:${PORT}`);
     });
   } catch (error) {
     console.error("Server startup failed:", error.message);

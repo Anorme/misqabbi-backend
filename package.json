@@ -1,5 +1,6 @@
 {
   "name": "misqabbi-backend",
+  "type": "module",
   "version": "1.0.0",
   "description": "This is the backend for the Misqabbi Store, an e-commerce platform that showcases **Misqabbi**, a women-owned fashion brand specializing in made-to-measure pieces designed exclusively for women.",
   "main": "index.js",

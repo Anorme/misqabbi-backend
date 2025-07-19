@@ -1,4 +1,5 @@
-const express = require("express");
+import express from "express";
+
 const router = express.Router();
 
 // TODO: Import authenticateToken middleware when ready
@@ -44,4 +45,4 @@ router.get(
   }
 );
 
-module.exports = router;
+export default router;

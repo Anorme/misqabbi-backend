@@ -1,8 +1,8 @@
-const { Schema, model } = require("mongoose");
-const bcrypt = require("bcrypt");
-const logger = require("../config/logger");
+import { Schema, model } from "mongoose";
+import bcrypt from "bcrypt";
 
-const { EMAIL_REGEX, STRONG_PASSWORD_REGEX } = require("../utils/validators");
+import logger from "../config/logger.js";
+import { EMAIL_REGEX, STRONG_PASSWORD_REGEX } from "../utils/validators.js";
 
 /**
  * Schema for individual items in the user's cart.
@@ -107,4 +107,4 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
 };
 
 const User = model("User", userSchema);
-module.exports = User;
+export default User;

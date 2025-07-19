@@ -1,6 +1,6 @@
-const { Types } = require("mongoose");
-const User = require("./users.mongo");
-const logger = require("../config/logger");
+import { Types } from "mongoose";
+import User from "./users.mongo.js";
+import logger from "../config/logger.js";
 
 /**
  * Create a new user in the database.
@@ -63,8 +63,4 @@ async function findUserById(id) {
   }
 }
 
-module.exports = {
-  createUser,
-  findUserByEmail,
-  findUserById,
-};
+export { createUser, findUserByEmail, findUserById };

@@ -1,8 +1,4 @@
-const { authenticateToken, checkAdmin } = require("./auth.middleware");
-const errorHandler = require("./error.middleware");
+import { authenticateToken, checkAdmin } from "./auth.middleware.js";
+import errorHandler from "./error.middleware.js";
 
-module.exports = {
-  authenticateToken,
-  checkAdmin,
-  errorHandler,
-};
+export { authenticateToken, checkAdmin, errorHandler };

@@ -1,8 +1,8 @@
-const passport = require("passport");
+import passport from "passport";
 
-const logger = require("../config/logger");
-const { createUser, findUserByEmail } = require("../models/users.model");
-const { signToken } = require("../services/jwtService");
+import logger from "../config/logger.js";
+import { createUser, findUserByEmail } from "../models/users.model.js";
+import { signToken } from "../services/jwtService.js";
 
 /**
  * @route   POST /signup
@@ -65,7 +65,4 @@ async function loginUser(req, res, next) {
   })(req, res, next);
 }
 
-module.exports = {
-  registerUser,
-  loginUser,
-};
+export { registerUser, loginUser };

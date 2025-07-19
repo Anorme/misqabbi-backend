@@ -1,6 +1,6 @@
-const { verifyToken } = require("../services/jwtService");
-const { findUserById } = require("../models/users.model");
-const logger = require("../config/logger");
+import { verifyToken } from "../services/jwtService.js";
+import { findUserById } from "../models/users.model.js";
+import logger from "../config/logger.js";
 
 /**
  * Auth middleware to validate JWT from Authorization header.
@@ -51,4 +51,4 @@ function checkAdmin(req, res, next) {
   next();
 }
 
-module.exports = { authenticateToken, checkAdmin };
+export { authenticateToken, checkAdmin };

@@ -1,15 +1,16 @@
-const express = require("express");
-const helmet = require("helmet");
-const morgan = require("morgan");
+import express from "express";
+import helmet from "helmet";
+import morgan from "morgan";
 
-require("./config/passport");
+import "./config/passport.js";
 
-const authRoutes = require("./routes/auth.routes");
-const orderRoutes = require("./routes/orders.routes");
-const adminRoutes = require("./routes/admin.routes");
-const { errorHandler } = require("./middleware");
+import authRoutes from "./routes/auth.routes.js";
+import orderRoutes from "./routes/orders.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
+import { errorHandler } from "./middleware/index.js";
 
 const app = express();
+
 // TODO: Move API_PREFIX to environment config for flexibility across environments
 const API_PREFIX = "/api/v1";
 
@@ -28,4 +29,4 @@ app.use(`${API_PREFIX}/admin`, adminRoutes);
 
 app.use(errorHandler);
 
-module.exports = app;
+export default app;

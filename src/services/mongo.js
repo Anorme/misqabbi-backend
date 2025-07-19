@@ -1,6 +1,7 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
+import dotenv from "dotenv";
 
-require("dotenv").config();
+dotenv.config();
 
 const MONGO_URL = process.env.MONGO_URL;
 
@@ -20,7 +21,4 @@ async function mongoDisconnect() {
   await mongoose.disconnect();
 }
 
-module.exports = {
-  mongoConnect,
-  mongoDisconnect,
-};
+export { mongoConnect, mongoDisconnect };

@@ -1,6 +1,8 @@
-const passport = require("passport");
-const LocalStrategy = require("passport-local").Strategy;
-const User = require("../models/users.mongo");
+import passport from "passport";
+import { Strategy } from "passport-local";
+
+import User from "../models/users.mongo.js";
+
 /**
  * Configure Passport to use the Local Strategy for email/password authentication,
  *
@@ -9,7 +11,7 @@ const User = require("../models/users.mongo");
  * - Returns structured error messages for development; replace with generic messages in production.
  */
 passport.use(
-  new LocalStrategy(
+  new Strategy(
     { usernameField: "email" }, // Specify 'email' as the login identifier
     async (email, password, done) => {
       try {
