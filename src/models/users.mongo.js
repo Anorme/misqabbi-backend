@@ -1,5 +1,6 @@
 const { Schema, model } = require("mongoose");
 const bcrypt = require("bcrypt");
+const logger = require("../config/logger");
 
 /**
  * Schema for individual items in the user's cart.
@@ -27,10 +28,12 @@ const cartItemSchema = new Schema(
 /**
  *  User schema definition.
  *
- * - Stores authentication and profile data.
- * - Embeds cart items for quick access.
- * - References previous orders for historical lookup.
- * - Includes role-based access control via 'role' field.
+ * Fields:
+ * - email {String} required, unique, trimmed, lowercase
+ * - password {String} required (hashed before save)
+ * - role {String} enum: 'user' | 'admin'
+ * - cartItems {Array<CartItem>} embedded for quick access
+ * - previousOrders {Array<ObjectId>} references Order documents
  */
 const userSchema = new Schema({
   displayName: {
@@ -70,8 +73,14 @@ const userSchema = new Schema({
  * - Uses bcrypt with a salt round of 10.
  */
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  this.password = await bcrypt.hash(this.password, 10);
+  try {
+    if (!this.isModified("password")) return next();
+    this.password = await bcrypt.hash(this.password, 10);
+    next();
+  } catch (error) {
+    logger.error(`[users.mongo] Error hashing password: ${error.message}`);
+    next(error);
+  }
 });
 
 /**
@@ -80,8 +89,13 @@ userSchema.pre("save", async function (next) {
  * @param {string} candidatePassword - Plain text password to verify
  * @returns {Promise<boolean>} - Whether the password matches
  */
-userSchema.methods.comparePassword = function (candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  try {
+    return bcrypt.compare(candidatePassword, this.password);
+  } catch (error) {
+    logger.error(`[users.mongo] Error comparing password: ${error.message}`);
+    throw error;
+  }
 };
 
 const User = model("User", userSchema);
