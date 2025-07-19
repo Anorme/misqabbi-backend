@@ -1,8 +1,8 @@
-const jwt = require("jsonwebtoken");
 const passport = require("passport");
 
 const logger = require("../config/logger");
 const { createUser, findUserByEmail } = require("../models/users.model");
+const { signToken } = require("../services/jwtService");
 
 /**
  * @route   POST /signup
@@ -54,11 +54,7 @@ async function loginUser(req, res, next) {
     }
 
     try {
-      const token = jwt.sign(
-        { id: user._id, role: user.role },
-        process.env.JWT_SECRET,
-        { expiresIn: "1h" }
-      );
+      const token = signToken({ id: user._id, role: user.role });
 
       logger.info(`[loginUser] User logged in: ${user._id}`);
       res.json({ token });
