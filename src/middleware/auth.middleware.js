@@ -26,7 +26,7 @@ async function authenticateToken(req, res, next) {
   try {
     const decoded = verifyToken(token);
 
-    const user = await findUserById(decoded.id);
+    const user = await findUserById(decoded.id).select("id role displayName");
     if (!user) return res.status(401).json({ message: "User not found" });
     req.user = user;
     next();
