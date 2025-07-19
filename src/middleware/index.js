@@ -1,8 +1,8 @@
-const { verifyToken, checkAdmin } = require("./auth.middleware");
+const { authenticateToken, checkAdmin } = require("./auth.middleware");
 const errorHandler = require("./error.middleware");
 
 module.exports = {
-  verifyToken,
+  authenticateToken,
   checkAdmin,
   errorHandler,
 };

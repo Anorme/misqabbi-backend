@@ -4,7 +4,7 @@ This folder contains authentication and authorization middleware for the Misqabb
 
 ---
 
-## `verifyToken`
+## `authenticateToken`
 
 **Purpose:** Authenticate requests using JWT tokens.
 
@@ -20,7 +20,7 @@ This folder contains authentication and authorization middleware for the Misqabb
 **Use:** Place before protected routes:
 
 ```js
-app.get("/secure", verifyToken, handler);
+app.get("/secure", authenticateToken, handler);
 ```
 
 ---
@@ -31,14 +31,14 @@ app.get("/secure", verifyToken, handler);
 
 **How it works:**
 
-- Assumes `req.user` is populated by `verifyToken`
+- Assumes `req.user` is populated by `authenticateToken`
 - Checks if `req.user.role === 'admin'`
 - Blocks access if role is not `'admin'`
 
-**Use:** Chain after `verifyToken`:
+**Use:** Chain after `authenticateToken`:
 
 ```js
-app.get("/admin", verifyToken, checkAdmin, handler);
+app.get("/admin", authenticateToken, checkAdmin, handler);
 ```
 
 ---
