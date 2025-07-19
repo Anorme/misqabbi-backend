@@ -8,6 +8,8 @@ import {
   STRONG_PASSWORD_REGEX,
 } from "../utils/validators.js";
 
+const { EMAIL_REGEX, STRONG_PASSWORD_REGEX } = require("../utils/validators");
+
 /**
  * Schema for individual items in the user's cart.
  *
