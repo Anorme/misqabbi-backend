@@ -2,6 +2,8 @@ const { Schema, model } = require("mongoose");
 const bcrypt = require("bcrypt");
 const logger = require("../config/logger");
 
+const { EMAIL_REGEX, STRONG_PASSWORD_REGEX } = require("../utils/validators");
+
 /**
  * Schema for individual items in the user's cart.
  *
@@ -35,36 +37,42 @@ const cartItemSchema = new Schema(
  * - cartItems {Array<CartItem>} embedded for quick access
  * - previousOrders {Array<ObjectId>} references Order documents
  */
-const userSchema = new Schema({
-  displayName: {
-    type: String,
-    trim: true,
-    default: "",
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    lowercase: true,
-    trim: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  role: {
-    type: String,
-    enum: ["user", "admin"],
-    default: "user",
-  },
-  cartItems: [cartItemSchema], // Embedded for fast access and frequent updates
-  previousOrders: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Order", // Referenced for historical lookup and scalability
+const userSchema = new Schema(
+  {
+    displayName: {
+      type: String,
+      trim: true,
+      default: "",
     },
-  ],
-});
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: EMAIL_REGEX,
+    },
+    password: {
+      type: String,
+      required: true,
+      match: STRONG_PASSWORD_REGEX,
+      minlength: 8,
+    },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
+    cartItems: [cartItemSchema], // Embedded for fast access and frequent updates
+    previousOrders: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Order", // Referenced for historical lookup and scalability
+      },
+    ],
+  },
+  { timestamps: true }
+);
 
 /**
  * Hash the password before saving the user.
