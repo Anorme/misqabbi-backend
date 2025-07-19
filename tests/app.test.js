@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
-const request = require("supertest");
-const app = require("../src/app");
+import { request } from "supertest";
+import app from "../src/app.js";
 
 describe("Health Check", () => {
   it("should return 200 OK with a welcome message", async () => {
