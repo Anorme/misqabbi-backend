@@ -5,10 +5,14 @@
   "description": "This is the backend for the Misqabbi Store, an e-commerce platform that showcases **Misqabbi**, a women-owned fashion brand specializing in made-to-measure pieces designed exclusively for women.",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "prepare": "husky",
     "dev": "nodemon server.js",
     "start": "node server.js"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {}
   },
   "lint-staged": {
     "*.js": [
