@@ -2,7 +2,11 @@ import { Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
 
 import logger from "../config/logger.js";
-import { EMAIL_REGEX, STRONG_PASSWORD_REGEX } from "../utils/validators.js";
+import {
+  EMAIL_REGEX,
+  isPasswordValidOrGoogleUser,
+  STRONG_PASSWORD_REGEX,
+} from "../utils/validators.js";
 
 import logger from "../config/logger.js";
 import { EMAIL_REGEX, STRONG_PASSWORD_REGEX } from "../utils/validators.js";
@@ -55,11 +59,18 @@ const userSchema = new Schema(
       trim: true,
       match: EMAIL_REGEX,
     },
+    googleId: {
+      type: String,
+    },
     password: {
       type: String,
-      required: true,
       match: STRONG_PASSWORD_REGEX,
-      minlength: 8,
+      validate: {
+        validator: function (value) {
+          return isPasswordValidOrGoogleUser(value, this);
+        },
+        message: "Password required for local accounts",
+      },
     },
     role: {
       type: String,
@@ -85,8 +96,9 @@ const userSchema = new Schema(
  */
 userSchema.pre("save", async function (next) {
   try {
-    if (!this.isModified("password")) return next();
-    this.password = await bcrypt.hash(this.password, 10);
+    const shouldHash = this.isModified("password") && this.password;
+    if (!shouldHash) return next();
+    this.password = bcrypt.hash(this.password, 10);
     next();
   } catch (error) {
     logger.error(`[users.mongo] Error hashing password: ${error.message}`);
@@ -108,6 +120,10 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
     throw error;
   }
 };
+
+userSchema.virtual("authProvider").get(function () {
+  return this.googleId ? "google" : "local";
+});
 
 const User = model("User", userSchema);
 export default User;
