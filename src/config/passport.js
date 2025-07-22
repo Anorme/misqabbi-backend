@@ -1,7 +1,9 @@
 import passport from "passport";
-import { Strategy } from "passport-local";
+import { Strategy as LocalStrategy } from "passport-local";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 
 import User from "../models/users.mongo.js";
+import { createUser, findUserByEmail } from "../models/users.model.js";
 
 /**
  * Configure Passport to use the Local Strategy for email/password authentication,
@@ -11,7 +13,7 @@ import User from "../models/users.mongo.js";
  * - Returns structured error messages for development; replace with generic messages in production.
  */
 passport.use(
-  new Strategy(
+  new LocalStrategy(
     { usernameField: "email" }, // Specify 'email' as the login identifier
     async (email, password, done) => {
       try {
@@ -36,6 +38,36 @@ passport.use(
         // Internal error during authentication
         return done(err);
       }
+    }
+  )
+);
+
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: process.env.GOOGLE_CALLBACK_URL,
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      const email = profile?.emails[0]?.value;
+      if (!email)
+        return done(null, false, { message: "No email returned from Google" });
+
+      let user = await findUserByEmail(email);
+
+      if (!user) {
+        user = await createUser({
+          email,
+          googleId: profile.id,
+          displayName: profile.displayName,
+        });
+      } else if (!user.googleId) {
+        user.googleId = profile.id;
+        await user.save();
+      }
+
+      return done(null, user);
     }
   )
 );
