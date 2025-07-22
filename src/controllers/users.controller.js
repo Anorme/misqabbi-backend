@@ -26,7 +26,6 @@ async function registerUser(req, res) {
       return res.status(400).json({ message: "Invalid user credentials" });
     }
     const user = await createUser({ email, password, displayName });
-    logger.info(`[registerUser] Created user: ${user._id}`);
     res.status(201).json({ message: "User created", userId: user._id });
   } catch (error) {
     logger.error(`[registerUser] ${error.message}`);
@@ -54,15 +53,60 @@ async function loginUser(req, res, next) {
     }
 
     try {
-      const token = signToken({ id: user._id, role: user.role });
-
-      logger.info(`[loginUser] User logged in: ${user._id}`);
-      res.json({ token });
+      req.user = user;
+      issueToken(req, res);
     } catch (error) {
       logger.error(`[loginUser] User JWT generation failed: ${error.message}`);
       return res.status(500).json({ error: "Token generation error" });
     }
   })(req, res, next);
+}
+
+/**
+ * @route   GET /auth/google/callback
+ * @desc    Finalizes Google OAuth flow and issues token
+ * @access  Public
+ *
+ * Workflow:
+ * - Invoked after successful Passport Google authentication
+ * - Delegates token generation to `issueToken` helper
+ * - Redirects user to frontend with token in query string
+ * - Handles errors with structured response and logging
+ *
+ * @returns {void}
+ */
+export function handleGoogleCallback(req, res) {
+  try {
+    issueToken(req, res, { redirectUrl: "http://localhost:3000" });
+  } catch (error) {
+    logger.error(`[GoogleCallback] Token issuance failed: ${error.message}`);
+    res.status(500).json({ error: "OAuth token error" });
+  }
+}
+
+/**
+ * Issues a signed JWT for the authenticated user and returns it via response.
+ *
+ * Delivery Options:
+ * - If `redirectUrl` is provided, redirects to that URL with the token in query params.
+ * - Otherwise, sends a JSON response with `{ token }`.
+ *
+ * @param {Object} [options] - Optional configuration
+ * @param {string} [options.redirectUrl] - URL to redirect with token as query param
+ * @returns {void}
+ */
+function issueToken(req, res, options = {}) {
+  const token = signToken({ id: req.user._id, role: req.user.role });
+  try {
+    if (options.redirectUrl) {
+      const urlWithToken = new URL(options.redirectUrl);
+      urlWithToken.searchParams.set("token", token);
+      return res.redirect(urlWithToken.toString());
+    }
+  } catch (error) {
+    logger.error(`[issueToken] Token generation failed: ${error.message}`);
+    return res.status(500).json({ error: "Authentication error" });
+  }
 }
 
 export { registerUser, loginUser };
