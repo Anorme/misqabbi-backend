@@ -4,9 +4,11 @@ import morgan from "morgan";
 
 import "./config/passport.js";
 
+import adminRoutes from "./routes/admin.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import orderRoutes from "./routes/orders.routes.js";
-import adminRoutes from "./routes/admin.routes.js";
+import productRoutes from "./routes/products.routes.js";
+
 import { errorHandler } from "./middleware/index.js";
 
 const app = express();
@@ -23,9 +25,10 @@ app.get("/", (req, res) => {
 });
 
 // Mount versioned routes
+app.use(`${API_PREFIX}/admin`, adminRoutes);
 app.use(`${API_PREFIX}/auth`, authRoutes);
 app.use(`${API_PREFIX}/orders`, orderRoutes);
-app.use(`${API_PREFIX}/admin`, adminRoutes);
+app.use(`${API_PREFIX}/products`, productRoutes);
 
 app.use(errorHandler);
 
