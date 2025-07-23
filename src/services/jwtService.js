@@ -1,8 +1,9 @@
 import jwt from "jsonwebtoken";
 
 function signToken(payload) {
+  console.log("Signing token expires in: ", process.env.JWT_EXPIRES_IN);
   return jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || "3600",
+    expiresIn: Number(process.env.JWT_EXPIRES_IN) || 3600,
   });
 }
 
