@@ -40,6 +40,11 @@ jobs:
       matrix:
         node-version: [18, 20, 22]
 
+    env:
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      GOOGLE_CALLBACK_URL: ${{ secrets.GOOGLE_CALLBACK_URL }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
