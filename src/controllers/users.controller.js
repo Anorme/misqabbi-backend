@@ -54,7 +54,7 @@ async function loginUser(req, res, next) {
 
     try {
       req.user = user;
-      issueToken(req, res);
+      return issueToken(req, res);
     } catch (error) {
       logger.error(`[loginUser] User JWT generation failed: ${error.message}`);
       return res.status(500).json({ error: "Token generation error" });
@@ -103,6 +103,7 @@ function issueToken(req, res, options = {}) {
       urlWithToken.searchParams.set("token", token);
       return res.redirect(urlWithToken.toString());
     }
+    res.json({ token });
   } catch (error) {
     logger.error(`[issueToken] Token generation failed: ${error.message}`);
     return res.status(500).json({ error: "Authentication error" });
