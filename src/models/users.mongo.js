@@ -8,9 +8,6 @@ import {
   STRONG_PASSWORD_REGEX,
 } from "../utils/validators.js";
 
-import logger from "../config/logger.js";
-import { EMAIL_REGEX, STRONG_PASSWORD_REGEX } from "../utils/validators.js";
-
 /**
  * Schema for individual items in the user's cart.
  *
