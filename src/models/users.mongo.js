@@ -5,7 +5,6 @@ import logger from "../config/logger.js";
 import {
   EMAIL_REGEX,
   isPasswordValidOrGoogleUser,
-  STRONG_PASSWORD_REGEX,
 } from "../utils/validators.js";
 
 /**
@@ -61,10 +60,13 @@ const userSchema = new Schema(
     },
     password: {
       type: String,
-      match: STRONG_PASSWORD_REGEX,
+      required: function () {
+        return !this.googleId;
+      },
       validate: {
         validator: function (value) {
-          return isPasswordValidOrGoogleUser(value, this);
+          const isNewOrChanged = this.isModified("password");
+          return !isNewOrChanged || isPasswordValidOrGoogleUser(value, this);
         },
         message: "Password required for local accounts",
       },
