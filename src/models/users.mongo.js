@@ -97,7 +97,7 @@ userSchema.pre("save", async function (next) {
   try {
     const shouldHash = this.isModified("password") && this.password;
     if (!shouldHash) return next();
-    this.password = bcrypt.hash(this.password, 10);
+    this.password = await bcrypt.hash(this.password, 10);
     next();
   } catch (error) {
     logger.error(`[users.mongo] Error hashing password: ${error.message}`);
