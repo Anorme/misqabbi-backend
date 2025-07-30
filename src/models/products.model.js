@@ -42,6 +42,7 @@ async function getProductById(id) {
     logger.error(
       `[products.model] Error finding product by id ${id}: ${error.message}`
     );
+    throw error;
   }
 }
 
@@ -55,7 +56,7 @@ async function createProduct(data) {
     const product = await Product.create(data);
     return product;
   } catch (error) {
-    logger.error(`[products.model] Error creating prodcut: ${error.message}`);
+    logger.error(`[products.model] Error creating product: ${error.message}`);
     throw error;
   }
 }
