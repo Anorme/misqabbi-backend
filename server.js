@@ -1,11 +1,9 @@
-import dotenv from "dotenv";
+import env from "./src/config/env.js";
 import http from "http";
 import app from "./src/app.js";
 import { mongoConnect } from "./src/services/mongo.js";
 
-dotenv.config();
-
-const PORT = process.env.PORT || 5000;
+const PORT = env.PORT || 5000;
 
 /**
  * Starts the server after establishing DB connection.

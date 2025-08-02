@@ -1,8 +1,8 @@
-import mongoose from "mongoose";
-import dotenv from "dotenv";
-dotenv.config();
+import env from "../config/env.js";
 
-const MONGO_URL = process.env.MONGO_URL;
+import mongoose from "mongoose";
+
+const MONGO_URL = env.MONGO_URL;
 
 mongoose.connection.once("open", () => {
   console.log("Mongoose connection ready!");
