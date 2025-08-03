@@ -1,4 +1,10 @@
 import express from "express";
+import { authenticateToken } from "../middleware/index.js";
+import {
+  createOrder,
+  getOrders,
+  getOrderById,
+} from "../controllers/orders.controller.js";
 
 const router = express.Router();
 
@@ -11,38 +17,16 @@ const router = express.Router();
 // @route   POST /api/orders
 // @desc    Create a new order
 // @access  Protected
-router.post(
-  "/",
-  /* authenticateToken, */ (req, res) => {
-    // TODO: Implement createOrder controller
-    return res
-      .status(501)
-      .json({ message: "Create order not yet implemented" });
-  }
-);
+router.post("/checkout", authenticateToken, createOrder);
 
 // @route   GET /api/orders
 // @desc    Get all orders for authenticated user
 // @access  Protected
-router.get(
-  "/",
-  /* authenticateToken, */ (req, res) => {
-    // TODO: Implement getOrders controller
-    return res.status(501).json({ message: "Get orders not yet implemented" });
-  }
-);
+router.get("/orders", authenticateToken, getOrders);
 
 // @route   GET /api/orders/:id
 // @desc    Get a specific order by ID
 // @access  Protected
-router.get(
-  "/:id",
-  /* authenticateToken, */ (req, res) => {
-    // TODO: Implement getOrderById controller
-    return res
-      .status(501)
-      .json({ message: "Get order by ID not yet implemented" });
-  }
-);
+router.get("/orders/:id", authenticateToken, getOrderById);
 
 export default router;
