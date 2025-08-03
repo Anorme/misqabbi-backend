@@ -1,7 +1,10 @@
+import fs from "node:fs";
 import dotenvFlow from "dotenv-flow";
-dotenvFlow.config();
-
 import { cleanEnv, str, port, url, num } from "envalid";
+
+if (fs.existsSync(".env")) {
+  dotenvFlow.config();
+}
 
 export default cleanEnv(process.env, {
   NODE_ENV: str({
