@@ -5,16 +5,14 @@
   "description": "This is the backend for the Misqabbi Store, an e-commerce platform that showcases **Misqabbi**, a women-owned fashion brand specializing in made-to-measure pieces designed exclusively for women.",
   "main": "index.js",
   "scripts": {
-    "dev":"npm run start:dev",
-    "start":"npm run start:prod",
-
+    "dev": "npm run start:dev",
+    "start": "npm run start:prod",
     "start:dev": "cross-env NODE_ENV=development nodemon server.js",
     "start:preview": "cross-env NODE_ENV=preview node server.js",
     "start:staging": "cross-env NODE_ENV=staging node server.js",
     "start:prod": "cross-env NODE_ENV=production node server.js",
-
-    "format:check":"npx prettier --check .",
-    "format:fix":"npx prettier --write .",
+    "format:check": "npx prettier --check .",
+    "format:fix": "npx prettier --write .",
     "lint": "eslint .",
     "prepare": "husky",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
