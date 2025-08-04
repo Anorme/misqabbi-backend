@@ -8,7 +8,7 @@ if (fs.existsSync(".env")) {
 
 export default cleanEnv(process.env, {
   NODE_ENV: str({
-    choices: ["development", "staging", "preview", "production"],
+    choices: ["development", "preview", "production", "staging", "test"],
   }),
   PORT: port({ default: 3000 }),
   MONGO_URL: str(),
