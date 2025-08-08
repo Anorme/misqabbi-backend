@@ -22,11 +22,11 @@ router.post("/checkout", authenticateToken, createOrder);
 // @route   GET /api/orders
 // @desc    Get all orders for authenticated user
 // @access  Protected
-router.get("/orders", authenticateToken, getOrders);
+router.get("/", authenticateToken, getOrders);
 
 // @route   GET /api/orders/:id
 // @desc    Get a specific order by ID
 // @access  Protected
-router.get("/orders/:id", authenticateToken, getOrderById);
+router.get("/:id", authenticateToken, getOrderById);
 
 export default router;
