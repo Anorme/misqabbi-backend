@@ -9,12 +9,6 @@ import { validateOrder } from "../middleware/validator.middleware.js";
 
 const router = express.Router();
 
-// TODO: Import authenticateToken middleware when ready
-// const authenticateToken = require('../middleware/auth.middleware');
-
-// TODO: Import orders controller functions when implemented
-// const { createOrder, getOrders, getOrderById } = require('../controllers/orders.controller');
-
 // @route   POST /api/orders
 // @desc    Create a new order
 // @access  Protected
