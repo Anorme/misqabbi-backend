@@ -52,6 +52,8 @@
   },
   "homepage": "https://github.com/Anorme/misqabbi-backend#readme",
   "dependencies": {
+    "@logtail/node": "^0.5.5",
+    "@logtail/winston": "^0.5.5",
     "bcrypt": "^6.0.0",
     "cross-env": "^10.0.0",
     "dotenv-flow": "^4.1.0",
