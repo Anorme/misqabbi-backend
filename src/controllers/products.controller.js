@@ -3,8 +3,11 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+<<<<<<< HEAD
   getPaginatedPublishedProducts,
   countPublishedProducts,
+=======
+>>>>>>> 27ae11c (refactor(models): rename model files from plural to singular and update imports)
 } from "../models/product.model.js";
 import logger from "../config/logger.js";
 
