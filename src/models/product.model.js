@@ -1,4 +1,4 @@
-import Product from "./products.mongo.js";
+import Product from "./product.mongo.js";
 import logger from "../config/logger.js";
 
 /**

@@ -1,7 +1,7 @@
-import User from "./users.mongo.js";
+import User from "./user.mongo.js";
 
 import logger from "../config/logger.js";
-import Product from "./products.mongo.js";
+import Product from "./product.mongo.js";
 
 async function getCart(userId) {
   try {

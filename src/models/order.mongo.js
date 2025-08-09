@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
-import User from "./users.mongo.js";
-import Product from "./products.mongo.js";
+import User from "./user.mongo.js";
+import Product from "./product.mongo.js";
 
 // Define the order schema
 const OrderSchema = new Schema(

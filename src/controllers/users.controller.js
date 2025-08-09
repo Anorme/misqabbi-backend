@@ -1,7 +1,7 @@
 import passport from "passport";
 
 import logger from "../config/logger.js";
-import { createUser, findUserByEmail } from "../models/users.model.js";
+import { createUser, findUserByEmail } from "../models/user.model.js";
 import { signToken } from "../services/jwtService.js";
 
 /**

@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import User from "./users.mongo.js";
+import User from "./user.mongo.js";
 import logger from "../config/logger.js";
 
 /**
