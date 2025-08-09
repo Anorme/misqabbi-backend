@@ -93,6 +93,61 @@ router.post("/checkout", validateOrder, authenticateToken, createOrder);
  *               totalPages: 0
  *               currentPage: 1
  */
+router.post("/checkout", authenticateToken, createOrder);
+>>>>>>> abd5b30 (docs(orders): use JSDoc style in-line comments for order routes)
+
+/**
+ * @swagger
+ * /orders:
+ *   get:
+ *     summary: Get all orders for authenticated user
+ *     description: Get all orders for authenticated user
+ *     tags:
+ *       - Orders
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of orders per page
+ *     responses:
+ *       200:
+ *         description: User orders (paginated)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Order'
+ *                 total:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ *                 currentPage:
+ *                   type: integer
+ *             example:
+ *               success: true
+ *               data: []
+ *               total: 0
+ *               totalPages: 0
+ *               currentPage: 1
+ */
 router.get("/", authenticateToken, getOrders);
 
 /**
