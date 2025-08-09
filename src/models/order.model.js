@@ -10,7 +10,7 @@ export async function createOrderFromCart(user, items, totalPrice, status) {
     }
 
     // Get IDs of products in the items array
-    const itemProductIds = items.map(item => item.productId);
+    const itemProductIds = items.map(item => item.product);
 
     // Fetch published products that match the item IDs
     const publishedProducts = await Product.find({
@@ -19,8 +19,17 @@ export async function createOrderFromCart(user, items, totalPrice, status) {
       isPublished: true,
     });
 
-    // If any product is not found or unpublished
-    if (publishedProducts.length !== items.length) {
+    // Convert publishedProducts ids to strings and store in the publishedProductIds set
+    const publishedProductIds = new Set(
+      publishedProducts.map(product => product._id.toString())
+    );
+
+    // Check if every item's productId is present in the publishedProductIds set
+    const allItemsArePublished = items.every(item =>
+      publishedProductIds.has(item.product.toString())
+    );
+
+    if (!allItemsArePublished) {
       throw new Error("Some products are not available or unpublished");
     }
 
