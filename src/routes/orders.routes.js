@@ -9,10 +9,19 @@ import { validateOrder } from "../middleware/validator.middleware.js";
 
 const router = express.Router();
 
+<<<<<<< HEAD
 // @route   POST /api/orders
 // @desc    Create a new order
 // @access  Protected
 router.post("/checkout", validateOrder, authenticateToken, createOrder);
+=======
+/**
+ * @route   POST/orders
+ * @desc    Creates a new order
+ * @access  Protected
+ */
+router.post("/checkout", authenticateToken, createOrder);
+>>>>>>> abd5b30 (docs(orders): use JSDoc style in-line comments for order routes)
 
 /**
  * @route   GET/orders
