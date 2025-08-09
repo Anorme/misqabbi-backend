@@ -1,8 +1,6 @@
 import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
-import dotenv from "dotenv";
-dotenv.config();
 
 import "./config/passport.js";
 
