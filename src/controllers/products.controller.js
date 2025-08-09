@@ -4,7 +4,7 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
-} from "../models/products.model.js";
+} from "../models/product.model.js";
 import logger from "../config/logger.js";
 
 /**

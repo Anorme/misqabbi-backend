@@ -4,8 +4,8 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 
-import User from "../models/users.mongo.js";
-import { createUser, findUserByEmail } from "../models/users.model.js";
+import User from "../models/user.mongo.js";
+import { createUser, findUserByEmail } from "../models/user.model.js";
 
 /**
  * Configure Passport to use the Local Strategy for email/password authentication,

@@ -1,6 +1,6 @@
 import Order from "../models/order.mongo.js";
 import logger from "../config/logger.js";
-import Product from "../models/products.mongo.js";
+import Product from "./product.mongo.js";
 
 export async function createOrderFromCart(user, items, totalPrice, status) {
   try {

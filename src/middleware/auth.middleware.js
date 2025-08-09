@@ -1,5 +1,5 @@
 import { verifyToken } from "../services/jwtService.js";
-import { findUserById } from "../models/users.model.js";
+import { findUserById } from "../models/user.model.js";
 import logger from "../config/logger.js";
 
 /**
