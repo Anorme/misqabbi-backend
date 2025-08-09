@@ -14,14 +14,18 @@ const router = express.Router();
 // @access  Protected
 router.post("/checkout", validateOrder, authenticateToken, createOrder);
 
-// @route   GET /api/orders
-// @desc    Get all orders for authenticated user
-// @access  Protected
+/**
+ * @route   GET/orders
+ * @desc    Get all orders for authenticated user
+ * @access  Protected
+ */
 router.get("/", authenticateToken, getOrders);
 
-// @route   GET /api/orders/:id
-// @desc    Get a specific order by ID
-// @access  Protected
+/**
+ * @route   GET /orders/:id
+ * @desc    Get a specific order by ID
+ * @access  Protected
+ */
 router.get("/:id", authenticateToken, getOrderById);
 
 export default router;
