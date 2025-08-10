@@ -6,9 +6,13 @@ if (fs.existsSync(".env")) {
   dotenvFlow.config();
 }
 
-export default cleanEnv(process.env, {
+const rawEnv = process.env.NODE_ENV || "development";
+const isProdLike = ["preview", "production", "staging"].includes(rawEnv);
+
+const baseSchema = {
   NODE_ENV: str({
     choices: ["development", "preview", "production", "staging", "test"],
+    default: "development",
   }),
   PORT: port({ default: 3000 }),
   MONGO_URL: str(),
@@ -17,4 +21,12 @@ export default cleanEnv(process.env, {
   GOOGLE_CLIENT_ID: str(),
   GOOGLE_CLIENT_SECRET: str(),
   GOOGLE_CALLBACK_URL: url(),
-});
+};
+
+const fullSchema = {
+  ...baseSchema,
+  LOGTAIL_TOKEN: str(),
+  LOGTAIL_INGESTING_HOST: str(),
+};
+
+export default cleanEnv(process.env, isProdLike ? fullSchema : baseSchema);
