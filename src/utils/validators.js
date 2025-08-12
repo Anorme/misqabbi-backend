@@ -10,4 +10,4 @@ export function isPasswordValidOrGoogleUser(value, doc) {
   return doc.googleId || STRONG_PASSWORD_REGEX.test(value);
 }
 
-export { EMAIL_REGEX, STRONG_PASSWORD_REGEX , OBJECTID_REGEX };
+export { EMAIL_REGEX, STRONG_PASSWORD_REGEX, OBJECTID_REGEX };
