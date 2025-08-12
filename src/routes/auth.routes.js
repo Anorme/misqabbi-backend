@@ -18,7 +18,7 @@ const router = express.Router();
  * - Delegates to registerUser controller for creation logic
  * - Controller handles validation, hashing, and response
  */
-router.post("/signup", validateUser,registerUser);
+router.post("/signup", validateUser, registerUser);
 
 /**
  * @route   POST /login
