@@ -95,7 +95,7 @@ const router = express.Router();
  *                   type: string
  *                   description: Error message
  */
-router.post("/signup", validateUser,registerUser);
+router.post("/signup", validateUser, registerUser);
 
 /**
  * @swagger
