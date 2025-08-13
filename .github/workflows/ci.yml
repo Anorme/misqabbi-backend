@@ -4,10 +4,15 @@ on:
   push:
     branches:
       - main
+      - staging
+      - development
+      - "fix/*"
       - "feature/*"
   pull_request:
     branches:
       - main
+      - staging
+      - development
 
 jobs:
   format:
