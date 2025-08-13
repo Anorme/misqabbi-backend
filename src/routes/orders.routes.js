@@ -5,6 +5,7 @@ import {
   getOrders,
   getOrderById,
 } from "../controllers/orders.controller.js";
+import { validateOrder } from "../middleware/validator.middleware.js";
 
 const router = express.Router();
 
@@ -17,7 +18,7 @@ const router = express.Router();
 // @route   POST /api/orders
 // @desc    Create a new order
 // @access  Protected
-router.post("/checkout", authenticateToken, createOrder);
+router.post("/checkout", validateOrder, authenticateToken, createOrder);
 
 // @route   GET /api/orders
 // @desc    Get all orders for authenticated user
