@@ -2,7 +2,6 @@ import { userValidator } from "../validators/user.validator.js";
 import { productValidator } from "../validators/product.validator.js";
 import { orderValidator } from "../validators/order.validator.js";
 
-
 export function validateUser(req, res, next) {
   const { error } = userValidator.validate(req.body);
   if (error) {
