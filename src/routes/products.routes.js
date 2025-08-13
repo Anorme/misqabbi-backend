@@ -8,6 +8,7 @@ import {
   getProducts,
   updateProductHandler,
 } from "../controllers/products.controller.js";
+import { validateProduct } from "../middleware/validator.middleware.js";
 
 const router = express.Router();
 
@@ -30,7 +31,13 @@ router.get("/:id", getProductByIdHandler);
  * @desc    Create a new product
  * @access  Admin (Requires authentication and admin role)
  */
-router.post("/", authenticateToken, checkAdmin, createProductHandler);
+router.post(
+  "/",
+  validateProduct,
+  authenticateToken,
+  checkAdmin,
+  createProductHandler
+);
 
 /**
  * @route   PUT /products/:id
