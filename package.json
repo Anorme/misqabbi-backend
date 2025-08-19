@@ -29,7 +29,9 @@
     "format:fix": "npx prettier --write .",
     "lint": "eslint .",
     "prepare": "husky",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:public": "node --experimental-vm-modules node_modules/jest/bin/jest.js  --testPathIgnorePatterns=tests/integration",
+    "test:integration": "node --experimental-vm-modules node_modules/jest/bin/jest.js tests/integration"
   },
   "dependencies": {
     "@logtail/node": "^0.5.5",
