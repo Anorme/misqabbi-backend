@@ -65,8 +65,18 @@ const userSchema = new Schema(
       },
       validate: {
         validator: function (value) {
-          const isNewOrChanged = this.isModified("password");
-          return !isNewOrChanged || isPasswordValidOrGoogleUser(value, this);
+          // Skip validation if Google user
+          if (this.googleId) return true;
+
+          // If password is being modified, check it's not empty
+          if (this.isModified("password")) {
+            if (typeof value !== "string" || value.trim().length < 6) {
+              return false;
+            }
+            return isPasswordValidOrGoogleUser(value, this);
+          }
+
+          return true;
         },
         message: "Password required for local accounts",
       },

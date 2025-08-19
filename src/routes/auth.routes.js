@@ -1,4 +1,9 @@
 import express from "express";
+import {
+  registerValidation,
+  loginValidation,
+} from "../validators/authValidator.js";
+import { validate } from "../middleware/validate.js";
 
 import {
   handleGoogleCallback,
@@ -17,7 +22,7 @@ const router = express.Router();
  * - Delegates to registerUser controller for creation logic
  * - Controller handles validation, hashing, and response
  */
-router.post("/signup", registerUser);
+router.post("/signup", registerValidation, validate, registerUser);
 
 /**
  * @route   POST /login
@@ -27,7 +32,7 @@ router.post("/signup", registerUser);
  * - Delegates to loginUser controller for authentication
  * - Controller handles credential verification and token issuance
  */
-router.post("/login", loginUser);
+router.post("/login", loginValidation, validate, loginUser);
 
 /**
  * @route   GET /google
