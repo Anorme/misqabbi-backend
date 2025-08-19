@@ -3,11 +3,8 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
-<<<<<<< HEAD
   getPaginatedPublishedProducts,
   countPublishedProducts,
-=======
->>>>>>> 27ae11c (refactor(models): rename model files from plural to singular and update imports)
 } from "../models/product.model.js";
 import logger from "../config/logger.js";
 
@@ -18,6 +15,24 @@ import logger from "../config/logger.js";
  */
 export async function getProducts(req, res) {
   try {
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+
+    const totalPublishedProducts = await countPublishedProducts();
+    if (page > Math.ceil(totalPublishedProducts / limit)) {
+      return res.status(400).json({
+        success: false,
+        error: "Requested page exceeds available product pages",
+      });
+    }
+    const products = await getPaginatedPublishedProducts(page, limit);
+    res.json({
+      success: true,
+      data: products,
+      total: totalPublishedProducts,
+      totalPages: Math.ceil(totalPublishedProducts / limit),
+      currentPage: page,
+    });
     const page = Math.max(parseInt(req.query.page) || 1, 1);
     const limit = Math.max(parseInt(req.query.limit) || 10, 1);
 
