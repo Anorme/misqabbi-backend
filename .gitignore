@@ -137,3 +137,7 @@ firebase-admin.json
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+
+# seededAdmin
+seedAdmin.js
