@@ -20,6 +20,7 @@
   },
   "scripts": {
     "dev": "npm run start:dev",
+    "docs": "jsdoc -c jsdoc.json",
     "start": "npm run start:prod",
     "start:dev": "cross-env NODE_ENV=development nodemon server.js",
     "start:preview": "cross-env NODE_ENV=preview node server.js",
