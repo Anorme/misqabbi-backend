@@ -13,31 +13,88 @@ import { authenticateToken } from "../middleware/auth.middleware.js";
 const router = express.Router();
 
 /**
- * @route   POST /signup
- * @desc    Maps signup request to controller
- * @access  Public
- *
- * - Delegates to registerUser controller for creation logic
- * - Controller handles validation, hashing, and response
+ * @swagger
+ * /signup:
+ *   post:
+ *     summary: Registers a new user with email, password, and optional displayName
+ *     description: Registers a new user with email, password, and optional displayName
+ *     tags:
+ *       - Users
+ *     requestBody:
+ *       description: User data to create
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               displayName:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Created user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 userId:
+ *                   type: string
  */
 router.post("/signup", validateUser, registerUser);
 
 /**
- * @route   POST /login
- * @desc    Maps login request to controller
- * @access  Public
- *
- * - Delegates to loginUser controller for authentication
- * - Controller handles credential verification and token issuance
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Authenticates a user and issues a signed JWT
+ *     description: Authenticates a user and issues a signed JWT
+ *     tags:
+ *       - Users
+ *     requestBody:
+ *       description: User credentials to authenticate
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 token:
+ *                   type: string
  */
 router.post("/login", loginUser);
 
 /**
- * @route   GET /google
- * @desc    Initiates Google OAuth login flow
- * @access  Public
- *
- * - Redirects to Google's consent screen requesting profile and email access
+ * @swagger
+ * /google:
+ *   get:
+ *     summary: Initiates Google OAuth login flow
+ *     description: Initiates Google OAuth login flow
+ *     tags:
+ *       - Users
+ *     responses:
+ *       302:
+ *         description: Redirects to Google's consent screen
  */
 router.get(
   "/google",
@@ -45,26 +102,52 @@ router.get(
 );
 
 /**
- * @route   GET /google/callback
- * @desc    Handles Google OAuth callback and issues token
- * @access  Public
- *
- * - Uses Passport to authenticate Google response
- * - Delegates token issuance and redirect to controller
+ * @swagger
+ * /google/callback:
+ *   get:
+ *     summary: Handles Google OAuth callback and issues token
+ *     description: Handles Google OAuth callback and issues token
+ *     tags:
+ *       - Users
+ *     responses:
+ *       302:
+ *         description: Redirects to frontend with token in query string
  */
 router.get(
   "/google/callback",
   passport.authenticate("google", { session: false }),
   handleGoogleCallback
 );
+
 /**
- * @route   GET /me
- * @desc    Retrieves the currently authenticated user
- * @access  Private
- *
- * - Middleware verifies the presence of a valid JWT using authenticateToken
- * - Delegates to getCurrentUser controller to retrieve user details
- * - Controller handles user lookup and response formatting
+ * @swagger
+ * /me:
+ *   get:
+ *     summary: Retrieves the currently authenticated user
+ *     description: Retrieves the currently authenticated user
+ *     tags:
+ *       - Users
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     userId:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     displayName:
+ *                       type: string
  */
 router.get("/me", authenticateToken, getCurrentUser);
 
