@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: routes/products.routes.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: routes/products.routes.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/*************  ✨ Windsurf Command 🌟  *************/
+/**
+ * @module routes/products.routes
+ * @group Products
+ */
+
+import express from "express";
+
+import { authenticateToken, checkAdmin } from "../middleware/index.js";
+import {
+  createProductHandler,
+  deleteProductHandler,
+  getProductByIdHandler,
+  getProducts,
+  updateProductHandler,
+} from "../controllers/products.controller.js";
+
+const router = express.Router();
+
+/**
+ * @route   GET /products
+ * @group   Products
+ * @desc    Fetch all published products
+ * @access  Public
+ * @returns {Promise&lt;Array>} Array of published product documents
+ */
+router.get("/", getProducts);
+
+/**
+ * @route   GET /products/:id
+ * @group   Products
+ * @desc    Fetch a published product by ID
+ * @access  Public
+ * @param   {String} id - Product ID
+ * @returns {Promise&lt;Product>} Product document or null if not found
+ */
+router.get("/:id", getProductByIdHandler);
+
+/**
+ * @route   POST /products
+ * @group   Products
+ * @desc    Create a new product
+ * @access  Admin (Requires authentication and admin role)
+ * @param   {Object} req.body - Product data
+ * @param   {String} req.body.name        - Name of the product
+ * @param   {String} req.body.description - Description of the product
+ * @param   {Number} req.body.price       - Product price in local currency (min: 0)
+ * @param   {String[]} req.body.images    - Array of image URLs (max: 5)
+ * @param   {String} req.body.category    - Category label (lowercase)
+ * @param   {Number} req.body.stock       - Units in stock (min: 0)
+ * @returns {Promise&lt;Product>} Created product document
+ * @example
+ * curl -X POST \
+ *   http://localhost:3000/products \
+ *   -H 'Content-Type: application/json' \
+ *   -d '{"name":"Product Name","description":"Product description","price":1.99,"images":["https://example.com/image.jpg"],"category":"category","stock":5}'
+ */
+router.post("/", authenticateToken, checkAdmin, createProductHandler);
+
+/**
+ * @route   PUT /products/:id
+ * @group   Products
+ * @desc    Update product details
+ * @access  Admin (Requires authentication and admin role)
+ * @param   {String} id - Product ID
+ * @param   {Object} req.body - Product data
+ * @param   {String} req.body.name        - Name of the product
+ * @param   {String} req.body.description - Description of the product
+ * @param   {Number} req.body.price       - Product price in local currency (min: 0)
+ * @param   {String[]} req.body.images    - Array of image URLs (max: 5)
+ * @param   {String} req.body.category    - Category label (lowercase)
+ * @param   {Number} req.body.stock       - Units in stock (min: 0)
+ * @returns {Promise&lt;Product>} Updated product document
+ * @example
+ * curl -X PUT \
+ *   http://localhost:3000/products/:id \
+ *   -H 'Content-Type: application/json' \
+ *   -d '{"name":"Product Name","description":"Product description","price":1.99,"images":["https://example.com/image.jpg"],"category":"category","stock":5}'
+ */
+router.put("/:id", authenticateToken, checkAdmin, updateProductHandler);
+
+/**
+ * @route   DELETE /products/:id
+ * @group   Products
+ * @desc    Delete a product by ID
+ * @access  Admin (Requires authentication and admin role)
+ * @param   {String} id - Product ID
+ * @returns {Promise&lt;void>}
+ */
+router.delete("/:id", authenticateToken, checkAdmin, deleteProductHandler);
+
+export default router;
+
+/*******  816ad250-83bb-4df6-9b8c-6cf458e4f629  *******/</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="routes_products.module_routes.html">routes</a></li></ul><h3>Global</h3><ul><li><a href="global.html#authenticateToken">authenticateToken</a></li><li><a href="global.html#cartItemSchema">cartItemSchema</a></li><li><a href="global.html#checkAdmin">checkAdmin</a></li><li><a href="global.html#corsOptions">corsOptions</a></li><li><a href="global.html#countPublishedProducts">countPublishedProducts</a></li><li><a href="global.html#createProduct">createProduct</a></li><li><a href="global.html#createProductHandler">createProductHandler</a></li><li><a href="global.html#createUser">createUser</a></li><li><a href="global.html#deleteProduct">deleteProduct</a></li><li><a href="global.html#deleteProductHandler">deleteProductHandler</a></li><li><a href="global.html#findUserByEmail">findUserByEmail</a></li><li><a href="global.html#findUserById">findUserById</a></li><li><a href="global.html#getAllProducts">getAllProducts</a></li><li><a href="global.html#getAllPublishedProducts">getAllPublishedProducts</a></li><li><a href="global.html#getPaginatedPublishedProducts">getPaginatedPublishedProducts</a></li><li><a href="global.html#getProductById">getProductById</a></li><li><a href="global.html#getProductByIdHandler">getProductByIdHandler</a></li><li><a href="global.html#getProducts">getProducts</a></li><li><a href="global.html#handleGoogleCallback">handleGoogleCallback</a></li><li><a href="global.html#issueToken">issueToken</a></li><li><a href="global.html#loginUser">loginUser</a></li><li><a href="global.html#registerUser">registerUser</a></li><li><a href="global.html#updateProduct">updateProduct</a></li><li><a href="global.html#updateProductHandler">updateProductHandler</a></li><li><a href="global.html#userSchema">userSchema</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Thu Aug 21 2025 14:42:39 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
