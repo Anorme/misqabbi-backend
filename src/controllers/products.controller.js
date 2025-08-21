@@ -9,10 +9,45 @@ import {
 import logger from "../config/logger.js";
 
 /**
- * @desc    Retrieve all published products for public access
- * @route   GET /products
- * @access  Public
+ * @swagger
+ * /products:
+ *   get:
+ *     summary: Retrieve all published products
+ *     description: Retrieve all published products
+ *     tags:
+ *       - Products
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: A list of published products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Product'
  */
+/**
+ * Fetches a paginated list of published products.
+ * @async
+ * @function getProducts
+ * @param {Request} req - Express request object with optional query params: page, limit
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} Sends JSON response with product data and pagination info
+ */
+
 export async function getProducts(req, res) {
   try {
     const page = Math.max(parseInt(req.query.page) || 1, 1);
@@ -42,10 +77,36 @@ export async function getProducts(req, res) {
 }
 
 /**
- * @desc    Retrieve single product by ID
- * @route   GET /products/:id
- * @access  Public
+ * @swagger
+ * /products/{id}:
+ *   get:
+ *     summary: Retrieve a published product by ID
+ *     description: Retrieve a published product by ID
+ *     tags:
+ *       - Products
+ *     parameters:
+ *      - in: path
+ *        name: id
+ *        required: true
+ *        schema:
+ *          type: string
+ *     responses:
+ *       200:
+ *         description: A published product
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Product'
  */
+/**
+ * Retrieves a single published product by its ID.
+ * @async
+ * @function getProductByIdHandler
+ * @param {Request} req - Express request object with path param: id
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} Sends JSON response with product data or error
+ */
+
 export async function getProductByIdHandler(req, res) {
   try {
     const { id } = req.params;
@@ -63,10 +124,53 @@ export async function getProductByIdHandler(req, res) {
 }
 
 /**
- * @desc    Create a new product
- * @route   POST /admin/products
- * @access  Admin
+ * @swagger
+ * /products:
+ *   post:
+ *     summary: Create a new product
+ *     description: Create a new product
+ *     tags:
+ *       - Products
+ *     requestBody:
+ *       description: Product data to create
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 maxItems: 5
+ *               category:
+ *                 type: string
+ *               stock:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *         description: Created product
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Product'
  */
+/**
+ * Creates a new product using request body data.
+ * @async
+ * @function createProductHandler
+ * @param {Request} req - Express request object with product data in body
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} Sends JSON response with created product or error
+ */
+
 export async function createProductHandler(req, res) {
   try {
     const data = { ...req.body, createdBy: req.user._id };
@@ -81,10 +185,59 @@ export async function createProductHandler(req, res) {
 }
 
 /**
- * @desc    Update an existing product
- * @route   PUT /admin/products/:id
- * @access  Admin
+ * @swagger
+ * /products/{id}:
+ *   put:
+ *     summary: Update an existing product
+ *     description: Update an existing product
+ *     tags:
+ *       - Products
+ *     parameters:
+ *      - in: path
+ *        name: id
+ *        required: true
+ *        schema:
+ *          type: string
+ *     requestBody:
+ *       description: Product data to update
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 maxItems: 5
+ *               category:
+ *                 type: string
+ *               stock:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Updated product
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Product'
  */
+/**
+ * Updates an existing product by ID using request body data.
+ * @async
+ * @function updateProductHandler
+ * @param {Request} req - Express request object with path param: id and update data in body
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} Sends JSON response with updated product or error
+ */
+
 export async function updateProductHandler(req, res) {
   try {
     const { id } = req.params;
@@ -102,11 +255,32 @@ export async function updateProductHandler(req, res) {
 }
 
 /**
- *
- * @desc    Delete a product by ID
- * @route   DELETE/admin/products/:id
- * @access  Admin
+ * @swagger
+ * /products/{id}:
+ *   delete:
+ *     summary: Delete a product by ID
+ *     description: Delete a product by ID
+ *     tags:
+ *       - Products
+ *     parameters:
+ *      - in: path
+ *        name: id
+ *        required: true
+ *        schema:
+ *          type: string
+ *     responses:
+ *       204:
+ *         description: Product deleted
  */
+/**
+ * Deletes a product by its ID.
+ * @async
+ * @function deleteProductHandler
+ * @param {Request} req - Express request object with path param: id
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} Sends 204 status or error response
+ */
+
 export async function deleteProductHandler(req, res) {
   try {
     const { id } = req.params;

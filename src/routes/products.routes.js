@@ -13,23 +13,66 @@ import { validateProduct } from "../middleware/validator.middleware.js";
 const router = express.Router();
 
 /**
- * @route   GET /products
- * @desc    Fetch all published products
- * @access  Public
+ * @swagger
+ * /products:
+ *   get:
+ *     summary: Fetch all published products
+ *     description: Fetch all published products
+ *     responses:
+ *       200:
+ *         description: A list of products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Product'
  */
 router.get("/", getProducts);
 
 /**
- * @route   GET /products/:id
- * @desc    Fetch a published product by ID
- * @access  Public
+ * @swagger
+ * /products/{id}:
+ *   get:
+ *     summary: Fetch a published product by ID
+ *     description: Fetch a published product by ID
+ *     parameters:
+ *      - in: path
+ *        name: id
+ *        required: true
+ *        schema:
+ *          type: string
+ *     responses:
+ *       200:
+ *         description: A product
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Product'
  */
 router.get("/:id", getProductByIdHandler);
 
 /**
- * @route   POST /products
- * @desc    Create a new product
- * @access  Admin (Requires authentication and admin role)
+ * @swagger
+ * /products:
+ *   post:
+ *     summary: Create a new product
+ *     description: Create a new product
+ *     security:
+ *      - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Product'
+ *     responses:
+ *       201:
+ *         description: Created product
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Product'
  */
 router.post(
   "/",
@@ -40,16 +83,52 @@ router.post(
 );
 
 /**
- * @route   PUT /products/:id
- * @desc    Update product details
- * @access  Admin (Requires authentication and admin role)
+ * @swagger
+ * /products/{id}:
+ *   put:
+ *     summary: Update product details
+ *     description: Update product details
+ *     security:
+ *      - bearerAuth: []
+ *     parameters:
+ *      - in: path
+ *        name: id
+ *        required: true
+ *        schema:
+ *          type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Product'
+ *     responses:
+ *       200:
+ *         description: Updated product
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Product'
  */
 router.put("/:id", authenticateToken, checkAdmin, updateProductHandler);
 
 /**
- * @route   DELETE /products/:id
- * @desc    Delete a product by ID
- * @access  Admin (Requires authentication and admin role)
+ * @swagger
+ * /products/{id}:
+ *   delete:
+ *     summary: Delete a product by ID
+ *     description: Delete a product by ID
+ *     security:
+ *      - bearerAuth: []
+ *     parameters:
+ *      - in: path
+ *        name: id
+ *        required: true
+ *        schema:
+ *          type: string
+ *     responses:
+ *       204:
+ *         description: No content
  */
 router.delete("/:id", authenticateToken, checkAdmin, deleteProductHandler);
 
