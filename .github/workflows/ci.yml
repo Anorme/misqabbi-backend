@@ -32,7 +32,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install -y
 
       - name: Run Prettier check
         run: npx prettier --check .
@@ -55,7 +55,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install Dependencies
-        run: npm ci
+        run: npm install -y
 
       - name: Run public tests
         run: npm run test:public
