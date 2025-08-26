@@ -2,14 +2,11 @@ name: Integration
 
 on:
   push:
-    branches:
-      - staging
-  pull_request:
-    branches:
-      - staging
+    branches: staging
 
 jobs:
   Integration-tests:
+    # if: github.repository_owner == 'Anorme'
     name: Integrating codes from development to staging
     runs-on: ubuntu-latest
 
