@@ -1,7 +1,10 @@
 import express from "express";
 
 import { authenticateToken, checkAdmin } from "../middleware/index.js";
-import { getAllOrders } from "../controllers/admin.controller.js";
+import {
+  getAllOrders,
+  updateOrderStatusHandler,
+} from "../controllers/admin.controller.js";
 
 const router = express.Router();
 
@@ -11,5 +14,12 @@ router.get("/dashboard", authenticateToken, checkAdmin, (req, res) => {
 });
 
 router.get("/orders", authenticateToken, checkAdmin, getAllOrders);
+
+router.put(
+  "/orders/:id",
+  authenticateToken,
+  checkAdmin,
+  updateOrderStatusHandler
+);
 
 export default router;
