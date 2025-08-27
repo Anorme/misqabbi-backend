@@ -1,6 +1,7 @@
 import express from "express";
 
 import { authenticateToken, checkAdmin } from "../middleware/index.js";
+import { getAllOrders } from "../controllers/admin.controller.js";
 
 const router = express.Router();
 
@@ -8,5 +9,7 @@ const router = express.Router();
 router.get("/dashboard", authenticateToken, checkAdmin, (req, res) => {
   res.status(200).json({ message: "Admin dashboard placeholder" });
 });
+
+router.get("/orders", authenticateToken, checkAdmin, getAllOrders);
 
 export default router;

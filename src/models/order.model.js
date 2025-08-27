@@ -70,3 +70,63 @@ export async function fetchOrderById(orderId, userId) {
     throw new Error(error.message);
   }
 }
+
+export async function updateOrderStatus(id, status) {
+  try {
+    const updated = await Order.findByIdAndUpdate(
+      id,
+      { status },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+    return updated;
+  } catch (error) {
+    logger.error(
+      `[order.model] Error updating product ${id}: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+export async function getPaginatedPublishedOrders(page, limit, query) {
+  try {
+    const startIndex = (page - 1) * limit;
+    const filterOptions = {};
+
+    // Status filter
+    if (query.status && query.status !== "all") {
+      filterOptions.status = query.status;
+    }
+
+    // Date range filter
+    if (query.startDate && query.endDate) {
+      filterOptions.createdAt = {
+        $gte: new Date(query.startDate),
+        $lte: new Date(query.endDate),
+      };
+    }
+
+    return await Order.find(filterOptions)
+      .sort({ createdAt: -1 })
+      .skip(startIndex)
+      .limit(limit);
+  } catch (error) {
+    logger.error(
+      `[orders.model] Error fetching paginated orders: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+export async function countPublishedOrders() {
+  try {
+    return await Order.countDocuments();
+  } catch (error) {
+    logger.error(
+      `[orders.model] Error counting published orders: ${error.message}`
+    );
+    throw error;
+  }
+}
