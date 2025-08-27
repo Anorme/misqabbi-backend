@@ -1,7 +1,11 @@
 const allowedOrigins = {
   development: "http://localhost:3000",
   staging: ["https://misqabbigh.netlify.app"],
-  production: ["https://misqabbi.com", "https://www.misqabbi.com"],
+  production: [
+    "https://shop.misqabbi.com",
+    "https://www.misqabbi.com",
+    "https://misqabbigh.netlify.app",
+  ],
 };
 
 /**
@@ -18,7 +22,7 @@ const corsOptions = env => {
   return {
     origin,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    credentials: false,
+    credentials: true,
   };
 };
 
