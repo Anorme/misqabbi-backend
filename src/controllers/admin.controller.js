@@ -17,7 +17,7 @@ export async function getAllOrders(req, res) {
         error: "Requested page exceeds available order pages",
       });
     }
-    const orders = await getPaginatedPublishedOrders(page, limit);
+    const orders = await getPaginatedPublishedOrders(page, limit, req.query);
     res.json({
       success: true,
       data: orders,
