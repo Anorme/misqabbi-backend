@@ -21,6 +21,7 @@ const baseSchema = {
   GOOGLE_CLIENT_ID: str(),
   GOOGLE_CLIENT_SECRET: str(),
   GOOGLE_CALLBACK_URL: url(),
+  GOOGLE_REDIRECT_URL: url(),
 };
 
 const fullSchema = {
