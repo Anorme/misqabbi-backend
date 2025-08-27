@@ -1,3 +1,5 @@
+import env from "../config/env.js";
+
 import passport from "passport";
 
 import logger from "../config/logger.js";
@@ -77,7 +79,7 @@ async function loginUser(req, res, next) {
  */
 export function handleGoogleCallback(req, res) {
   try {
-    issueToken(req, res, { redirectUrl: "http://localhost:3000" });
+    issueToken(req, res, { redirectUrl: env.GOOGLE_REDIRECT_URL });
   } catch (error) {
     logger.error(`[GoogleCallback] Token issuance failed: ${error.message}`);
     res.status(500).json({ error: "OAuth token error" });
@@ -97,15 +99,37 @@ export function handleGoogleCallback(req, res) {
  */
 function issueToken(req, res, options = {}) {
   const token = signToken({ id: req.user._id, role: req.user.role });
+
+  const isProd = env.NODE_ENV === "production";
+
   try {
-    if (options.redirectUrl) {
-      const urlWithToken = new URL(options.redirectUrl);
-      urlWithToken.searchParams.set("token", token);
-      return res.redirect(urlWithToken.toString());
+    if (isProd) {
+      res.cookie("auth_token", token, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: "none",
+        domain: ".misqabbi.com",
+        maxAge: 8 * 60 * 60 * 1000,
+      });
     }
-    res.json({ token });
+
+    if (options.redirectUrl) {
+      const url = new URL(options.redirectUrl);
+
+      if (!isProd) {
+        url.searchParams.set("token", token);
+      }
+
+      return res.redirect(url.toString());
+    }
+
+    if (!isProd) {
+      return res.json({ token });
+    }
+
+    return res.status(200).json({ message: "Token issued successfully" });
   } catch (error) {
-    logger.error(`[issueToken] Token generation failed: ${error.message}`);
+    logger.error(`[issueToken] Token delivery failed: ${error.message}`);
     return res.status(500).json({ error: "Authentication error" });
   }
 }
