@@ -3,6 +3,7 @@ import express from "express";
 import { authenticateToken, checkAdmin } from "../middleware/index.js";
 import {
   getAllOrders,
+  getUserAnalyticsHandler,
   updateOrderStatusHandler,
 } from "../controllers/admin.controller.js";
 
@@ -20,6 +21,13 @@ router.put(
   authenticateToken,
   checkAdmin,
   updateOrderStatusHandler
+);
+
+router.get(
+  "/users/:id/analytics",
+  authenticateToken,
+  checkAdmin,
+  getUserAnalyticsHandler
 );
 
 export default router;
