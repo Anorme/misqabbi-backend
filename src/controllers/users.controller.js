@@ -3,8 +3,9 @@ import env from "../config/env.js";
 import passport from "passport";
 
 import logger from "../config/logger.js";
-import { createUser, findUserByEmail } from "../models/user.model.js";
 import { signToken } from "../services/jwtService.js";
+import { formatResponse } from "../utils/responseFormatter.js";
+import { createUser, findUserByEmail } from "../models/user.model.js";
 
 /**
  * @route   POST /signup
@@ -25,13 +26,30 @@ async function registerUser(req, res) {
     const existingUser = await findUserByEmail(email);
     if (existingUser) {
       logger.warn(`[registerUser] Email already exists: ${email}`);
-      return res.status(400).json({ message: "Invalid user credentials" });
+      return res.status(400).json(
+        formatResponse({
+          success: false,
+          message: "Invalid user credentials",
+        })
+      );
     }
     const user = await createUser({ email, password, displayName });
-    res.status(201).json({ message: "User created", userId: user._id });
+    res.status(201).json(
+      formatResponse({
+        message: "User created",
+        data: {
+          userId: user._id,
+        },
+      })
+    );
   } catch (error) {
     logger.error(`[registerUser] ${error.message}`);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json(
+      formatResponse({
+        success: false,
+        message: "Failed to register user",
+      })
+    );
   }
 }
 
@@ -56,7 +74,7 @@ async function loginUser(req, res, next) {
 
     try {
       req.user = user;
-      return issueToken(req, res);
+      return finalizeAuth(req, res);
     } catch (error) {
       logger.error(`[loginUser] User JWT generation failed: ${error.message}`);
       return res.status(500).json({ error: "Token generation error" });
@@ -71,7 +89,7 @@ async function loginUser(req, res, next) {
  *
  * Workflow:
  * - Invoked after successful Passport Google authentication
- * - Delegates token generation to `issueToken` helper
+ * - Delegates token generation to `finalizeAuth` helper
  * - Redirects user to frontend with token in query string
  * - Handles errors with structured response and logging
  *
@@ -79,58 +97,98 @@ async function loginUser(req, res, next) {
  */
 export function handleGoogleCallback(req, res) {
   try {
-    issueToken(req, res, { redirectUrl: env.GOOGLE_REDIRECT_URL });
+    finalizeAuth(req, res, { redirectUrl: env.GOOGLE_REDIRECT_URL });
   } catch (error) {
     logger.error(`[GoogleCallback] Token issuance failed: ${error.message}`);
-    res.status(500).json({ error: "OAuth token error" });
+    res.status(500).json(
+      formatResponse({
+        success: false,
+        message: "Failed to issue token",
+        error: "OAuth token error",
+      })
+    );
   }
 }
 
 /**
- * Issues a signed JWT for the authenticated user and returns it via response.
+ * Helper function to finalize authentication workflow
+ * - Generates a JWT with user ID and role as payload
+ * - In production, sends an http-only cookie with the token
+ * - In development, returns a JSON response with the token and basic user data
+ * - Handles errors with structured response and logging
  *
- * Delivery Options:
- * - If `redirectUrl` is provided, redirects to that URL with the token in query params.
- * - Otherwise, sends a JSON response with `{ token }`.
- *
- * @param {Object} [options] - Optional configuration
- * @param {string} [options.redirectUrl] - URL to redirect with token as query param
+ * @param {Object} req   - Express request object
+ * @param {Object} res   - Express response object
+ * @param {Object} [options] - Optional configuration object
+ * @param {String} [options.redirectUrl] - Redirect URL for production; defaults to false
  * @returns {void}
  */
-function issueToken(req, res, options = {}) {
+function finalizeAuth(req, res, options = {}) {
   const token = signToken({ id: req.user._id, role: req.user.role });
 
-  const isProd = env.NODE_ENV === "production";
+  const isProdlike =
+    env.NODE_ENV === "production" || env.NODE_ENV === "staging";
+  const isDev = env.NODE_ENV === "development";
+
+  const cookieOptions = {
+    httpOnly: true,
+    secure: isProdlike,
+    sameSite: "none",
+    domain: ".misqabbi.com",
+    maxAge: 8 * 60 * 60 * 1000,
+  };
+
+  const user = {
+    userId: req.user._id,
+    email: req.user.email,
+    displayName: req.user.displayName,
+  };
 
   try {
-    if (isProd) {
-      res.cookie("auth_token", token, {
-        httpOnly: true,
-        secure: isProd,
-        sameSite: "none",
-        domain: ".misqabbi.com",
-        maxAge: 8 * 60 * 60 * 1000,
-      });
-    }
+    if (isProdlike) {
+      res.cookie("auth_token", token, cookieOptions);
 
-    if (options.redirectUrl) {
-      const url = new URL(options.redirectUrl);
-
-      if (!isProd) {
-        url.searchParams.set("token", token);
+      // If redirectUrl is provided, redirect without sending JSON
+      if (options.redirectUrl) {
+        return res.redirect(options.redirectUrl);
       }
 
-      return res.redirect(url.toString());
+      // Otherwise, return basic user data
+      return res.status(200).json(
+        formatResponse({
+          message: "Token delivered successfully",
+          data: { user },
+        })
+      );
     }
 
-    if (!isProd) {
-      return res.json({ token });
+    // In development, return token and user data
+    if (isDev) {
+      return res.status(200).json(
+        formatResponse({
+          message: "Token delivered successfully",
+          data: { token, user },
+        })
+      );
     }
 
-    return res.status(200).json({ message: "Token issued successfully" });
+    // Fallback for unexpected env
+    return res.status(500).json(
+      formatResponse({
+        success: false,
+        message: "Unrecognized environment",
+        error: "Authentication error",
+      })
+    );
   } catch (error) {
-    logger.error(`[issueToken] Token delivery failed: ${error.message}`);
-    return res.status(500).json({ error: "Authentication error" });
+    logger.error(`[finalizeAuth] Token delivery failed: ${error.message}`);
+    return res.status(500).json(
+      formatResponse({
+        success: false,
+        message: "Failed to issue token",
+        error: "Authentication error",
+      })
+    );
   }
 }
 
