@@ -34,14 +34,8 @@ async function registerUser(req, res) {
       );
     }
     const user = await createUser({ email, password, displayName });
-    res.status(201).json(
-      formatResponse({
-        message: "User created",
-        data: {
-          userId: user._id,
-        },
-      })
-    );
+    req.user = user;
+    return finalizeAuth(req, res);
   } catch (error) {
     logger.error(`[registerUser] ${error.message}`);
     res.status(500).json(
