@@ -1,6 +1,7 @@
 import env from "./config/env.js";
 
 import express from "express";
+import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import morgan from "morgan";
 import cors from "cors";
@@ -23,6 +24,7 @@ const API_PREFIX = "/api/v1";
 
 app.use(helmet());
 app.use(morgan("dev"));
+app.use(cookieParser());
 app.use(express.json());
 app.use(cors(corsOptions(env.NODE_ENV)));
 
