@@ -4,6 +4,7 @@ import passport from "passport";
 
 import logger from "../config/logger.js";
 import { signToken } from "../services/jwtService.js";
+import getCookieOptions from "../utils/getCookieOptions.js";
 import { formatResponse } from "../utils/responseFormatter.js";
 import { createUser, findUserByEmail } from "../models/user.model.js";
 
@@ -120,17 +121,7 @@ export function handleGoogleCallback(req, res) {
 function finalizeAuth(req, res, options = {}) {
   const token = signToken({ id: req.user._id, role: req.user.role });
 
-  const isProdlike =
-    env.NODE_ENV === "production" || env.NODE_ENV === "staging";
-  const isDev = env.NODE_ENV === "development";
-
-  const cookieOptions = {
-    httpOnly: true,
-    secure: isProdlike,
-    sameSite: "none",
-    domain: ".misqabbi.com",
-    maxAge: 8 * 60 * 60 * 1000,
-  };
+  const cookieOptions = getCookieOptions();
 
   const user = {
     userId: req.user._id,
@@ -139,39 +130,16 @@ function finalizeAuth(req, res, options = {}) {
   };
 
   try {
-    if (isProdlike) {
-      res.cookie("auth_token", token, cookieOptions);
+    res.cookie("auth_token", token, cookieOptions);
 
-      // If redirectUrl is provided, redirect without sending JSON
-      if (options.redirectUrl) {
-        return res.redirect(options.redirectUrl);
-      }
-
-      // Otherwise, return basic user data
-      return res.status(200).json(
-        formatResponse({
-          message: "Token delivered successfully",
-          data: { user },
-        })
-      );
+    if (options.redirectUrl) {
+      return res.redirect(options.redirectUrl);
     }
 
-    // In development, return token and user data
-    if (isDev) {
-      return res.status(200).json(
-        formatResponse({
-          message: "Token delivered successfully",
-          data: { token, user },
-        })
-      );
-    }
-
-    // Fallback for unexpected env
-    return res.status(500).json(
+    return res.status(200).json(
       formatResponse({
-        success: false,
-        message: "Unrecognized environment",
-        error: "Authentication error",
+        message: "Authenticate successful",
+        data: { user },
       })
     );
   } catch (error) {
