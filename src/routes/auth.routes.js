@@ -1,12 +1,14 @@
 import express from "express";
 
 import {
+  getCurrentUser,
   handleGoogleCallback,
   loginUser,
   registerUser,
 } from "../controllers/users.controller.js";
 import passport from "passport";
 import { validateUser } from "../middleware/validator.middleware.js";
+import { authenticateToken } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
@@ -55,5 +57,15 @@ router.get(
   passport.authenticate("google", { session: false }),
   handleGoogleCallback
 );
+/**
+ * @route   GET /me
+ * @desc    Retrieves the currently authenticated user
+ * @access  Private
+ *
+ * - Middleware verifies the presence of a valid JWT using authenticateToken
+ * - Delegates to getCurrentUser controller to retrieve user details
+ * - Controller handles user lookup and response formatting
+ */
+router.get("/me", authenticateToken, getCurrentUser);
 
 export default router;
