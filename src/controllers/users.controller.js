@@ -106,6 +106,45 @@ export function handleGoogleCallback(req, res) {
 }
 
 /**
+ * @route   GET /me
+ * @desc    Retrieves the currently authenticated user
+ * @access  Private
+ *
+ * Workflow:
+ * - Retrieves the user object from the request
+ * - Validates the user object
+ * - Returns the user object in a standardized format
+ * - Handles unauthorized access with a 401 response
+ *
+ * @returns {Promise<Object>} User data in a standardized format
+ */
+export async function getCurrentUser(req, res) {
+  const user = req.user;
+
+  if (!user) {
+    return res.status(401).json(
+      formatResponse({
+        success: false,
+        message: "User not authenticated",
+      })
+    );
+  }
+
+  return res.status(200).json(
+    formatResponse({
+      message: "Authenticated user retrieved successfully",
+      data: {
+        user: {
+          userId: user._id,
+          email: user.email,
+          displayName: user.displayName,
+        },
+      },
+    })
+  );
+}
+
+/**
  * Helper function to finalize authentication workflow
  * - Generates a JWT with user ID and role as payload
  * - In production, sends an http-only cookie with the token
