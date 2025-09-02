@@ -24,7 +24,7 @@ router.put(
 );
 
 router.get(
-  "/users/:id/analytics",
+  "/analytics/:userId",
   authenticateToken,
   checkAdmin,
   getUserAnalyticsHandler
