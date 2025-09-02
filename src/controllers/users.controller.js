@@ -129,6 +129,8 @@ function finalizeAuth(req, res, options = {}) {
     displayName: req.user.displayName,
   };
 
+  const isDev = env.NODE_ENV === "development";
+
   try {
     res.cookie("auth_token", token, cookieOptions);
 
@@ -136,9 +138,11 @@ function finalizeAuth(req, res, options = {}) {
       return res.redirect(options.redirectUrl);
     }
 
+    if (isDev) logger.info(`[finalizeAuth] Token issued: ${token}`);
+
     return res.status(200).json(
       formatResponse({
-        message: "Authenticate successful",
+        message: "User authenticated successfully",
         data: { user },
       })
     );
