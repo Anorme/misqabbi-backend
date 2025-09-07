@@ -5,15 +5,14 @@ import {
   getOrders,
   getOrderById,
 } from "../controllers/orders.controller.js";
+import { validateOrder } from "../middleware/validator.middleware.js";
 
 const router = express.Router();
 
-/**
- * @route   POST/orders
- * @desc    Creates a new order
- * @access  Protected
- */
-router.post("/checkout", authenticateToken, createOrder);
+// @route   POST /api/orders
+// @desc    Create a new order
+// @access  Protected
+router.post("/checkout", validateOrder, authenticateToken, createOrder);
 
 /**
  * @route   GET/orders
