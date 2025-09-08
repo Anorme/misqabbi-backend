@@ -1,5 +1,5 @@
 const allowedOrigins = {
-  development: ["http://localhost:3000"],
+  development: ["http://localhost:3000", "https://misqabbigh.netlify.app"],
   staging: ["https://misqabbigh.netlify.app"],
   production: [
     "https://shop.misqabbi.com",
