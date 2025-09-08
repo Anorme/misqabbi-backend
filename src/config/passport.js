@@ -5,7 +5,7 @@ import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 
 import User from "../models/user.mongo.js";
-import { createUser, findUserByEmail } from "../models/user.model.js";
+import { createGoogleUser, findUserByEmail } from "../models/user.model.js";
 
 /**
  * Configure Passport to use the Local Strategy for email/password authentication,
@@ -59,7 +59,7 @@ passport.use(
       let user = await findUserByEmail(email);
 
       if (!user) {
-        user = await createUser({
+        user = await createGoogleUser({
           email,
           googleId: profile.id,
           displayName: profile.displayName,
