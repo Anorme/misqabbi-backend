@@ -6,7 +6,7 @@ import logger from "../config/logger.js";
 import { signToken } from "../services/jwtService.js";
 import getCookieOptions from "../utils/getCookieOptions.js";
 import { formatResponse } from "../utils/responseFormatter.js";
-import { createUser, findUserByEmail } from "../models/user.model.js";
+import { createLocalUser, findUserByEmail } from "../models/user.model.js";
 
 /**
  * @route   POST /signup
@@ -34,7 +34,7 @@ async function registerUser(req, res) {
         })
       );
     }
-    const user = await createUser({ email, password, displayName });
+    const user = await createLocalUser({ email, password, displayName });
     req.user = user;
     return finalizeAuth(req, res);
   } catch (error) {
