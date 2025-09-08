@@ -3,17 +3,32 @@ import User from "./user.mongo.js";
 import logger from "../config/logger.js";
 
 /**
- * Create a new user in the database.
+ * Create a new local user.
  *
- * @param {Object} userData - User details
- * @param {string} userData.email - Unique email address
- * @param {string} userData.password - Plain text password (will be hashed via schema middleware)
- * @param {string} [userData.displayName] - Optional display name
- * @returns {Promise<Object|null>} - The created user document
+ * @param {Object} data - User data with shape: { email, password, displayName }
+ * @returns {Promise<Object>} - Newly created user document
+ * @throws {Error} - If there is an error creating the user
  */
-async function createUser({ email, password, displayName }) {
+async function createLocalUser({ email, password, displayName }) {
   try {
     const user = new User({ email, password, displayName });
+    return await user.save();
+  } catch (error) {
+    logger.error(`[users.model] Error creating user: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
+ * Create a new user with a Google ID.
+ *
+ * @param {Object} data - User data with shape: { email, googleId, displayName }
+ * @returns {Promise<Object>} - Newly created user document
+ * @throws {Error} - If there is an error creating the user
+ */
+async function createGoogleUser({ email, googleId, displayName }) {
+  try {
+    const user = new User({ email, googleId, displayName });
     return await user.save();
   } catch (error) {
     logger.error(`[users.model] Error creating user: ${error.message}`);
@@ -63,4 +78,4 @@ async function findUserById(id) {
   }
 }
 
-export { createUser, findUserByEmail, findUserById };
+export { createLocalUser, createGoogleUser, findUserByEmail, findUserById };
