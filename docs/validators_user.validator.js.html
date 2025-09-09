@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Home</title>
+    <title>JSDoc: Source: validators/user.validator.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,80 +17,83 @@
 
 <div id="main">
 
-    <h1 class="page-title">Home</h1>
+    <h1 class="page-title">Source: validators/user.validator.js</h1>
 
     
 
 
 
     
-
-
-    <h3> </h3>
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
     <section>
-        <article><h1>Misqabbi Store</h1>
-<h2>🛍️ Description</h2>
-<p>This is the backend for the <strong>Misqabbi Store</strong>, an e-commerce platform that powers a women-owned fashion brand specializing in made-to-measure pieces designed exclusively for women.</p>
-<p>Built with Node.js, Express and MongoDB, this backend is designed for scalability, security, and collaboration.</p>
-<hr>
-<h2>⚙️ Installation</h2>
-<ol>
-<li>
-<p>Clone the repository:</p>
-<pre class="prettyprint source lang-bash"><code>git clone https://github.com/anorme/misqabbi-backend.git
+        <article>
+            <pre class="prettyprint source linenums"><code>import Joi from "joi";
+import { EMAIL_REGEX, STRONG_PASSWORD_REGEX } from "../utils/validators.js";
+import mongoose from "mongoose";
+
+/**
+ * Joi schema for a single item in the user's cart.
+ *
+ * - productId: required, ObjectId string
+ * - quantity: required, number, min 1
+ */
+export const cartItemSchema = Joi.object({
+  productId: Joi.string()
+    .custom((value, helpers) => {
+      if (!mongoose.Types.ObjectId.isValid(value)) {
+        return helpers.error("any.invalid");
+      }
+      return value; // must return the value if valid
+    })
+    .required()
+    .messages({ "any.required": "Invalid MongoDB ObjectId in productId" }),
+  quantity: Joi.number().min(1).required(), // validate quantity (min 1)
+});
+
+/**
+ * Joi validation schema for User creation/update.
+ *
+ * Fields:
+ * - displayName: optional, trimmed, min 3, max 30
+ * - email: required, lowercase, trimmed, matches email regex
+ * - googleId: optional string
+ * - password: required if googleId is missing, min 6, max 128
+ * - role: 'user' | 'admin'
+ * - cartItems: array of validated cartItemSchema
+ * - previousOrders: array of ObjectId strings
+ */
+
+export const userValidator = Joi.object({
+  displayName: Joi.string().min(3).max(30).trim().optional(), // validate username (3-30 chars)
+  email: Joi.string().trim().lowercase().pattern(EMAIL_REGEX).required(), // validate email format
+  googleId: Joi.string().trim().optional(), // optional Google ID
+  password: Joi.string()
+    .pattern(STRONG_PASSWORD_REGEX)
+    .min(8)
+    .max(128)
+    .when("googleId", {
+      is: Joi.exist(),
+      then: Joi.optional(),
+      otherwise: Joi.required(),
+    }), // validate password if googleId is not present
+  role: Joi.string().valid("user", "admin").default("user"), // validate role (default to 'user')
+  cartItems: Joi.array().items(cartItemSchema).optional(), // validate cart items
+  previousOrders: Joi.array().items(
+    Joi.string()
+      .optional()
+      .custom((value, helpers) => {
+        if (!mongoose.Types.ObjectId.isValid(value)) {
+          return helpers.error("any.invalid");
+        }
+        return value; // must return the value if valid
+      }, "ObjectId Validation")
+      .messages({
+        "any.invalid": "Invalid MongoDB ObjectId in previousOrders",
+      })
+  ),
+});
 </code></pre>
-</li>
-<li>
-<p>Navigate into the project directory:</p>
-<pre class="prettyprint source lang-bash"><code>cd misqabbi-backend
-</code></pre>
-</li>
-<li>
-<p>Install dependencies:</p>
-<pre class="prettyprint source lang-bash"><code>npm install
-</code></pre>
-</li>
-<li>
-<p>Copy the <code>.env.template</code> to <code>.env</code> and fill in your values:</p>
-<pre class="prettyprint source lang-bash"><code>cp env.template .env
-</code></pre>
-<p>💡 &gt; If you're on Windows and cp doesn't work, use Copy-Item in PowerShell.</p>
-</li>
-</ol>
-<hr>
-<h2>🚀 Usage</h2>
-<p>To start the development server in watch mode:</p>
-<pre class="prettyprint source lang-bash"><code>npm run dev
-</code></pre>
-<p>To start the server normally:</p>
-<pre class="prettyprint source lang-bash"><code>npm start
-</code></pre>
-<hr>
-<h2>🤝 Contributing</h2>
-<p>We love contributions! To get started, please read our<br>
-<a href="CONTRIBUTING.md">Contributing Guide</a> for coding standards, commit conventions, and submission steps.</p>
-<hr>
-<h2>📄 License</h2>
-<p>This project does not currently have a license. Check back later for updates.</p>
-<hr></article>
+        </article>
     </section>
-
-
 
 
 

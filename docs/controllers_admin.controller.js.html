@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Home</title>
+    <title>JSDoc: Source: controllers/admin.controller.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,80 +17,91 @@
 
 <div id="main">
 
-    <h1 class="page-title">Home</h1>
+    <h1 class="page-title">Source: controllers/admin.controller.js</h1>
 
     
 
 
 
     
-
-
-    <h3> </h3>
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
     <section>
-        <article><h1>Misqabbi Store</h1>
-<h2>🛍️ Description</h2>
-<p>This is the backend for the <strong>Misqabbi Store</strong>, an e-commerce platform that powers a women-owned fashion brand specializing in made-to-measure pieces designed exclusively for women.</p>
-<p>Built with Node.js, Express and MongoDB, this backend is designed for scalability, security, and collaboration.</p>
-<hr>
-<h2>⚙️ Installation</h2>
-<ol>
-<li>
-<p>Clone the repository:</p>
-<pre class="prettyprint source lang-bash"><code>git clone https://github.com/anorme/misqabbi-backend.git
+        <article>
+            <pre class="prettyprint source linenums"><code>import {
+  countPublishedOrders,
+  getPaginatedPublishedOrders,
+  updateOrderStatus,
+} from "../models/order.model.js";
+import logger from "../config/logger.js";
+import { getUserAnalytics } from "../models/analytics.model.js";
+
+export async function getAllOrders(req, res) {
+  try {
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+
+    const totalPublishedOrders = await countPublishedOrders();
+    if (page > Math.ceil(totalPublishedOrders / limit)) {
+      return res.status(400).json({
+        success: false,
+        error: "Requested page exceeds available order pages",
+      });
+    }
+    const orders = await getPaginatedPublishedOrders(page, limit, req.query);
+    res.json({
+      success: true,
+      data: orders,
+      total: totalPublishedOrders,
+      totalPages: Math.ceil(totalPublishedOrders / limit),
+      currentPage: page,
+    });
+  } catch (error) {
+    logger.error(
+      `[orders.controller] Failed to fetch orders: ${error.message}`
+    );
+    res.status(500).json({ error: "Failed to load orders" });
+  }
+}
+
+/**
+ * @desc    Update an existing order's status
+ * @route   PUT /admin/orders/:id
+ * @access  Admin
+ */
+export async function updateOrderStatusHandler(req, res) {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const order = await updateOrderStatus(id, status);
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+    res.json(order);
+  } catch (error) {
+    logger.error(
+      `[order.controller] Order status update failed: ${error.message}`
+    );
+    res.status(400).json({ error: "Order status update failed" });
+  }
+}
+
+export async function getUserAnalyticsHandler(req, res) {
+  try {
+    const { userId } = req.params;
+    const analytics = await getUserAnalytics(userId);
+    if (!analytics) {
+      return res.status(404).json({ error: "No analytics found for user" });
+    }
+    res.json({ success: true, data: analytics });
+  } catch (error) {
+    logger.error(
+      `[admin.controller] Failed to fetch user analytics: ${error.message}`
+    );
+    res.status(500).json({ error: "Failed to load user analytics" });
+  }
+}
 </code></pre>
-</li>
-<li>
-<p>Navigate into the project directory:</p>
-<pre class="prettyprint source lang-bash"><code>cd misqabbi-backend
-</code></pre>
-</li>
-<li>
-<p>Install dependencies:</p>
-<pre class="prettyprint source lang-bash"><code>npm install
-</code></pre>
-</li>
-<li>
-<p>Copy the <code>.env.template</code> to <code>.env</code> and fill in your values:</p>
-<pre class="prettyprint source lang-bash"><code>cp env.template .env
-</code></pre>
-<p>💡 &gt; If you're on Windows and cp doesn't work, use Copy-Item in PowerShell.</p>
-</li>
-</ol>
-<hr>
-<h2>🚀 Usage</h2>
-<p>To start the development server in watch mode:</p>
-<pre class="prettyprint source lang-bash"><code>npm run dev
-</code></pre>
-<p>To start the server normally:</p>
-<pre class="prettyprint source lang-bash"><code>npm start
-</code></pre>
-<hr>
-<h2>🤝 Contributing</h2>
-<p>We love contributions! To get started, please read our<br>
-<a href="CONTRIBUTING.md">Contributing Guide</a> for coding standards, commit conventions, and submission steps.</p>
-<hr>
-<h2>📄 License</h2>
-<p>This project does not currently have a license. Check back later for updates.</p>
-<hr></article>
+        </article>
     </section>
-
-
 
 
 

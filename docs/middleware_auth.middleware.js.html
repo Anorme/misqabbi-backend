@@ -31,25 +31,23 @@ import { findUserById } from "../models/user.model.js";
 import logger from "../config/logger.js";
 
 /**
- * Auth middleware to validate JWT from Authorization header.
+ * Verifies the presence and validity of an authentication token
+ * sent in a cookie, and if valid, populates `req.user` with the
+ * corresponding user document.
  *
- * Expected format: 'Bearer &lt;token>'
- * Attaches verified user to req.user
- *
- * @throws {401} If token is missing or malformed
- * @throws {403} If token is invalid or expired
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ * @throws {401} if no token is present, or if the user is not found
+ * @throws {403} if the token is invalid or expired
  */
 async function authenticateToken(req, res, next) {
-  const authHeader = req.headers?.authorization;
+  const token = req.cookies?.auth_token;
 
-  if (!authHeader?.startsWith("Bearer ")) {
-    logger.warn("[auth.middleware] Missing or malformed Authorization header");
-    return res
-      .status(401)
-      .json({ message: "Missing or malformed Authorization header" });
+  if (!token) {
+    logger.warn("[auth.middleware] Missing token cookie");
+    return res.status(401).json({ message: "Missing token" });
   }
-
-  const token = authHeader.split(" ")[1];
 
   try {
     const decoded = verifyToken(token);
@@ -90,13 +88,13 @@ export { authenticateToken, checkAdmin };
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#authenticateToken">authenticateToken</a></li><li><a href="global.html#cartItemSchema">cartItemSchema</a></li><li><a href="global.html#checkAdmin">checkAdmin</a></li><li><a href="global.html#corsOptions">corsOptions</a></li><li><a href="global.html#countPublishedProducts">countPublishedProducts</a></li><li><a href="global.html#createProduct">createProduct</a></li><li><a href="global.html#createProductHandler">createProductHandler</a></li><li><a href="global.html#createUser">createUser</a></li><li><a href="global.html#deleteProduct">deleteProduct</a></li><li><a href="global.html#deleteProductHandler">deleteProductHandler</a></li><li><a href="global.html#findUserByEmail">findUserByEmail</a></li><li><a href="global.html#findUserById">findUserById</a></li><li><a href="global.html#getAllProducts">getAllProducts</a></li><li><a href="global.html#getAllPublishedProducts">getAllPublishedProducts</a></li><li><a href="global.html#getPaginatedPublishedProducts">getPaginatedPublishedProducts</a></li><li><a href="global.html#getProductById">getProductById</a></li><li><a href="global.html#getProductByIdHandler">getProductByIdHandler</a></li><li><a href="global.html#getProducts">getProducts</a></li><li><a href="global.html#handleGoogleCallback">handleGoogleCallback</a></li><li><a href="global.html#issueToken">issueToken</a></li><li><a href="global.html#loginUser">loginUser</a></li><li><a href="global.html#registerUser">registerUser</a></li><li><a href="global.html#updateProduct">updateProduct</a></li><li><a href="global.html#updateProductHandler">updateProductHandler</a></li><li><a href="global.html#userSchema">userSchema</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#authenticateToken">authenticateToken</a></li><li><a href="global.html#cartItemSchema">cartItemSchema</a></li><li><a href="global.html#checkAdmin">checkAdmin</a></li><li><a href="global.html#countPublishedProducts">countPublishedProducts</a></li><li><a href="global.html#createGoogleUser">createGoogleUser</a></li><li><a href="global.html#createLocalUser">createLocalUser</a></li><li><a href="global.html#createProduct">createProduct</a></li><li><a href="global.html#createProductHandler">createProductHandler</a></li><li><a href="global.html#deleteProduct">deleteProduct</a></li><li><a href="global.html#deleteProductHandler">deleteProductHandler</a></li><li><a href="global.html#finalizeAuth">finalizeAuth</a></li><li><a href="global.html#findUserByEmail">findUserByEmail</a></li><li><a href="global.html#findUserById">findUserById</a></li><li><a href="global.html#getAllProducts">getAllProducts</a></li><li><a href="global.html#getAllPublishedProducts">getAllPublishedProducts</a></li><li><a href="global.html#getCurrentUser">getCurrentUser</a></li><li><a href="global.html#getPaginatedPublishedProducts">getPaginatedPublishedProducts</a></li><li><a href="global.html#getProductById">getProductById</a></li><li><a href="global.html#getProductByIdHandler">getProductByIdHandler</a></li><li><a href="global.html#getProducts">getProducts</a></li><li><a href="global.html#handleGoogleCallback">handleGoogleCallback</a></li><li><a href="global.html#loginUser">loginUser</a></li><li><a href="global.html#orderValidator">orderValidator</a></li><li><a href="global.html#origin">origin</a></li><li><a href="global.html#productValidator">productValidator</a></li><li><a href="global.html#registerUser">registerUser</a></li><li><a href="global.html#updateOrderStatusHandler">updateOrderStatusHandler</a></li><li><a href="global.html#updateProduct">updateProduct</a></li><li><a href="global.html#updateProductHandler">updateProductHandler</a></li><li><a href="global.html#userSchema">userSchema</a></li><li><a href="global.html#userValidator">userValidator</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Thu Aug 21 2025 18:09:11 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Sep 09 2025 10:01:11 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>
