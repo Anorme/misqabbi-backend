@@ -31,17 +31,32 @@ import User from "./user.mongo.js";
 import logger from "../config/logger.js";
 
 /**
- * Create a new user in the database.
+ * Create a new local user.
  *
- * @param {Object} userData - User details
- * @param {string} userData.email - Unique email address
- * @param {string} userData.password - Plain text password (will be hashed via schema middleware)
- * @param {string} [userData.displayName] - Optional display name
- * @returns {Promise&lt;Object|null>} - The created user document
+ * @param {Object} data - User data with shape: { email, password, displayName }
+ * @returns {Promise&lt;Object>} - Newly created user document
+ * @throws {Error} - If there is an error creating the user
  */
-async function createUser({ email, password, displayName }) {
+async function createLocalUser({ email, password, displayName }) {
   try {
     const user = new User({ email, password, displayName });
+    return await user.save();
+  } catch (error) {
+    logger.error(`[users.model] Error creating user: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
+ * Create a new user with a Google ID.
+ *
+ * @param {Object} data - User data with shape: { email, googleId, displayName }
+ * @returns {Promise&lt;Object>} - Newly created user document
+ * @throws {Error} - If there is an error creating the user
+ */
+async function createGoogleUser({ email, googleId, displayName }) {
+  try {
+    const user = new User({ email, googleId, displayName });
     return await user.save();
   } catch (error) {
     logger.error(`[users.model] Error creating user: ${error.message}`);
@@ -91,7 +106,7 @@ async function findUserById(id) {
   }
 }
 
-export { createUser, findUserByEmail, findUserById };
+export { createLocalUser, createGoogleUser, findUserByEmail, findUserById };
 </code></pre>
         </article>
     </section>
@@ -102,13 +117,13 @@ export { createUser, findUserByEmail, findUserById };
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#authenticateToken">authenticateToken</a></li><li><a href="global.html#cartItemSchema">cartItemSchema</a></li><li><a href="global.html#checkAdmin">checkAdmin</a></li><li><a href="global.html#corsOptions">corsOptions</a></li><li><a href="global.html#countPublishedProducts">countPublishedProducts</a></li><li><a href="global.html#createProduct">createProduct</a></li><li><a href="global.html#createProductHandler">createProductHandler</a></li><li><a href="global.html#createUser">createUser</a></li><li><a href="global.html#deleteProduct">deleteProduct</a></li><li><a href="global.html#deleteProductHandler">deleteProductHandler</a></li><li><a href="global.html#findUserByEmail">findUserByEmail</a></li><li><a href="global.html#findUserById">findUserById</a></li><li><a href="global.html#getAllProducts">getAllProducts</a></li><li><a href="global.html#getAllPublishedProducts">getAllPublishedProducts</a></li><li><a href="global.html#getPaginatedPublishedProducts">getPaginatedPublishedProducts</a></li><li><a href="global.html#getProductById">getProductById</a></li><li><a href="global.html#getProductByIdHandler">getProductByIdHandler</a></li><li><a href="global.html#getProducts">getProducts</a></li><li><a href="global.html#handleGoogleCallback">handleGoogleCallback</a></li><li><a href="global.html#issueToken">issueToken</a></li><li><a href="global.html#loginUser">loginUser</a></li><li><a href="global.html#registerUser">registerUser</a></li><li><a href="global.html#updateProduct">updateProduct</a></li><li><a href="global.html#updateProductHandler">updateProductHandler</a></li><li><a href="global.html#userSchema">userSchema</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#authenticateToken">authenticateToken</a></li><li><a href="global.html#cartItemSchema">cartItemSchema</a></li><li><a href="global.html#checkAdmin">checkAdmin</a></li><li><a href="global.html#countPublishedProducts">countPublishedProducts</a></li><li><a href="global.html#createGoogleUser">createGoogleUser</a></li><li><a href="global.html#createLocalUser">createLocalUser</a></li><li><a href="global.html#createProduct">createProduct</a></li><li><a href="global.html#createProductHandler">createProductHandler</a></li><li><a href="global.html#deleteProduct">deleteProduct</a></li><li><a href="global.html#deleteProductHandler">deleteProductHandler</a></li><li><a href="global.html#finalizeAuth">finalizeAuth</a></li><li><a href="global.html#findUserByEmail">findUserByEmail</a></li><li><a href="global.html#findUserById">findUserById</a></li><li><a href="global.html#getAllProducts">getAllProducts</a></li><li><a href="global.html#getAllPublishedProducts">getAllPublishedProducts</a></li><li><a href="global.html#getCurrentUser">getCurrentUser</a></li><li><a href="global.html#getPaginatedPublishedProducts">getPaginatedPublishedProducts</a></li><li><a href="global.html#getProductById">getProductById</a></li><li><a href="global.html#getProductByIdHandler">getProductByIdHandler</a></li><li><a href="global.html#getProducts">getProducts</a></li><li><a href="global.html#handleGoogleCallback">handleGoogleCallback</a></li><li><a href="global.html#loginUser">loginUser</a></li><li><a href="global.html#orderValidator">orderValidator</a></li><li><a href="global.html#origin">origin</a></li><li><a href="global.html#productValidator">productValidator</a></li><li><a href="global.html#registerUser">registerUser</a></li><li><a href="global.html#updateOrderStatusHandler">updateOrderStatusHandler</a></li><li><a href="global.html#updateProduct">updateProduct</a></li><li><a href="global.html#updateProductHandler">updateProductHandler</a></li><li><a href="global.html#userSchema">userSchema</a></li><li><a href="global.html#userValidator">userValidator</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Thu Aug 21 2025 18:09:11 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Sep 09 2025 10:01:11 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>
