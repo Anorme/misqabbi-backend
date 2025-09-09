@@ -14,7 +14,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /signup:
+ * /auth/signup:
  *   post:
  *     summary: Registers a new user with email, password, and optional displayName
  *     description: Registers a new user with email, password, and optional displayName
@@ -30,10 +30,13 @@ const router = express.Router();
  *             properties:
  *               email:
  *                 type: string
+ *                 description: User's email address
  *               password:
  *                 type: string
+ *                 description: User's password
  *               displayName:
  *                 type: string
+ *                 description: User's display name (optional)
  *     responses:
  *       201:
  *         description: Created user
@@ -42,16 +45,58 @@ const router = express.Router();
  *             schema:
  *               type: object
  *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates whether the user was created successfully
  *                 message:
  *                   type: string
- *                 userId:
+ *                   description: Success or error message
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     userId:
+ *                       type: string
+ *                       description: Created user's ID
+ *                     email:
+ *                       type: string
+ *                       description: Created user's email address
+ *                     displayName:
+ *                       type: string
+ *                       description: Created user's display name (if provided)
+ *       400:
+ *         description: Invalid user credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates whether the user was created successfully
+ *                   example: false
+ *                 message:
  *                   type: string
+ *                   description: Error message
+ *       500:
+ *         description: Failed to create user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates whether the user was created successfully
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   description: Error message
  */
 router.post("/signup", validateUser, registerUser);
 
 /**
  * @swagger
- * /login:
+ * /auth/login:
  *   post:
  *     summary: Authenticates a user and issues a signed JWT
  *     description: Authenticates a user and issues a signed JWT
@@ -67,8 +112,10 @@ router.post("/signup", validateUser, registerUser);
  *             properties:
  *               email:
  *                 type: string
+ *                 description: User's email address
  *               password:
  *                 type: string
+ *                 description: User's password
  *     responses:
  *       200:
  *         description: User authenticated
@@ -79,14 +126,56 @@ router.post("/signup", validateUser, registerUser);
  *               properties:
  *                 message:
  *                   type: string
+ *                   description: Success message
  *                 token:
  *                   type: string
+ *                   description: Signed JWT token
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     userId:
+ *                       type: string
+ *                       description: User's ID
+ *                     email:
+ *                       type: string
+ *                       description: User's email address
+ *                     displayName:
+ *                       type: string
+ *                       description: User's display name
+ *       401:
+ *         description: Invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates whether the user was authenticated successfully
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *       500:
+ *         description: Token generation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates whether the user was authenticated successfully
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   description: Error message
  */
 router.post("/login", loginUser);
 
 /**
  * @swagger
- * /google:
+ * /auth/google:
  *   get:
  *     summary: Initiates Google OAuth login flow
  *     description: Initiates Google OAuth login flow
@@ -103,15 +192,32 @@ router.get(
 
 /**
  * @swagger
- * /google/callback:
+ * /auth/google/callback:
  *   get:
- *     summary: Handles Google OAuth callback and issues token
- *     description: Handles Google OAuth callback and issues token
+ *     summary: Handles Google OAuth callback and authenticates user
+ *     description: Handles Google OAuth callback and authenticates user
  *     tags:
  *       - Users
  *     responses:
  *       302:
- *         description: Redirects to frontend with token in query string
+ *         description: Redirects to frontend with authentication cookie
+ *       500:
+ *         description: Authentication failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates whether the authentication was successful
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *                 error:
+ *                   type: string
+ *                   description: Error message
  */
 router.get(
   "/google/callback",
@@ -121,7 +227,7 @@ router.get(
 
 /**
  * @swagger
- * /me:
+ * /auth/me:
  *   get:
  *     summary: Retrieves the currently authenticated user
  *     description: Retrieves the currently authenticated user
@@ -148,6 +254,18 @@ router.get(
  *                       type: string
  *                     displayName:
  *                       type: string
+ *       401:
+ *         description: User not authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
  */
 router.get("/me", authenticateToken, getCurrentUser);
 
