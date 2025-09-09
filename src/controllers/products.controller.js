@@ -10,37 +10,6 @@ import logger from "../config/logger.js";
 import { formatResponse } from "../utils/responseFormatter.js";
 
 /**
- * @swagger
- * /products:
- *   get:
- *     summary: Retrieve all published products
- *     description: Retrieve all published products
- *     tags:
- *       - Products
- *     parameters:
- *       - in: query
- *         name: page
- *         required: false
- *         schema:
- *           type: integer
- *           default: 1
- *       - in: query
- *         name: limit
- *         required: false
- *         schema:
- *           type: integer
- *           default: 10
- *     responses:
- *       200:
- *         description: A list of published products
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Product'
- */
-/**
  * Fetches a paginated list of published products.
  * @async
  * @function getProducts
@@ -83,28 +52,6 @@ export async function getProducts(req, res) {
 }
 
 /**
- * @swagger
- * /products/{id}:
- *   get:
- *     summary: Retrieve a published product by ID
- *     description: Retrieve a published product by ID
- *     tags:
- *       - Products
- *     parameters:
- *      - in: path
- *        name: id
- *        required: true
- *        schema:
- *          type: string
- *     responses:
- *       200:
- *         description: A published product
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Product'
- */
-/**
  * Retrieves a single published product by its ID.
  * @async
  * @function getProductByIdHandler
@@ -140,45 +87,6 @@ export async function getProductByIdHandler(req, res) {
 }
 
 /**
- * @swagger
- * /products:
- *   post:
- *     summary: Create a new product
- *     description: Create a new product
- *     tags:
- *       - Products
- *     requestBody:
- *       description: Product data to create
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               description:
- *                 type: string
- *               price:
- *                 type: number
- *               images:
- *                 type: array
- *                 items:
- *                   type: string
- *                 maxItems: 5
- *               category:
- *                 type: string
- *               stock:
- *                 type: integer
- *     responses:
- *       201:
- *         description: Created product
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Product'
- */
-/**
  * Creates a new product using request body data.
  * @async
  * @function createProductHandler
@@ -205,51 +113,6 @@ export async function createProductHandler(req, res) {
   }
 }
 
-/**
- * @swagger
- * /products/{id}:
- *   put:
- *     summary: Update an existing product
- *     description: Update an existing product
- *     tags:
- *       - Products
- *     parameters:
- *      - in: path
- *        name: id
- *        required: true
- *        schema:
- *          type: string
- *     requestBody:
- *       description: Product data to update
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               description:
- *                 type: string
- *               price:
- *                 type: number
- *               images:
- *                 type: array
- *                 items:
- *                   type: string
- *                 maxItems: 5
- *               category:
- *                 type: string
- *               stock:
- *                 type: integer
- *     responses:
- *       200:
- *         description: Updated product
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Product'
- */
 /**
  * Updates an existing product by ID using request body data.
  * @async
@@ -285,24 +148,6 @@ export async function updateProductHandler(req, res) {
   }
 }
 
-/**
- * @swagger
- * /products/{id}:
- *   delete:
- *     summary: Delete a product by ID
- *     description: Delete a product by ID
- *     tags:
- *       - Products
- *     parameters:
- *      - in: path
- *        name: id
- *        required: true
- *        schema:
- *          type: string
- *     responses:
- *       204:
- *         description: Product deleted
- */
 /**
  * Deletes a product by its ID.
  * @async
