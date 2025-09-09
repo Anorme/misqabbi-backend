@@ -64,7 +64,12 @@ async function loginUser(req, res, next) {
   passport.authenticate("local", { session: false }, (err, user, info) => {
     if (err || !user) {
       logger.warn(`[loginUser] Login failed: ${info?.message || err.message}`);
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json(
+        formatResponse({
+          success: false,
+          message: "Invalid credentials",
+        })
+      );
     }
 
     try {
@@ -72,7 +77,12 @@ async function loginUser(req, res, next) {
       return finalizeAuth(req, res);
     } catch (error) {
       logger.error(`[loginUser] User JWT generation failed: ${error.message}`);
-      return res.status(500).json({ error: "Token generation error" });
+      return res.status(500).json(
+        formatResponse({
+          success: false,
+          error: "Token generation error",
+        })
+      );
     }
   })(req, res, next);
 }
@@ -147,8 +157,8 @@ export async function getCurrentUser(req, res) {
 /**
  * Helper function to finalize authentication workflow
  * - Generates a JWT with user ID and role as payload
- * - In production, sends an http-only cookie with the token
- * - In development, returns a JSON response with the token and basic user data
+ * - Sets an http-only cookie with the token with environment aware options
+ * - Returns a JSON response with basic user data and logs the token in development
  * - Handles errors with structured response and logging
  *
  * @param {Object} req   - Express request object
