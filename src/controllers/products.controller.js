@@ -7,6 +7,7 @@ import {
   countPublishedProducts,
 } from "../models/product.model.js";
 import logger from "../config/logger.js";
+import { formatResponse } from "../utils/responseFormatter.js";
 
 /**
  * @swagger
@@ -72,7 +73,12 @@ export async function getProducts(req, res) {
     logger.error(
       `[products.controller] Failed to fetch products: ${error.message}`
     );
-    res.status(500).json({ error: "Failed to load products" });
+    res.status(500).json(
+      formatResponse({
+        success: false,
+        error: "Failed to load products",
+      })
+    );
   }
 }
 
@@ -112,14 +118,24 @@ export async function getProductByIdHandler(req, res) {
     const { id } = req.params;
     const product = await getProductById(id);
     if (!product || !product.isPublished) {
-      return res.status(404).json({ error: "Product not found" });
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Product not found",
+        })
+      );
     }
-    res.json(product);
+    res.json(formatResponse({ data: product }));
   } catch (error) {
     logger.error(
       `[products.controller] Error getting product ${req.params.id}: ${error.message}`
     );
-    res.status(500).json({ error: "Failed to load product " });
+    res.status(500).json(
+      formatResponse({
+        success: false,
+        error: "Failed to load product ",
+      })
+    );
   }
 }
 
@@ -175,12 +191,17 @@ export async function createProductHandler(req, res) {
   try {
     const data = { ...req.body, createdBy: req.user._id };
     const product = await createProduct(data);
-    res.status(201).json(product);
+    res.status(201).json(formatResponse({ data: product }));
   } catch (error) {
     logger.error(
       `[products.controller] Error creating product: ${error.message}`
     );
-    res.status(400).json({ error: "Invalid product data" });
+    res.status(400).json(
+      formatResponse({
+        success: false,
+        error: "Invalid product data",
+      })
+    );
   }
 }
 
@@ -243,14 +264,24 @@ export async function updateProductHandler(req, res) {
     const { id } = req.params;
     const product = await updateProduct(id, req.body);
     if (!product) {
-      return res.status(404).json({ error: "Product not found" });
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Product not found",
+        })
+      );
     }
-    res.json(product);
+    res.json(formatResponse({ data: product }));
   } catch (error) {
     logger.error(
       `[products.controller] Product update failed: ${error.message}`
     );
-    res.status(400).json({ error: "Product update failed" });
+    res.status(400).json(
+      formatResponse({
+        success: false,
+        error: "Product update failed",
+      })
+    );
   }
 }
 
@@ -286,13 +317,23 @@ export async function deleteProductHandler(req, res) {
     const { id } = req.params;
     const deleted = await deleteProduct(id);
     if (!deleted) {
-      return res.status(404).json({ error: "Product not found" });
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Product not found",
+        })
+      );
     }
     res.status(204).send();
   } catch (error) {
     logger.error(
       `[products.controller] Product deletion failed: ${error.message}`
     );
-    res.status(400).json({ error: "Product deletion failed" });
+    res.status(400).json(
+      formatResponse({
+        success: false,
+        error: "Product deletion failed",
+      })
+    );
   }
 }
