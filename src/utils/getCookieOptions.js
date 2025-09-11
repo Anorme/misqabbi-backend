@@ -1,14 +1,22 @@
 import env from "../config/env.js";
 
-const isDev = env.NODE_ENV === "development";
-const isProdlike = env.NODE_ENV === "production" || env.NODE_ENV === "staging";
-const isTest = env.NODE_ENV === "test";
+const cookieEnv = env.COOKIE_ENV || "local";
+
+const COOKIE_SETTINGS = {
+  local: { secure: false, sameSite: "lax", domain: undefined },
+  development: { secure: true, sameSite: "none", domain: ".misqabbi.com" },
+  staging: { secure: true, sameSite: "none", domain: ".misqabbi.com" },
+  production: { secure: true, sameSite: "none", domain: ".misqabbi.com" },
+};
 
 export default function getCookieOptions() {
+  const opts = COOKIE_SETTINGS[cookieEnv] || COOKIE_SETTINGS["local"];
+
   return {
     httpOnly: true,
-    secure: isProdlike,
-    sameSite: isDev ? "lax" : isTest ? "strict" : "none",
+    secure: opts.secure,
+    sameSite: opts.sameSite,
+    domain: opts.domain,
     maxAge: 8 * 60 * 60 * 1000,
   };
 }
