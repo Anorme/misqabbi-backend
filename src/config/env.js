@@ -22,6 +22,10 @@ const baseSchema = {
   GOOGLE_CLIENT_SECRET: str(),
   GOOGLE_CALLBACK_URL: url(),
   GOOGLE_REDIRECT_URL: url(),
+  COOKIE_ENV: str({
+    choices: ["local", "development", "staging", "production"],
+    default: "local",
+  }),
 };
 
 const fullSchema = {
