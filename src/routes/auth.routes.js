@@ -4,6 +4,7 @@ import {
   getCurrentUser,
   handleGoogleCallback,
   loginUser,
+  logoutUser,
   registerUser,
 } from "../controllers/users.controller.js";
 import passport from "passport";
@@ -268,5 +269,21 @@ router.get(
  *                   type: string
  */
 router.get("/me", authenticateToken, getCurrentUser);
+
+/**
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Logs out a user and invalidates their authentication cookie
+ *     description: Logs out a user and invalidates their authentication cookie
+ *     tags:
+ *       - Users
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User logged out
+ */
+router.post("/logout", logoutUser);
 
 export default router;
