@@ -207,4 +207,20 @@ function finalizeAuth(req, res, options = {}) {
   }
 }
 
-export { registerUser, loginUser };
+/**
+ * Logs out the currently authenticated user by clearing the authentication token cookie.
+ * @function logoutUser
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>} Sends a JSON response with a success message and clears the authentication token cookie
+ */
+const logoutUser = (req, res) => {
+  res.clearCookie("auth_token", getCookieOptions());
+  return res.status(200).json(
+    formatResponse({
+      message: "User logged out successfully",
+    })
+  );
+};
+
+export { registerUser, loginUser, logoutUser };
