@@ -42,4 +42,13 @@ export const productValidator = Joi.object({
       return value; // must return the value if valid
     }, "ObjectId Validation")
     .optional(),
+  slug: Joi.string()
+    .trim()
+    .lowercase()
+    .pattern(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+    .optional()
+    .messages({
+      "string.pattern.base":
+        "Slug can only contain lowercase letters, numbers, and hyphens",
+    }),
 });
