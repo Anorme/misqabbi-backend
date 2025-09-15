@@ -85,6 +85,22 @@ async function getProductById(id) {
 }
 
 /**
+ * @desc    Retrieves a single product by its slug.
+ * @param   {String} slug - Product slug
+ * @returns {Promise<Object|null>} Product document or null if not found
+ */
+async function getProductBySlug(slug) {
+  try {
+    return await Product.findOne({ slug });
+  } catch (error) {
+    logger.error(
+      `[product.model] Error finding product by slug ${slug}: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+/**
  * @desc    Create a new product document in the database
  * @param   {Object} data - Product data (matches schema shape)
  * @returns {Promise<Object>} Created product document
@@ -143,6 +159,7 @@ export {
   getPaginatedPublishedProducts,
   countPublishedProducts,
   getProductById,
+  getProductBySlug,
   createProduct,
   updateProduct,
   deleteProduct,
