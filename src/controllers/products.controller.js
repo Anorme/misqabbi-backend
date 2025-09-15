@@ -1,5 +1,6 @@
 import {
   getProductById,
+  getProductBySlug,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -85,6 +86,32 @@ export async function getProductByIdHandler(req, res) {
     );
   }
 }
+
+export const getProductBySlugHandler = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const product = await getProductBySlug(slug);
+    if (!product || !product.isPublished) {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Product not found",
+        })
+      );
+    }
+    res.status(200).json(formatResponse({ data: product }));
+  } catch (error) {
+    logger.error(
+      `[products.controller] Error getting product by slug ${req.params.slug}: ${error.message}`
+    );
+    res.status(500).json(
+      formatResponse({
+        success: false,
+        error: "Failed to load product by slug",
+      })
+    );
+  }
+};
 
 /**
  * Creates a new product using request body data.
