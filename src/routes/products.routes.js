@@ -5,6 +5,7 @@ import {
   createProductHandler,
   deleteProductHandler,
   getProductByIdHandler,
+  getProductBySlugHandler,
   getProducts,
   updateProductHandler,
 } from "../controllers/products.controller.js";
@@ -93,7 +94,7 @@ router.get("/", getProducts);
 
 /**
  * @swagger
- * /products/{id}:
+ * /products/id/{id}:
  *   get:
  *     summary: Fetch a published product by ID
  *     description: Fetch a published product by ID
@@ -142,7 +143,60 @@ router.get("/", getProducts);
  *                   description: Error message
  *                   example: "Failed to load product"
  */
-router.get("/:id", getProductByIdHandler);
+router.get("/id/:id", getProductByIdHandler);
+
+/**
+ * @swagger
+ * /products/{slug}:
+ *   get:
+ *     summary: Fetch a product by its slug
+ *     description: Fetch a product by its slug
+ *     tags:
+ *       - Products
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: A product
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates whether the request was successful
+ *                 data:
+ *                   $ref: "#/components/schemas/Product"
+ *               example:
+ *                 success: true
+ *                 data:
+ *                   id: "product1"
+ *                   name: "Product 1"
+ *                   description: "Description of Product 1"
+ *                   price: 19.99
+ *                   published: true
+ *       500:
+ *         description: Failed to load product
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates whether the request was successful
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ *                   example: "Failed to load product"
+ */
+router.get("/:slug", getProductBySlugHandler);
 
 /**
  * @swagger
