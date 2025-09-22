@@ -15,54 +15,30 @@ import { Schema, model } from "mongoose";
  */
 const productSchema = new Schema(
   {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-      default: "",
-    },
-    description: {
-      type: String,
-      default: "",
-      trim: true,
-    },
-    price: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
+    name: { type: String, required: true, trim: true },
+    description: { type: String, default: "", trim: true },
+    price: { type: Number, required: true, min: 0 },
     images: {
       type: [String],
       default: [],
       validate: {
-        validator: function (array) {
-          return array.length <= 5;
-        },
+        validator: array => array.length <= 5,
         message: "Maximum of 5 images allowed",
       },
     },
-    category: {
-      type: String,
-      required: true,
-      trim: true,
-      lowercase: true,
-    },
-    stock: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
-    isPublished: {
-      type: Boolean,
-      default: false,
-    },
-    createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
+    category: { type: String, required: true, trim: true, lowercase: true },
+    stock: { type: Number, required: true, min: 0 },
+    isPublished: { type: Boolean, default: false },
+    createdBy: { type: Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );
+
+// indexes
+productSchema.index({ name: 1 });
+productSchema.index({ category: 1 });
+productSchema.index({ category: 1, price: -1 });
+productSchema.index({ createdBy: 1 });
 
 const Product = model("Product", productSchema);
 export default Product;
