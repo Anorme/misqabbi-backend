@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: models/product.model.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: models/product.model.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import Product from "./product.mongo.js";
+import logger from "../config/logger.js";
+
+/**
+ * @desc    Retrieve all products from the database (regardless of publish status)
+ * @returns {Promise&lt;Array>}  Array of product documents
+ */
+async function getAllProducts() {
+  try {
+    const products = await Product.find({});
+    return products;
+  } catch (error) {
+    logger.error(`[products.model] Error fetching products: ${error}`);
+    throw error;
+  }
+}
+
+/**
+ * @desc      Retrieve all products where isPublished is true
+ * @returns   {Promise&lt;Array>} Array of published product documents
+ */
+async function getAllPublishedProducts() {
+  try {
+    return await Product.find({ isPublished: true });
+  } catch (error) {
+    logger.error(
+      `[products.model] Error fetching published products: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+/**
+ * @desc    Retrieve the count of all products where isPublished is true
+ * @returns {Promise&lt;Number>} Count of published product documents
+ */
+async function countPublishedProducts() {
+  try {
+    return await Product.countDocuments({ isPublished: true });
+  } catch (error) {
+    logger.error(
+      `[products.model] Error counting published products: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+/**
+ * @desc    Retrieve a paginated set of published products
+ * @param   {Number} page - Page number of results to return
+ * @param   {Number} limit - Number of results per page
+ * @returns {Promise&lt;Array>} Array of published product documents
+ * @throws  {Error} When there is an error fetching the paginated products
+ */
+async function getPaginatedPublishedProducts(page, limit) {
+  try {
+    const startIndex = (page - 1) * limit;
+
+    return await Product.find({ isPublished: true })
+      .sort({ createdAt: -1 })
+      .skip(startIndex)
+      .limit(limit);
+  } catch (error) {
+    logger.error(
+      `[products.model] Error fetching paginated products: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+/**
+ * @desc    Retrieve a single product by its MongoDB _id
+ * @param   {String} id - Product ID
+ * @returns {Promise&lt;Object|null>} Product document or null if not found
+ */
+async function getProductById(id) {
+  try {
+    return await Product.findById(id);
+  } catch (error) {
+    logger.error(
+      `[products.model] Error finding product by id ${id}: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+/**
+ * @desc    Create a new product document in the database
+ * @param   {Object} data - Product data (matches schema shape)
+ * @returns {Promise&lt;Object>} Created product document
+ */
+async function createProduct(data) {
+  try {
+    const product = await Product.create(data);
+    return product;
+  } catch (error) {
+    logger.error(`[products.model] Error creating product: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
+ * @desc    Update a product document by ID
+ * @param   {String} id - Product ID
+ * @param   {Object} updates - Updated fields
+ * @returns {Promise&lt;Object|null>} Updated product or null if not found
+ */
+async function updateProduct(id, updates) {
+  try {
+    const updated = await Product.findByIdAndUpdate(id, updates, {
+      new: true,
+      runValidators: true,
+    });
+    return updated;
+  } catch (error) {
+    logger.error(
+      `[products.model] Error updating product ${id}: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+/**
+ * @desc    Delete a product by its ID
+ * @param   {String} id - Product ID
+ * @returns {Promise&lt;Object|null>} Deleted document or null if not found
+ */
+async function deleteProduct(id) {
+  try {
+    const result = await Product.findByIdAndDelete(id);
+    return result;
+  } catch (error) {
+    logger.error(
+      `[products.model] Error deleting product ${id}: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+export {
+  getAllProducts,
+  getAllPublishedProducts,
+  getPaginatedPublishedProducts,
+  countPublishedProducts,
+  getProductById,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#authenticateToken">authenticateToken</a></li><li><a href="global.html#cartItemSchema">cartItemSchema</a></li><li><a href="global.html#checkAdmin">checkAdmin</a></li><li><a href="global.html#countPublishedProducts">countPublishedProducts</a></li><li><a href="global.html#createGoogleUser">createGoogleUser</a></li><li><a href="global.html#createLocalUser">createLocalUser</a></li><li><a href="global.html#createProduct">createProduct</a></li><li><a href="global.html#createProductHandler">createProductHandler</a></li><li><a href="global.html#deleteProduct">deleteProduct</a></li><li><a href="global.html#deleteProductHandler">deleteProductHandler</a></li><li><a href="global.html#finalizeAuth">finalizeAuth</a></li><li><a href="global.html#findUserByEmail">findUserByEmail</a></li><li><a href="global.html#findUserById">findUserById</a></li><li><a href="global.html#getAllProducts">getAllProducts</a></li><li><a href="global.html#getAllPublishedProducts">getAllPublishedProducts</a></li><li><a href="global.html#getCurrentUser">getCurrentUser</a></li><li><a href="global.html#getPaginatedPublishedProducts">getPaginatedPublishedProducts</a></li><li><a href="global.html#getProductById">getProductById</a></li><li><a href="global.html#getProductByIdHandler">getProductByIdHandler</a></li><li><a href="global.html#getProducts">getProducts</a></li><li><a href="global.html#handleGoogleCallback">handleGoogleCallback</a></li><li><a href="global.html#loginUser">loginUser</a></li><li><a href="global.html#orderValidator">orderValidator</a></li><li><a href="global.html#origin">origin</a></li><li><a href="global.html#productValidator">productValidator</a></li><li><a href="global.html#registerUser">registerUser</a></li><li><a href="global.html#updateOrderStatusHandler">updateOrderStatusHandler</a></li><li><a href="global.html#updateProduct">updateProduct</a></li><li><a href="global.html#updateProductHandler">updateProductHandler</a></li><li><a href="global.html#userSchema">userSchema</a></li><li><a href="global.html#userValidator">userValidator</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Sep 09 2025 10:01:11 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

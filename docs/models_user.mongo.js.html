@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: models/user.mongo.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: models/user.mongo.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { Schema, model } from "mongoose";
+import bcrypt from "bcrypt";
+
+import logger from "../config/logger.js";
+import {
+  EMAIL_REGEX,
+  isPasswordValidOrGoogleUser,
+} from "../utils/validators.js";
+
+/**
+ * Schema for individual items in the user's cart.
+ *
+ * - Embedded directly in the user document for fast access.
+ * - References a Product by ObjectId.
+ * - Does not generate its own _id to keep the structure lean.
+ */
+const cartItemSchema = new Schema(
+  {
+    productId: {
+      type: Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+  },
+  { _id: false }
+);
+
+/**
+ *  User schema definition.
+ *
+ * Fields:
+ * - email {String} required, unique, trimmed, lowercase
+ * - password {String} required (hashed before save)
+ * - role {String} enum: 'user' | 'admin'
+ * - cartItems {Array&lt;CartItem>} embedded for quick access
+ * - previousOrders {Array&lt;ObjectId>} references Order documents
+ */
+const userSchema = new Schema(
+  {
+    displayName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: EMAIL_REGEX,
+    },
+    googleId: {
+      type: String,
+    },
+    password: {
+      type: String,
+      required: function () {
+        return !this.googleId;
+      },
+      validate: {
+        validator: function (value) {
+          const isNewOrChanged = this.isModified("password");
+          return !isNewOrChanged || isPasswordValidOrGoogleUser(value, this);
+        },
+        message: "Password required for local accounts",
+      },
+    },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
+    cartItems: [cartItemSchema], // Embedded for fast access and frequent updates
+    previousOrders: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Order", // Referenced for historical lookup and scalability
+      },
+    ],
+  },
+  { timestamps: true }
+);
+
+/**
+ * Hash the password before saving the user.
+ *
+ * - Only hashes if the password field has been modified.
+ * - Uses bcrypt with a salt round of 10.
+ */
+userSchema.pre("save", async function (next) {
+  try {
+    const shouldHash = this.isModified("password") &amp;&amp; this.password;
+    if (!shouldHash) return next();
+    this.password = await bcrypt.hash(this.password, 10);
+    next();
+  } catch (error) {
+    logger.error(`[users.mongo] Error hashing password: ${error.message}`);
+    next(error);
+  }
+});
+
+/**
+ * Compare a candidate password with the stored hash.
+ *
+ * @param {string} candidatePassword - Plain text password to verify
+ * @returns {Promise&lt;boolean>} - Whether the password matches
+ */
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  try {
+    return bcrypt.compare(candidatePassword, this.password);
+  } catch (error) {
+    logger.error(`[users.mongo] Error comparing password: ${error.message}`);
+    throw error;
+  }
+};
+
+userSchema.virtual("authProvider").get(function () {
+  return this.googleId ? "google" : "local";
+});
+
+const User = model("User", userSchema);
+export default User;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#authenticateToken">authenticateToken</a></li><li><a href="global.html#cartItemSchema">cartItemSchema</a></li><li><a href="global.html#checkAdmin">checkAdmin</a></li><li><a href="global.html#countPublishedProducts">countPublishedProducts</a></li><li><a href="global.html#createGoogleUser">createGoogleUser</a></li><li><a href="global.html#createLocalUser">createLocalUser</a></li><li><a href="global.html#createProduct">createProduct</a></li><li><a href="global.html#createProductHandler">createProductHandler</a></li><li><a href="global.html#deleteProduct">deleteProduct</a></li><li><a href="global.html#deleteProductHandler">deleteProductHandler</a></li><li><a href="global.html#finalizeAuth">finalizeAuth</a></li><li><a href="global.html#findUserByEmail">findUserByEmail</a></li><li><a href="global.html#findUserById">findUserById</a></li><li><a href="global.html#getAllProducts">getAllProducts</a></li><li><a href="global.html#getAllPublishedProducts">getAllPublishedProducts</a></li><li><a href="global.html#getCurrentUser">getCurrentUser</a></li><li><a href="global.html#getPaginatedPublishedProducts">getPaginatedPublishedProducts</a></li><li><a href="global.html#getProductById">getProductById</a></li><li><a href="global.html#getProductByIdHandler">getProductByIdHandler</a></li><li><a href="global.html#getProducts">getProducts</a></li><li><a href="global.html#handleGoogleCallback">handleGoogleCallback</a></li><li><a href="global.html#loginUser">loginUser</a></li><li><a href="global.html#orderValidator">orderValidator</a></li><li><a href="global.html#origin">origin</a></li><li><a href="global.html#productValidator">productValidator</a></li><li><a href="global.html#registerUser">registerUser</a></li><li><a href="global.html#updateOrderStatusHandler">updateOrderStatusHandler</a></li><li><a href="global.html#updateProduct">updateProduct</a></li><li><a href="global.html#updateProductHandler">updateProductHandler</a></li><li><a href="global.html#userSchema">userSchema</a></li><li><a href="global.html#userValidator">userValidator</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Sep 09 2025 10:01:11 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

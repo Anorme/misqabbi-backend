@@ -1,12 +1,15 @@
 import env from "./config/env.js";
 
 import express from "express";
+import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import morgan from "morgan";
 import cors from "cors";
+import { serve, setup } from "swagger-ui-express";
 
 import "./config/passport.js";
 import corsOptions from "./config/cors.js";
+import swaggerSpec from "./config/swagger.js";
 
 import adminRoutes from "./routes/admin.routes.js";
 import authRoutes from "./routes/auth.routes.js";
@@ -23,8 +26,10 @@ const API_PREFIX = "/api/v1";
 
 app.use(helmet());
 app.use(morgan("dev"));
+app.use(cookieParser());
 app.use(express.json());
 app.use(cors(corsOptions(env.NODE_ENV)));
+app.use("/api-docs", serve, setup(swaggerSpec));
 
 app.get("/", (req, res) => {
   res.status(200).json({ message: "Misqabbi backend is live" });

@@ -20,6 +20,7 @@
   },
   "scripts": {
     "dev": "npm run start:dev",
+    "docs": "jsdoc -c jsdoc.json",
     "start": "npm run start:prod",
     "start:dev": "cross-env NODE_ENV=development nodemon server.js",
     "start:preview": "cross-env NODE_ENV=preview node server.js",
@@ -37,6 +38,7 @@
     "@logtail/node": "^0.5.5",
     "@logtail/winston": "^0.5.5",
     "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "cross-env": "^10.0.0",
     "dotenv-flow": "^4.1.0",
@@ -50,6 +52,9 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-local": "^1.0.0",
+    "slugify": "^1.6.6",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "winston": "^3.17.0"
   },
   "devDependencies": {
@@ -60,6 +65,7 @@
     "globals": "^16.3.0",
     "husky": "^9.1.7",
     "jest": "^30.0.4",
+    "jsdoc": "^4.0.4",
     "lint-staged": "^16.1.2",
     "nodemon": "^3.1.10",
     "prettier": "^3.6.2",

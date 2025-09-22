@@ -1,24 +1,33 @@
 const allowedOrigins = {
-  development: "http://localhost:3000",
+  development: ["http://localhost:3000", "https://misqabbigh.netlify.app"],
   staging: ["https://misqabbigh.netlify.app"],
-  production: ["https://misqabbi.com", "https://www.misqabbi.com"],
+  production: [
+    "https://shop.misqabbi.com",
+    "https://www.misqabbi.com",
+    "https://misqabbigh.netlify.app",
+  ],
 };
 
-/**
- * Generates a CORS configuration object for the given environment (NODE_ENV).
- *
- * @param {string} env - The environment name (NODE_ENV) to generate the CORS
- *     configuration for.
- * @returns {Object} A CORS configuration object with the following properties:
- *     - origin: The value of the Access-Control-Allow-Origin header.
- *     - methods: An array of allowed HTTP request methods.
- */
 const corsOptions = env => {
-  const origin = allowedOrigins[env] || "*";
+  const whitelist = allowedOrigins[env] || [];
   return {
-    origin,
+    /**
+     * CORS origin function to check if the incoming request's origin is
+     * allowed to make requests to the server.
+     *
+     * @param {string} origin - The origin of the incoming request.
+     * @param {Function} callback - Called with either `null` or an `Error`
+     *   object indicating whether the request is allowed or not.
+     */
+    origin: function (origin, callback) {
+      if (!origin || whitelist.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    credentials: false,
   };
 };
 

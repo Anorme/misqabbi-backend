@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import slugify from "slugify";
 
 /**
  * @typedef Product
@@ -26,19 +27,46 @@ const productSchema = new Schema(
         message: "Maximum of 5 images allowed",
       },
     },
-    category: { type: String, required: true, trim: true, lowercase: true },
-    stock: { type: Number, required: true, min: 0 },
-    isPublished: { type: Boolean, default: false },
-    createdBy: { type: Schema.Types.ObjectId, ref: "User" },
+    category: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+    },
+    stock: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    isPublished: {
+      type: Boolean,
+      default: false,
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
   { timestamps: true }
 );
 
-// indexes
-productSchema.index({ name: 1 });
-productSchema.index({ category: 1 });
-productSchema.index({ category: 1, price: -1 });
-productSchema.index({ createdBy: 1 });
+productSchema.pre("save", function (next) {
+  if (!this.slug && this.name) {
+    this.slug = slugify(this.name, {
+      lower: true,
+      strict: true,
+      trim: true,
+    });
+  }
+  next();
+});
 
 const Product = model("Product", productSchema);
 export default Product;

@@ -3,25 +3,23 @@ import { findUserById } from "../models/user.model.js";
 import logger from "../config/logger.js";
 
 /**
- * Auth middleware to validate JWT from Authorization header.
+ * Verifies the presence and validity of an authentication token
+ * sent in a cookie, and if valid, populates `req.user` with the
+ * corresponding user document.
  *
- * Expected format: 'Bearer <token>'
- * Attaches verified user to req.user
- *
- * @throws {401} If token is missing or malformed
- * @throws {403} If token is invalid or expired
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ * @throws {401} if no token is present, or if the user is not found
+ * @throws {403} if the token is invalid or expired
  */
 async function authenticateToken(req, res, next) {
-  const authHeader = req.headers?.authorization;
+  const token = req.cookies?.auth_token;
 
-  if (!authHeader?.startsWith("Bearer ")) {
-    logger.warn("[auth.middleware] Missing or malformed Authorization header");
-    return res
-      .status(401)
-      .json({ message: "Missing or malformed Authorization header" });
+  if (!token) {
+    logger.warn("[auth.middleware] Missing token cookie");
+    return res.status(401).json({ message: "Missing token" });
   }
-
-  const token = authHeader.split(" ")[1];
 
   try {
     const decoded = verifyToken(token);

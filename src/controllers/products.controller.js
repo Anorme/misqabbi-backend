@@ -1,5 +1,6 @@
 import {
   getProductById,
+  getProductBySlug,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -7,12 +8,17 @@ import {
   countSearchedProducts,
 } from "../models/product.model.js";
 import logger from "../config/logger.js";
+import { formatResponse } from "../utils/responseFormatter.js";
 
 /**
- * @desc    Retrieve all published products for public access
- * @route   GET /products
- * @access  Public
+ * Fetches a paginated list of published products.
+ * @async
+ * @function getProducts
+ * @param {Request} req - Express request object with optional query params: page, limit
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} Sends JSON response with product data and pagination info
  */
+
 export async function getProducts(req, res) {
   try {
     const filters = {
@@ -49,107 +55,161 @@ export async function getProducts(req, res) {
       `[products.controller] Error doing products fetch: ${error.message}`,
       error
     );
-    res
-      .status(500)
-      .json({ success: false, error: "Error doing products fetch" });
+    res.status(500).json(
+      formatResponse({
+        success: false,
+        error: "Failed to load products",
+      })
+    );
   }
 }
 
 /**
- * @desc    Retrieve single product by ID
- * @route   GET /products/:id
- * @access  Public
+ * Retrieves a single published product by its ID.
+ * @async
+ * @function getProductByIdHandler
+ * @param {Request} req - Express request object with path param: id
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} Sends JSON response with product data or error
  */
+
 export async function getProductByIdHandler(req, res) {
   try {
     const { id } = req.params;
     const product = await getProductById(id);
     if (!product || !product.isPublished) {
-      return res
-        .status(404)
-        .json({
+      return res.status(404).json(
+        formatResponse({
           success: false,
-          error: "Error doing product fetch: product not found",
-        });
+          error: "Product not found",
+        })
+      );
     }
-    res.json(product);
+    res.json(formatResponse({ data: product }));
   } catch (error) {
     logger.error(
       `[products.controller] Error doing product fetch for ${req.params.id}: ${error.message}`,
       error
     );
-    res
-      .status(500)
-      .json({ success: false, error: "Error doing product fetch" });
+    res.status(500).json(
+      formatResponse({
+        success: false,
+        error: "Failed to load product ",
+      })
+    );
   }
 }
 
+export const getProductBySlugHandler = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const product = await getProductBySlug(slug);
+    if (!product || !product.isPublished) {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Product not found",
+        })
+      );
+    }
+    res.status(200).json(formatResponse({ data: product }));
+  } catch (error) {
+    logger.error(
+      `[products.controller] Error getting product by slug ${req.params.slug}: ${error.message}`
+    );
+    res.status(500).json(
+      formatResponse({
+        success: false,
+        error: "Failed to load product by slug",
+      })
+    );
+  }
+};
+
 /**
- * @desc    Create a new product
- * @route   POST /admin/products
- * @access  Admin
+ * Creates a new product using request body data.
+ * @async
+ * @function createProductHandler
+ * @param {Request} req - Express request object with product data in body
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} Sends JSON response with created product or error
  */
+
 export async function createProductHandler(req, res) {
   try {
     const data = { ...req.body, createdBy: req.user._id };
     const product = await createProduct(data);
-    res.status(201).json(product);
+    res.status(201).json(formatResponse({ data: product }));
   } catch (error) {
     logger.error(
       `[products.controller] Error doing product creation: ${error.message}`,
       error
     );
-    res
-      .status(400)
-      .json({ success: false, error: "Error doing product creation" });
+    res.status(400).json(
+      formatResponse({
+        success: false,
+        error: "Invalid product data",
+      })
+    );
   }
 }
 
 /**
- * @desc    Update an existing product
- * @route   PUT /admin/products/:id
- * @access  Admin
+ * Updates an existing product by ID using request body data.
+ * @async
+ * @function updateProductHandler
+ * @param {Request} req - Express request object with path param: id and update data in body
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} Sends JSON response with updated product or error
  */
+
 export async function updateProductHandler(req, res) {
   try {
     const { id } = req.params;
     const product = await updateProduct(id, req.body);
     if (!product) {
-      return res
-        .status(404)
-        .json({
+      return res.status(404).json(
+        formatResponse({
           success: false,
-          error: "Error doing product update: product not found",
-        });
+          error: "Product not found",
+        })
+      );
     }
-    res.json(product);
+    res.json(formatResponse({ data: product }));
   } catch (error) {
     logger.error(
       `[products.controller] Error doing product update ${req.params.id}: ${error.message}`,
       error
     );
-    res
-      .status(400)
-      .json({ success: false, error: "Error doing product update" });
+    res.status(400).json(
+      formatResponse({
+        success: false,
+        error: "Product update failed",
+      })
+    );
   }
 }
 
 /**
- * @desc    Delete a product by ID
- * @route   DELETE /admin/products/:id
- * @access  Admin
+ * Deletes a product by its ID.
+ * @async
+ * @function deleteProductHandler
+ * @param {Request} req - Express request object with path param: id
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} Sends 204 status or error response
  */
+
 export async function deleteProductHandler(req, res) {
   try {
     const { id } = req.params;
     const deleted = await deleteProduct(id);
     if (!deleted) {
-      return res
-        .status(404)
-        .json({
+      return res.status(404).json(
+        formatResponse({
           success: false,
-          error: "Error doing product deletion: product not found",
-        });
+          error: "Product not found",
+        })
+      );
     }
     res.status(204).send();
   } catch (error) {
@@ -157,8 +217,11 @@ export async function deleteProductHandler(req, res) {
       `[products.controller] Error doing product deletion ${req.params.id}: ${error.message}`,
       error
     );
-    res
-      .status(400)
-      .json({ success: false, error: "Error doing product deletion" });
+    res.status(400).json(
+      formatResponse({
+        success: false,
+        error: "Product deletion failed",
+      })
+    );
   }
 }
