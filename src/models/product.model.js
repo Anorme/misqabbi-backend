@@ -10,7 +10,7 @@ async function getAllProducts() {
     const products = await Product.find({});
     return products;
   } catch (error) {
-    logger.error(`[products.model] Error fetching products: ${error}`);
+    logger.error(`[products.model] Error fetching products: ${error.message}`);
     throw error;
   }
 }

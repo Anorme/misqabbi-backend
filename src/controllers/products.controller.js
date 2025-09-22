@@ -3,8 +3,8 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
-  getPaginatedPublishedProducts,
-  countPublishedProducts,
+  searchPublishedProducts,
+  countSearchedProducts,
 } from "../models/product.model.js";
 import logger from "../config/logger.js";
 
@@ -15,17 +15,28 @@ import logger from "../config/logger.js";
  */
 export async function getProducts(req, res) {
   try {
+    const filters = {
+      name: req.query.name,
+      category: req.query.category,
+      minPrice: req.query.minPrice,
+      maxPrice: req.query.maxPrice,
+    };
+
     const page = Math.max(parseInt(req.query.page) || 1, 1);
     const limit = Math.max(parseInt(req.query.limit) || 10, 1);
 
-    const totalPublishedProducts = await countPublishedProducts();
+    const totalPublishedProducts = await countSearchedProducts(filters);
+
     if (page > Math.ceil(totalPublishedProducts / limit)) {
       return res.status(400).json({
         success: false,
-        error: "Requested page exceeds available product pages",
+        error:
+          "Error doing products fetch: requested page exceeds available product pages",
       });
     }
-    const products = await getPaginatedPublishedProducts(page, limit);
+
+    const products = await searchPublishedProducts(filters, page, limit);
+
     res.json({
       success: true,
       data: products,
@@ -35,9 +46,12 @@ export async function getProducts(req, res) {
     });
   } catch (error) {
     logger.error(
-      `[products.controller] Failed to fetch products: ${error.message}`
+      `[products.controller] Error doing products fetch: ${error.message}`,
+      error
     );
-    res.status(500).json({ error: "Failed to load products" });
+    res
+      .status(500)
+      .json({ success: false, error: "Error doing products fetch" });
   }
 }
 
@@ -51,14 +65,22 @@ export async function getProductByIdHandler(req, res) {
     const { id } = req.params;
     const product = await getProductById(id);
     if (!product || !product.isPublished) {
-      return res.status(404).json({ error: "Product not found" });
+      return res
+        .status(404)
+        .json({
+          success: false,
+          error: "Error doing product fetch: product not found",
+        });
     }
     res.json(product);
   } catch (error) {
     logger.error(
-      `[products.controller] Error getting product ${req.params.id}: ${error.message}`
+      `[products.controller] Error doing product fetch for ${req.params.id}: ${error.message}`,
+      error
     );
-    res.status(500).json({ error: "Failed to load product " });
+    res
+      .status(500)
+      .json({ success: false, error: "Error doing product fetch" });
   }
 }
 
@@ -74,9 +96,12 @@ export async function createProductHandler(req, res) {
     res.status(201).json(product);
   } catch (error) {
     logger.error(
-      `[products.controller] Error creating product: ${error.message}`
+      `[products.controller] Error doing product creation: ${error.message}`,
+      error
     );
-    res.status(400).json({ error: "Invalid product data" });
+    res
+      .status(400)
+      .json({ success: false, error: "Error doing product creation" });
   }
 }
 
@@ -90,21 +115,28 @@ export async function updateProductHandler(req, res) {
     const { id } = req.params;
     const product = await updateProduct(id, req.body);
     if (!product) {
-      return res.status(404).json({ error: "Product not found" });
+      return res
+        .status(404)
+        .json({
+          success: false,
+          error: "Error doing product update: product not found",
+        });
     }
     res.json(product);
   } catch (error) {
     logger.error(
-      `[products.controller] Product update failed: ${error.message}`
+      `[products.controller] Error doing product update ${req.params.id}: ${error.message}`,
+      error
     );
-    res.status(400).json({ error: "Product update failed" });
+    res
+      .status(400)
+      .json({ success: false, error: "Error doing product update" });
   }
 }
 
 /**
- *
  * @desc    Delete a product by ID
- * @route   DELETE/admin/products/:id
+ * @route   DELETE /admin/products/:id
  * @access  Admin
  */
 export async function deleteProductHandler(req, res) {
@@ -112,13 +144,21 @@ export async function deleteProductHandler(req, res) {
     const { id } = req.params;
     const deleted = await deleteProduct(id);
     if (!deleted) {
-      return res.status(404).json({ error: "Product not found" });
+      return res
+        .status(404)
+        .json({
+          success: false,
+          error: "Error doing product deletion: product not found",
+        });
     }
     res.status(204).send();
   } catch (error) {
     logger.error(
-      `[products.controller] Product deletion failed: ${error.message}`
+      `[products.controller] Error doing product deletion ${req.params.id}: ${error.message}`,
+      error
     );
-    res.status(400).json({ error: "Product deletion failed" });
+    res
+      .status(400)
+      .json({ success: false, error: "Error doing product deletion" });
   }
 }
