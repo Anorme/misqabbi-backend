@@ -14,6 +14,41 @@ async function getAllProducts() {
     throw error;
   }
 }
+/** * @desc    Search published products based on filters with pagination
+ * @param   {Object} filters - Search filters (name, category, minPrice, maxPrice)
+ * @param   {Number} page - Page number for pagination
+ * @param   {Number} limit - Number of results per page
+ * @returns {Promise<Array>} Array of matching published product documents
+ * @throws  {Error} When there is an error during the search
+ */
+
+async function searchPublishedProducts(filters = {}, page = 1, limit = 10) {
+  try {
+    const query = { isPublished: true };
+
+    if (filters.name) {
+      query.name = { $regex: filters.name, $options: "i" };
+    }
+
+    if (filters.category) {
+      query.category = filters.category.toLowerCase();
+    }
+
+    if (filters.minPrice || filters.maxPrice) {
+      query.price = {};
+      if (filters.minPrice) query.price.$gte = Number(filters.minPrice);
+      if (filters.maxPrice) query.price.$lte = Number(filters.maxPrice);
+    }
+
+    // pagination
+    return await Product.find(query)
+      .skip((page - 1) * limit)
+      .limit(limit);
+  } catch (error) {
+    logger.error(`[products.model] Error searching products: ${error.message}`);
+    throw error;
+  }
+}
 
 /**
  * @desc      Retrieve all products where isPublished is true
@@ -33,39 +68,29 @@ async function getAllPublishedProducts() {
 /**
  * @desc    Retrieve the count of all products where isPublished is true
  * @returns {Promise<Number>} Count of published product documents
+ * @throws  {Error} When there is an error during the count operation
  */
-async function countPublishedProducts() {
-  try {
-    return await Product.countDocuments({ isPublished: true });
-  } catch (error) {
-    logger.error(
-      `[products.model] Error counting published products: ${error.message}`
-    );
-    throw error;
-  }
-}
+async function countSearchedProducts(filters = {}) {
+  const query = { isPublished: true };
 
-/**
- * @desc    Retrieve a paginated set of published products
- * @param   {Number} page - Page number of results to return
- * @param   {Number} limit - Number of results per page
- * @returns {Promise<Array>} Array of published product documents
- * @throws  {Error} When there is an error fetching the paginated products
- */
-async function getPaginatedPublishedProducts(page, limit) {
-  try {
-    const startIndex = (page - 1) * limit;
-
-    return await Product.find({ isPublished: true })
-      .sort({ createdAt: -1 })
-      .skip(startIndex)
-      .limit(limit);
-  } catch (error) {
-    logger.error(
-      `[products.model] Error fetching paginated products: ${error.message}`
-    );
-    throw error;
+  // replicate the same filter conditions as in searchPublishedProducts
+  if (filters.name) {
+    query.name = { $regex: filters.name, $options: "i" }; // case-insensitive
   }
+
+  if (filters.category) {
+    query.category = filters.category.toLowerCase();
+  }
+
+  if (filters.minPrice || filters.maxPrice) {
+    query.price = {};
+    if (filters.minPrice) query.price.$gte = Number(filters.minPrice);
+    if (filters.maxPrice) query.price.$lte = Number(filters.maxPrice);
+  }
+
+  // add any other filters used in the future here
+
+  return Product.countDocuments(query);
 }
 
 /**
@@ -140,8 +165,8 @@ async function deleteProduct(id) {
 export {
   getAllProducts,
   getAllPublishedProducts,
-  getPaginatedPublishedProducts,
-  countPublishedProducts,
+  countSearchedProducts,
+  searchPublishedProducts,
   getProductById,
   createProduct,
   updateProduct,
