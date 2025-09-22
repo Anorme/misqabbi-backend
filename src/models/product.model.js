@@ -42,6 +42,7 @@ async function searchPublishedProducts(filters = {}, page = 1, limit = 10) {
 
     // pagination
     return await Product.find(query)
+      .sort({ price: 1 })
       .skip((page - 1) * limit)
       .limit(limit);
   } catch (error) {
