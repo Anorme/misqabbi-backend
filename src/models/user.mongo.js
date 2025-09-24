@@ -8,23 +8,18 @@ import {
 } from "../utils/validators.js";
 
 /**
- * Schema for individual items in the user's cart.
+ * Schema for individual items in the user's favorites.
  *
  * - Embedded directly in the user document for fast access.
  * - References a Product by ObjectId.
  * - Does not generate its own _id to keep the structure lean.
  */
-const cartItemSchema = new Schema(
+const favoritesItemSchema = new Schema(
   {
     productId: {
       type: Schema.Types.ObjectId,
       ref: "Product",
       required: true,
-    },
-    quantity: {
-      type: Number,
-      required: true,
-      min: 1,
     },
   },
   { _id: false }
@@ -37,7 +32,7 @@ const cartItemSchema = new Schema(
  * - email {String} required, unique, trimmed, lowercase
  * - password {String} required (hashed before save)
  * - role {String} enum: 'user' | 'admin'
- * - cartItems {Array<CartItem>} embedded for quick access
+ * - favorites {Array<FavoritesItem>} embedded for quick access
  * - previousOrders {Array<ObjectId>} references Order documents
  */
 const userSchema = new Schema(
@@ -76,7 +71,7 @@ const userSchema = new Schema(
       enum: ["user", "admin"],
       default: "user",
     },
-    cartItems: [cartItemSchema], // Embedded for fast access and frequent updates
+    favorites: [favoritesItemSchema], // Embedded for fast access and frequent updates
     previousOrders: [
       {
         type: Schema.Types.ObjectId,
