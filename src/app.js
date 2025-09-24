@@ -13,7 +13,7 @@ import swaggerSpec from "./config/swagger.js";
 
 import adminRoutes from "./routes/admin.routes.js";
 import authRoutes from "./routes/auth.routes.js";
-import cartRoutes from "./routes/cart.routes.js";
+import favoritesRoutes from "./routes/favorites.routes.js";
 import orderRoutes from "./routes/orders.routes.js";
 import productRoutes from "./routes/products.routes.js";
 
@@ -38,7 +38,7 @@ app.get("/", (req, res) => {
 // Mount versioned routes
 app.use(`${API_PREFIX}/admin`, adminRoutes);
 app.use(`${API_PREFIX}/auth`, authRoutes);
-app.use(`${API_PREFIX}/cart`, cartRoutes);
+app.use(`${API_PREFIX}/favorites`, favoritesRoutes);
 app.use(`${API_PREFIX}/orders`, orderRoutes);
 app.use(`${API_PREFIX}/products`, productRoutes);
 
