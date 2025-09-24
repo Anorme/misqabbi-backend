@@ -8,7 +8,7 @@ import {
   isFavorited,
 } from "../models/favorites.model.js";
 
-import { formatResponse } from "../utils/response.js";
+import { formatResponse } from "../utils/responseFormatter.js";
 
 async function handleGetFavorites(req, res) {
   try {
