@@ -12,11 +12,11 @@ import { formatResponse } from "../utils/responseFormatter.js";
 
 async function handleGetFavorites(req, res) {
   try {
-    const favorites = await getFavorites(req.user.id);
+    const favoriteStatus = await getFavorites(req.user.id);
     res.status(200).json(
       formatResponse({
         message: "Favorites retrieved successfully",
-        data: { favorites },
+        data: favoriteStatus,
       })
     );
   } catch (error) {
@@ -43,11 +43,11 @@ async function handleAddToFavorites(req, res) {
         })
       );
     }
-    const updatedFavorites = await addToFavorites(req.user.id, productId);
+    const favoriteStatus = await addToFavorites(req.user.id, productId);
     res.status(200).json(
       formatResponse({
         message: "Favorites updated successfully",
-        data: { favorites: updatedFavorites },
+        data: favoriteStatus,
       })
     );
   } catch (error) {
@@ -75,11 +75,11 @@ async function handleRemoveFromFavorites(req, res) {
       );
     }
 
-    const updatedFavorites = await removeFromFavorites(req.user.id, productId);
+    const favoriteStatus = await removeFromFavorites(req.user.id, productId);
     res.status(200).json(
       formatResponse({
         message: "Favorites updated successfully",
-        data: { favorites: updatedFavorites },
+        data: favoriteStatus,
       })
     );
   } catch (error) {
@@ -106,11 +106,11 @@ async function handleToggleFavorite(req, res) {
         })
       );
     }
-    const updatedFavorites = await toggleFavorite(req.user.id, productId);
+    const favoriteStatus = await toggleFavorite(req.user.id, productId);
     res.status(200).json(
       formatResponse({
         message: "Favorites updated successfully",
-        data: { favorites: updatedFavorites },
+        data: favoriteStatus,
       })
     );
   } catch (error) {
@@ -137,11 +137,11 @@ async function handleIsFavorited(req, res) {
         })
       );
     }
-    const isProductFavorited = await isFavorited(req.user.id, productId);
+    const favoriteStatus = await isFavorited(req.user.id, productId);
     res.status(200).json(
       formatResponse({
         message: "Product is favorited",
-        data: { isFavorited: isProductFavorited },
+        data: favoriteStatus,
       })
     );
   } catch (error) {
