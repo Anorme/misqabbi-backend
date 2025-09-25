@@ -33,10 +33,10 @@ router.get("/", authenticateToken, handleGetFavorites);
 
 /**
  * @swagger
- * /favorites/check/{productId}:
+ * /favorites/status/{productId}:
  *   get:
  *     summary: Check if a product is in the user's favorites
- *     description: Returns whether the specified product is in the current user's favorites.
+ *     description: Returns whether the specified product is favorited by the authenticated user
  *     tags:
  *       - Favorites
  *     security:
@@ -50,18 +50,25 @@ router.get("/", authenticateToken, handleGetFavorites);
  *         description: The ID of the product to check
  *     responses:
  *       200:
- *         description: Whether the product is favorited
+ *         description: Favorited status retrieved
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 isFavorited:
- *                   type: boolean
- *                   description: Indicates if the product is in the user's favorites
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     isFavorited:
+ *                       type: boolean
+ *       400:
+ *         description: Missing productId in request
+ *       500:
+ *         description: Failed to check if product is favorited
  */
-
-router.get("/check/:productId", authenticateToken, handleIsFavorited);
+router.get("/status/:productId", authenticateToken, handleIsFavorited);
 
 /**
  * @swagger
@@ -105,7 +112,8 @@ router.post("/", authenticateToken, handleAddToFavorites);
  *         name: productId
  *         required: true
  *         schema:
- *          $ref: '#/components/schemas/FavoritesItem'
+ *          type: string
+ *         description: The ID of the product to remove
  *     responses:
  *       204:
  *         description: Item removed
@@ -114,10 +122,10 @@ router.delete("/:productId", authenticateToken, handleRemoveFromFavorites);
 
 /**
  * @swagger
- * /favorites/{productId}/is-favorited:
- *   get:
- *     summary: Check if a product is in the user's favorites
- *     description: Returns whether the specified product is favorited by the authenticated user
+ * /favorites/toggle/{productId}:
+ *   patch:
+ *     summary: Toggle favorite status for a product
+ *     description: Toggle favorite status for a product
  *     tags:
  *       - Favorites
  *     security:
@@ -128,29 +136,19 @@ router.delete("/:productId", authenticateToken, handleRemoveFromFavorites);
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the product to check
+ *         description: The ID of the product to toggle
  *     responses:
  *       200:
- *         description: Favorited status retrieved
+ *         description: Favorite status toggled
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                 data:
- *                   type: object
- *                   properties:
- *                     isFavorited:
- *                       type: boolean
+ *               $ref: '#/components/schemas/FavoritesItem'
  *       400:
  *         description: Missing productId in request
  *       500:
- *         description: Failed to check if product is favorited
+ *         description: Failed to toggle favorite status
  */
-router.get("/:productId/is-favorited", authenticateToken, handleIsFavorited);
-
 router.patch("/toggle/:productId", authenticateToken, handleToggleFavorite);
 
 export default router;
