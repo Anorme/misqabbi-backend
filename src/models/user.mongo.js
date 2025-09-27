@@ -14,7 +14,7 @@ import {
  * - References a Product by ObjectId.
  * - Does not generate its own _id to keep the structure lean.
  */
-const favoritesItemSchema = new Schema(
+const favoriteItemSchema = new Schema(
   {
     productId: {
       type: Schema.Types.ObjectId,
@@ -32,7 +32,7 @@ const favoritesItemSchema = new Schema(
  * - email {String} required, unique, trimmed, lowercase
  * - password {String} required (hashed before save)
  * - role {String} enum: 'user' | 'admin'
- * - favorites {Array<FavoritesItem>} embedded for quick access
+ * - favorites {Array<FavoriteItem>} embedded for quick access
  * - previousOrders {Array<ObjectId>} references Order documents
  */
 const userSchema = new Schema(
@@ -71,7 +71,7 @@ const userSchema = new Schema(
       enum: ["user", "admin"],
       default: "user",
     },
-    favorites: [favoritesItemSchema], // Embedded for fast access and frequent updates
+    favorites: [favoriteItemSchema], // Embedded for fast access and frequent updates
     previousOrders: [
       {
         type: Schema.Types.ObjectId,

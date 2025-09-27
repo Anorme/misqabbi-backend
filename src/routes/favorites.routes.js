@@ -27,7 +27,7 @@ const router = express.Router();
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/FavoritesItem'
+ *               $ref: '#/components/schemas/FavoriteItem'
  */
 router.get("/", authenticateToken, handleGetFavorites);
 
@@ -86,14 +86,14 @@ router.get("/status/:productId", authenticateToken, handleIsFavorited);
  *       content:
  *         application/json:
  *             schema:
- *               $ref: '#/components/schemas/FavoritesItem'
+ *               $ref: '#/components/schemas/FavoriteItem'
  *     responses:
  *       201:
  *         description: Favorites updated
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/FavoritesItem'
+ *               $ref: '#/components/schemas/FavoriteItem'
  */
 router.post("/", authenticateToken, handleAddToFavorites);
 
@@ -143,7 +143,7 @@ router.delete("/:productId", authenticateToken, handleRemoveFromFavorites);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/FavoritesItem'
+ *               $ref: '#/components/schemas/FavoriteItem'
  *       400:
  *         description: Missing productId in request
  *       500:
