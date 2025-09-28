@@ -12,7 +12,17 @@ async function getFavorites(userId) {
 
     if (!user) throw new Error("User not found");
 
-    return user.favorites || [];
+    const transformFavorites = (user.favorites || [])
+      .filter(fav => fav.productId)
+      .map(fav => ({
+        productId: fav.productId._id,
+        name: fav.productId.name,
+        price: fav.productId.price,
+        images: fav.productId.images,
+        stock: fav.productId.stock,
+      }));
+
+    return transformFavorites;
   } catch (error) {
     logger.error(
       `[favorites.model] Error fetching user ${userId} favorites: ${error.message}`
