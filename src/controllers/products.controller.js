@@ -25,17 +25,22 @@ export async function getProducts(req, res) {
     const pageNum = Math.max(parseInt(page) || 1, 1);
     const limitNum = Math.max(parseInt(limit) || 10, 1);
 
-    const filters = { q, category, minPrice, maxPrice };
+    const filters = {
+      q: q?.trim() || undefined,
+      category: category?.trim() || undefined,
+      minPrice: minPrice ? Number(minPrice) : undefined,
+      maxPrice: maxPrice ? Number(maxPrice) : undefined,
+    };
 
-    const products = await getDiscoverableProducts(filters, pageNum, limitNum);
     const total = await countDiscoverableProducts(filters);
 
-    if (pageNum > Math.ceil(total / limitNum)) {
+    if (pageNum > Math.ceil(total / limitNum) && total > 0) {
       return res.status(400).json({
         success: false,
         error: "Requested page exceeds available product pages",
       });
     }
+    const products = await getDiscoverableProducts(filters, pageNum, limitNum);
 
     res.json({
       success: true,
