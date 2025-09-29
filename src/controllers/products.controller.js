@@ -4,8 +4,8 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
-  getPaginatedPublishedProducts,
-  countPublishedProducts,
+  searchPublishedProducts,
+  countSearchedProducts,
 } from "../models/product.model.js";
 import logger from "../config/logger.js";
 import { formatResponse } from "../utils/responseFormatter.js";
@@ -24,14 +24,14 @@ export async function getProducts(req, res) {
     const page = Math.max(parseInt(req.query.page) || 1, 1);
     const limit = Math.max(parseInt(req.query.limit) || 10, 1);
 
-    const totalPublishedProducts = await countPublishedProducts();
+    const totalPublishedProducts = await countSearchedProducts();
     if (page > Math.ceil(totalPublishedProducts / limit)) {
       return res.status(400).json({
         success: false,
         error: "Requested page exceeds available product pages",
       });
     }
-    const products = await getPaginatedPublishedProducts(page, limit);
+    const products = await searchPublishedProducts(page, limit);
     res.json({
       success: true,
       data: products,
