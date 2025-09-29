@@ -21,7 +21,7 @@ export function buildProductQuery(params) {
 
   // Price range
   if (minPrice || maxPrice) {
-    query.price || {};
+    query.price = query.price || {};
     if (minPrice) query.price.$gte = Number(minPrice);
     if (maxPrice) query.price.$lte = Number(maxPrice);
   }
