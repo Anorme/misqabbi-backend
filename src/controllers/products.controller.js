@@ -4,40 +4,45 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
-  getPaginatedPublishedProducts,
-  countPublishedProducts,
+  getDiscoverableProducts,
+  countDiscoverableProducts,
 } from "../models/product.model.js";
 import logger from "../config/logger.js";
 import { formatResponse } from "../utils/responseFormatter.js";
 
 /**
- * Fetches a paginated list of published products.
+ * Retrieves a paginated list of discoverable (published, filtered, and/or searched) products.
  * @async
  * @function getProducts
- * @param {Request} req - Express request object with optional query params: page, limit
+ * @param {Request} req - Express request object with optional query params: q, category, minPrice, maxPrice, page, limit
  * @param {Response} res - Express response object
- * @returns {Promise<void>} Sends JSON response with product data and pagination info
+ * @returns {Promise<void>} Sends JSON response with product data, total count, total pages, and current page
  */
-
 export async function getProducts(req, res) {
   try {
-    const page = Math.max(parseInt(req.query.page) || 1, 1);
-    const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+    const { q, category, minPrice, maxPrice, page, limit } = req.query;
 
-    const totalPublishedProducts = await countPublishedProducts();
-    if (page > Math.ceil(totalPublishedProducts / limit)) {
+    const pageNum = Math.max(parseInt(page) || 1, 1);
+    const limitNum = Math.max(parseInt(limit) || 10, 1);
+
+    const filters = { q, category, minPrice, maxPrice };
+
+    const products = await getDiscoverableProducts(filters, pageNum, limitNum);
+    const total = await countDiscoverableProducts(filters);
+
+    if (pageNum > Math.ceil(total / limitNum)) {
       return res.status(400).json({
         success: false,
         error: "Requested page exceeds available product pages",
       });
     }
-    const products = await getPaginatedPublishedProducts(page, limit);
+
     res.json({
       success: true,
       data: products,
-      total: totalPublishedProducts,
-      totalPages: Math.ceil(totalPublishedProducts / limit),
-      currentPage: page,
+      total,
+      totalPages: Math.ceil(total / limitNum),
+      currentPage: pageNum,
     });
   } catch (error) {
     logger.error(
