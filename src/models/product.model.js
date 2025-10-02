@@ -31,6 +31,7 @@ async function getAllPublishedProducts() {
   }
 }
 
+// Deprecated: use countDiscoverableProducts instead
 /**
  * @desc    Count all published products matching given filters
  * @param   {Object} filters - Search filters
@@ -87,6 +88,40 @@ async function searchPublishedProducts(filters = {}, page = 1, limit = 10) {
       .limit(limit);
   } catch (error) {
     logger.error(`[products.model] Error searching products: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
+ * @desc    Count the number of products matching discoverable (search/filter) criteria.
+ * @param   {Object} params - Query parameters for filtering/searching products (e.g., q, category, minPrice, maxPrice)
+ * @returns {Promise<Number>} Count of products matching the criteria
+ */
+async function countDiscoverableProducts(params) {
+  const { query } = buildProductQuery(params);
+  return await Product.countDocuments(query);
+}
+
+/**
+ * @desc    Retrieve a paginated set of products matching discoverable (search/filter) criteria.
+ * @param   {Object} params - Query parameters for filtering/searching products (e.g., q, category, minPrice, maxPrice)
+ * @returns {Promise<Array>} Array of products matching the criteria
+ */
+async function getDiscoverableProducts(params, page = 1, limit = 10) {
+  try {
+    const { query, projection, sort } = buildProductQuery(params);
+    const skip = (page - 1) * limit;
+
+    const products = await Product.find(query, projection)
+      .sort(sort)
+      .skip(skip)
+      .limit(limit);
+
+    return products;
+  } catch (error) {
+    logger.error(
+      `[products.model] Error getting discoverable products: ${error.message}`
+    );
     throw error;
   }
 }

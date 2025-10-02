@@ -9,16 +9,16 @@ import {
 } from "../models/product.model.js";
 import logger from "../config/logger.js";
 import { formatResponse } from "../utils/responseFormatter.js";
+import { isValidSortOption } from "../utils/validators.js";
 
 /**
- * Fetches a paginated list of published products.
+ * Retrieves a paginated list of discoverable (published, filtered, and/or searched) products.
  * @async
  * @function getProducts
- * @param {Request} req - Express request object with optional query params: page, limit
+ * @param {Request} req - Express request object with optional query params: q, category, minPrice, maxPrice, page, limit, sort
  * @param {Response} res - Express response object
- * @returns {Promise<void>} Sends JSON response with product data and pagination info
+ * @returns {Promise<void>} Sends JSON response with product data, total count, total pages, and current page
  */
-
 export async function getProducts(req, res) {
   try {
     const page = Math.max(parseInt(req.query.page) || 1, 1);
@@ -31,9 +31,9 @@ export async function getProducts(req, res) {
     return res.json({
       success: true,
       data: products,
-      total: totalPublishedProducts,
-      totalPages: Math.ceil(totalPublishedProducts / limit),
-      currentPage: page,
+      total,
+      totalPages: Math.ceil(total / limitNum),
+      currentPage: pageNum,
     });
   } catch (error) {
     logger.error(
