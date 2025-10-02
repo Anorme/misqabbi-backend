@@ -9,27 +9,40 @@ import {
 } from "../models/product.model.js";
 import logger from "../config/logger.js";
 import { formatResponse } from "../utils/responseFormatter.js";
+import { isValidSortOption } from "../utils/validators.js";
 
 /**
  * Retrieves a paginated list of discoverable (published, filtered, and/or searched) products.
  * @async
  * @function getProducts
- * @param {Request} req - Express request object with optional query params: q, category, minPrice, maxPrice, page, limit
+ * @param {Request} req - Express request object with optional query params: q, category, minPrice, maxPrice, page, limit, sort
  * @param {Response} res - Express response object
  * @returns {Promise<void>} Sends JSON response with product data, total count, total pages, and current page
  */
 export async function getProducts(req, res) {
   try {
-    const { q, category, minPrice, maxPrice, page, limit } = req.query;
+    const { q, category, minPrice, maxPrice, page, limit, sort } = req.query;
 
     const pageNum = Math.max(parseInt(page) || 1, 1);
     const limitNum = Math.max(parseInt(limit) || 10, 1);
+
+    // Validate sort parameter
+    if (sort && !isValidSortOption(sort)) {
+      return res.status(400).json(
+        formatResponse({
+          success: false,
+          error:
+            "Invalid sort option. Valid options are: latest, price-low-high, price-high-low, name-a-z, name-z-a",
+        })
+      );
+    }
 
     const filters = {
       q: q?.trim() || undefined,
       category: category?.trim() || undefined,
       minPrice: minPrice ? Number(minPrice) : undefined,
       maxPrice: maxPrice ? Number(maxPrice) : undefined,
+      sort: sort?.trim() || undefined,
     };
 
     const total = await countDiscoverableProducts(filters);
