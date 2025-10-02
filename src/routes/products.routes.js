@@ -17,8 +17,8 @@ const router = express.Router();
  * @swagger
  * /products:
  *   get:
- *     summary: Fetch all published products
- *     description: Fetch all published products
+ *     summary: Fetch all published products with filtering, searching, and sorting
+ *     description: Fetch all published products with optional filtering by category, price range, search query, and sorting options
  *     tags:
  *       - Products
  *     parameters:
@@ -28,12 +28,46 @@ const router = express.Router();
  *         schema:
  *           type: integer
  *           default: 1
+ *         description: Page number for pagination
  *       - in: query
  *         name: limit
  *         required: false
  *         schema:
  *           type: integer
  *           default: 10
+ *         description: Number of products per page
+ *       - in: query
+ *         name: q
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Search query for product name, description, or category
+ *       - in: query
+ *         name: category
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Filter products by category
+ *       - in: query
+ *         name: minPrice
+ *         required: false
+ *         schema:
+ *           type: number
+ *         description: Minimum price filter
+ *       - in: query
+ *         name: maxPrice
+ *         required: false
+ *         schema:
+ *           type: number
+ *         description: Maximum price filter
+ *       - in: query
+ *         name: sort
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [latest, price-low-high, price-high-low, name-a-z, name-z-a]
+ *           default: latest
+ *         description: Sort products by specified criteria
  *     responses:
  *       200:
  *         description: A list of published products
@@ -74,6 +108,21 @@ const router = express.Router();
  *                 total: 2
  *                 totalPages: 1
  *                 currentPage: 1
+ *       400:
+ *         description: Invalid request parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates whether the request was successful
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ *                   example: "Invalid sort option. Valid options are: latest, price-low-high, price-high-low, name-a-z, name-z-a"
  *       500:
  *         description: Failed to load products
  *         content:
