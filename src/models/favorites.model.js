@@ -7,7 +7,7 @@ async function getFavorites(userId) {
   try {
     const user = await User.findById(userId).select("favorites").populate({
       path: "favorites.productId",
-      select: "name price images stock",
+      select: "name price images stock slug",
     });
 
     if (!user) throw new Error("User not found");
@@ -20,6 +20,7 @@ async function getFavorites(userId) {
         price: fav.productId.price,
         images: fav.productId.images,
         stock: fav.productId.stock,
+        slug: fav.productId.slug,
       }));
 
     return transformFavorites;
