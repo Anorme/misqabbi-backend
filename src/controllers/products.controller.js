@@ -23,16 +23,12 @@ export async function getProducts(req, res) {
   try {
     const page = Math.max(parseInt(req.query.page) || 1, 1);
     const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+    const filters = req.query; // must pass this
 
-    const totalPublishedProducts = await countSearchedProducts();
-    if (page > Math.ceil(totalPublishedProducts / limit)) {
-      return res.status(400).json({
-        success: false,
-        error: "Requested page exceeds available product pages",
-      });
-    }
-    const products = await searchPublishedProducts(page, limit);
-    res.json({
+    const totalPublishedProducts = await countSearchedProducts(filters);
+    const products = await searchPublishedProducts(filters, page, limit);
+
+    return res.json({
       success: true,
       data: products,
       total: totalPublishedProducts,
@@ -41,14 +37,12 @@ export async function getProducts(req, res) {
     });
   } catch (error) {
     logger.error(
-      `[products.controller] Failed to fetch products: ${error.message}`
+      `[products.controller] Error getting products: ${error.message}`
     );
-    res.status(500).json(
-      formatResponse({
-        success: false,
-        error: "Failed to load products",
-      })
-    );
+    return res.status(500).json({
+      success: false,
+      error: error.message || "Failed to load products",
+    });
   }
 }
 

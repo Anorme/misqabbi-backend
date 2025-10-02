@@ -1,5 +1,6 @@
 import Product from "./product.mongo.js";
 import logger from "../config/logger.js";
+import { buildProductQuery } from "../utils/productQueryBuilder.js";
 
 /**
  * @desc    Retrieve all products from the database (regardless of publish status)
@@ -31,68 +32,57 @@ async function getAllPublishedProducts() {
 }
 
 /**
- * @desc    Retrieve the count of all products where isPublished is true
- * @returns {Promise<Number>} Count of published product documents
- * @throws  {Error} When there is an error during the count operation
+ * @desc    Count all published products matching given filters
+ * @param   {Object} filters - Search filters
+ * @param   {String} [filters.q] - Full-text search query (matches name, description, category, brand)
+ * @param   {String} [filters.category] - Product category to filter by
+ * @param   {Number} [filters.minPrice] - Minimum product price
+ * @param   {Number} [filters.maxPrice] - Maximum product price
+ * @returns {Promise<Number>} Count of matching published products
+ * @throws  {Error} If the count operation fails
  */
+
 async function countSearchedProducts(filters = {}) {
-  const query = { isPublished: true };
-
-  // replicate the same filter conditions as in searchPublishedProducts
-  if (filters.name) {
-    query.name = { $regex: filters.name, $options: "i" }; // case-insensitive
-  }
-
-  if (filters.category) {
-    query.category = filters.category.toLowerCase();
-  }
-
-  if (filters.minPrice || filters.maxPrice) {
-    query.price = {};
-    if (filters.minPrice) query.price.$gte = Number(filters.minPrice);
-    if (filters.maxPrice) query.price.$lte = Number(filters.maxPrice);
-  }
-
-  // add any other filters used in the future here
-
+  const query = buildProductQuery(filters);
   return Product.countDocuments(query);
 }
 
 /**
- * @desc    Retrieve a paginated set of published products
- * @param   {Number} page - Page number of results to return
- * @param   {Number} limit - Number of results per page
- * @returns {Promise<Array>} Array of published product documents
- * @throws  {Error} When there is an error fetching the paginated products
+ * @desc    Search published products with filters, pagination, and sorting
+ * @param   {Object} filters - Search filters
+ * @param   {String} [filters.q] - Full-text search query (matches name, description, category, brand)
+ * @param   {String} [filters.category] - Product category to filter by
+ * @param   {Number} [filters.minPrice] - Minimum product price
+ * @param   {Number} [filters.maxPrice] - Maximum product price
+ * @param   {Number} [page=1] - Page number for pagination (must be >= 1)
+ * @param   {Number} [limit=10] - Number of results per page (must be >= 1)
+ * @returns {Promise<Array>} Array of published product documents matching criteria
+ * @throws  {Error} If the search operation fails
  */
-/** * @desc    Search published products based on filters with pagination
- * @param   {Object} filters - Search filters (name, category, minPrice, maxPrice)
- * @param   {Number} page - Page number for pagination
- * @param   {Number} limit - Number of results per page
- * @returns {Promise<Array>} Array of matching published product documents
- * @throws  {Error} When there is an error during the search
- */
-
 async function searchPublishedProducts(filters = {}, page = 1, limit = 10) {
   try {
-    const query = { isPublished: true };
+    if (typeof filters !== "object" || Array.isArray(filters)) {
+      filters = {};
+    }
+    const query = buildProductQuery(filters);
 
-    if (filters.name) {
-      query.name = { $regex: filters.name, $options: "i" };
+    // Safe parsing for page/limit
+    page = Math.max(parseInt(page) || 1, 1);
+    limit = Math.max(parseInt(limit) || 10, 1);
+
+    // Sorting logic
+    const sort = {};
+    if (filters.q) {
+      sort.score = { $meta: "textScore" };
+    } else {
+      sort.createdAt = -1;
     }
 
-    if (filters.category) {
-      query.category = filters.category.toLowerCase();
-    }
+    // Only project score field if doing text search
+    const projection = filters.q ? { score: { $meta: "textScore" } } : {};
 
-    if (filters.minPrice || filters.maxPrice) {
-      query.price = {};
-      if (filters.minPrice) query.price.$gte = Number(filters.minPrice);
-      if (filters.maxPrice) query.price.$lte = Number(filters.maxPrice);
-    }
-
-    // pagination
-    return await Product.find(query)
+    return await Product.find(query, projection)
+      .sort(sort)
       .skip((page - 1) * limit)
       .limit(limit);
   } catch (error) {
