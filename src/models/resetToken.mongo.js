@@ -1,5 +1,11 @@
 import { model, Schema } from "mongoose";
-
+/**
+ * @typedef ResetToken
+ * @property {Schema.Types.ObjectId} userId - Reference to the User who requested the reset
+ * @property {String} token                - Unique reset token string
+ * @property {Date} createdAt              - Timestamp of token creation
+ * @property {Date} updatedAt              - Timestamp of last update
+ */
 const resetTokenSchema = new Schema(
   {
     userId: {
