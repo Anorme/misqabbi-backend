@@ -6,7 +6,14 @@ import logger from "../config/logger.js";
 import { signToken } from "../services/jwtService.js";
 import getCookieOptions from "../utils/getCookieOptions.js";
 import { formatResponse } from "../utils/responseFormatter.js";
-import { createLocalUser, findUserByEmail } from "../models/user.model.js";
+import {
+  createLocalUser,
+  findUserByEmail,
+  findUserById,
+} from "../models/user.model.js";
+import crypto from "crypto";
+import ResetToken from "../models/resetToken.mongo.js";
+import { sendEmail } from "../services/emailService.js";
 
 /**
  * @route   POST /signup
@@ -21,7 +28,7 @@ import { createLocalUser, findUserByEmail } from "../models/user.model.js";
  * - Responds with newly created user ID or a generic error message
  */
 
-async function registerUser(req, res) {
+export async function registerUser(req, res) {
   const { email, password, displayName } = req.body;
   try {
     const existingUser = await findUserByEmail(email);
@@ -60,7 +67,7 @@ async function registerUser(req, res) {
  * - Logs outcome and returns token for client-side usage
  * - Gracefully handles failures and token generation errors
  */
-async function loginUser(req, res, next) {
+export async function loginUser(req, res, next) {
   passport.authenticate("local", { session: false }, (err, user, info) => {
     if (err || !user) {
       logger.warn(`[loginUser] Login failed: ${info?.message || err.message}`);
@@ -214,7 +221,7 @@ function finalizeAuth(req, res, options = {}) {
  * @param {Object} res - Express response object
  * @returns {Promise<void>} Sends a JSON response with a success message and clears the authentication token cookie
  */
-const logoutUser = (req, res) => {
+export const logoutUser = (req, res) => {
   res.clearCookie("auth_token", getCookieOptions());
   return res.status(200).json(
     formatResponse({
@@ -223,4 +230,107 @@ const logoutUser = (req, res) => {
   );
 };
 
-export { registerUser, loginUser, logoutUser };
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await findUserByEmail(email);
+
+    if (!user) {
+      logger.warn(
+        `[forgotPassword] Password reset requested for non-existent email: ${email}`
+      );
+      // Always respond the same way
+      return res.json({
+        success: true,
+        message: "If the email exists, a reset link has been sent",
+      });
+    }
+
+    // Generate raw token
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    logger.info(`[forgotPassword] Generated reset token for user ${user._id}`);
+
+    // Hash token for DB
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+    logger.info(`[forgotPassword] Hashed reset token for storage`);
+
+    // Cleanup old tokens
+    await ResetToken.deleteMany({ userId: user._id });
+
+    // Save new token
+    await ResetToken.create({
+      userId: user._id,
+      token: hashedToken,
+      expiresAt: Date.now() + 30 * 60 * 1000, // 30 minutes
+    });
+
+    // Build reset URL with raw token (not hashed!)
+    const resetUrl = `${env.FRONTEND_URL}/reset-password?token=${rawToken}&id=${user._id}`;
+
+    // Send email
+    await sendEmail(
+      user.email,
+      "Password Reset",
+      `Click here to reset your password: ${resetUrl}`
+    );
+
+    return res.json({
+      success: true,
+      message: "If the email exists, a reset link has been sent",
+    });
+  } catch (error) {
+    logger.error(`[forgotPassword] Error: ${error.message}`);
+    return res.status(500).json({
+      success: false,
+      error: "Server error",
+    });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  const { userId, token } = req.query; // <-- from query string
+  const { newPassword } = req.body; // <-- from request body
+  try {
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    const resetTokenDoc = await ResetToken.findOne({
+      userId,
+      token: hashedToken,
+    });
+    if (!resetTokenDoc) {
+      logger.warn(
+        `[resetPassword] Invalid or expired reset token for user ${userId}`
+      );
+      return res.status(400).json({
+        success: false,
+        error: "Invalid or expired token",
+      });
+    }
+
+    const user = await findUserById(userId);
+    if (!user) {
+      logger.warn(`[resetPassword] No user found for ID ${userId}`);
+      return res.status(400).json({
+        success: false,
+        error: "Invalid user",
+      });
+    }
+    user.password = newPassword;
+    await user.save();
+    await ResetToken.deleteMany({ userId });
+    logger.info(`[resetPassword] Password reset successful for user ${userId}`);
+    return res.json({
+      success: true,
+      message: "Password has been reset successfully",
+    });
+  } catch (error) {
+    logger.error(`[resetPassword] Error: ${error.message}`);
+    return res.status(500).json({
+      success: false,
+      error: "Server error",
+    });
+  }
+};
