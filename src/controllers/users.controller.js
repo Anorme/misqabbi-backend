@@ -269,7 +269,7 @@ export const forgotPassword = async (req, res) => {
     });
 
     // Build reset URL with raw token (not hashed!)
-    const resetUrl = `${env.FRONTEND_URL}/reset-password?token=${rawToken}&id=${user._id}`;
+    const resetUrl = `http://localhost:3000/reset-password?token=${rawToken}&id=${user._id}`;
 
     // Send email
     await sendEmail(
@@ -292,14 +292,17 @@ export const forgotPassword = async (req, res) => {
 };
 
 export const resetPassword = async (req, res) => {
-  const { userId, token } = req.query; // <-- from query string
-  const { newPassword } = req.body; // <-- from request body
+  const { userId, token } = req.params; // <-- from URL params
+  const { newPassword } = req.body;
+
   try {
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
     const resetTokenDoc = await ResetToken.findOne({
       userId,
       token: hashedToken,
     });
+
     if (!resetTokenDoc) {
       logger.warn(
         `[resetPassword] Invalid or expired reset token for user ${userId}`
@@ -318,9 +321,12 @@ export const resetPassword = async (req, res) => {
         error: "Invalid user",
       });
     }
+
     user.password = newPassword;
     await user.save();
+
     await ResetToken.deleteMany({ userId });
+
     logger.info(`[resetPassword] Password reset successful for user ${userId}`);
     return res.json({
       success: true,

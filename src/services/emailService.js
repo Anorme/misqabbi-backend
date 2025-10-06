@@ -1,22 +1,35 @@
 import nodemailer from "nodemailer";
 import logger from "../config/logger.js";
+import dotenv from "dotenv";
+dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // true for port 465, false for others like 587
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+let transporter;
+console.log("EMAIL_USER:", process.env.EMAIL_USER);
+console.log("EMAIL_PASS:", process.env.EMAIL_PASS ? "Loaded" : "Missing");
 
-/**
- * Send an email using Nodemailer
- * @param {string} to - Recipient email address
- * @param {string} subject - Email subject line
- * @param {string} text - Plain text body of the email
- */
+try {
+  transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true, // true for 465, false for 587
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  // Optionally verify connection once
+  transporter
+    .verify()
+    .then(() => logger.info("✅ Mail transporter is ready"))
+    .catch(err =>
+      logger.error(`[sendEmail] Transporter verify failed: ${err.message}`)
+    );
+} catch (error) {
+  logger.error(`[sendEmail] Transporter creation failed: ${error.message}`);
+  console.error("Full error:", error);
+}
+
 export const sendEmail = async (to, subject, text) => {
   try {
     const mailOptions = {

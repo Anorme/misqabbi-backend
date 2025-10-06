@@ -420,6 +420,6 @@ router.post("/forgot-password", forgotPassword);
  * type: string
  * description: Error message
  */
-router.post("reset-password/:userId/:token", resetPassword);
+router.post("/reset-password/:userId/:token", resetPassword);
 
 export default router;
