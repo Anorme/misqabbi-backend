@@ -72,6 +72,15 @@ const productSchema = new Schema(
   { timestamps: true }
 );
 
+productSchema.index(
+  {
+    name: "text",
+    description: "text",
+    category: "text",
+  },
+  { name: "ProductTextIndex" }
+);
+
 productSchema.pre("save", function (next) {
   if (!this.slug && this.name) {
     this.slug = slugify(this.name, {
