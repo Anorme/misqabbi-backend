@@ -22,6 +22,10 @@ const baseSchema = {
   GOOGLE_CLIENT_SECRET: str(),
   GOOGLE_CALLBACK_URL: url(),
   GOOGLE_REDIRECT_URL: url(),
+  BASE_URL: url(),
+  EMAIL_HOST: str(),
+  EMAIL_PORT: port(),
+
   COOKIE_ENV: str({
     choices: ["local", "development", "staging", "production"],
     default: "local",
