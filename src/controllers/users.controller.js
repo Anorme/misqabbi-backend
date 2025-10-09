@@ -272,7 +272,7 @@ export const forgotPassword = async (req, res) => {
     });
 
     // Build reset URL with raw token (not hashed!)
-    const resetUrl = `http://localhost:3000/reset-password?token=${rawToken}&id=${user._id}`;
+    const resetUrl = `${process.env.BASE_URL}/reset-password?token=${rawToken}&id=${user._id}`;
 
     // Send email
     await sendEmail(
