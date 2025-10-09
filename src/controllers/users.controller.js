@@ -14,6 +14,7 @@ import {
 import crypto from "crypto";
 import ResetToken from "../models/resetToken.mongo.js";
 import { sendEmail } from "../services/emailService.js";
+import { PASSWORD_RESET_EMAIL } from "../constants/emailTemplates.js";
 
 /**
  * @route   POST /signup
@@ -241,10 +242,12 @@ export const forgotPassword = async (req, res) => {
         `[forgotPassword] Password reset requested for non-existent email: ${email}`
       );
       // Always respond the same way
-      return res.json({
-        success: true,
-        message: "If the email exists, a reset link has been sent",
-      });
+      return res.json(
+        formatResponse({
+          success: true,
+          message: "If the email exists, a reset link has been sent",
+        })
+      );
     }
 
     // Generate raw token
@@ -275,19 +278,23 @@ export const forgotPassword = async (req, res) => {
     await sendEmail(
       user.email,
       "Password Reset",
-      `Click here to reset your password: ${resetUrl}`
+      PASSWORD_RESET_EMAIL(resetUrl)
     );
 
-    return res.json({
-      success: true,
-      message: "If the email exists, a reset link has been sent",
-    });
+    return res.json(
+      formatResponse({
+        success: true,
+        message: "If the email exists, a reset link has been sent",
+      })
+    );
   } catch (error) {
     logger.error(`[forgotPassword] Error: ${error.message}`);
-    return res.status(500).json({
-      success: false,
-      error: "Server error",
-    });
+    return res.status(500).json(
+      formatResponse({
+        success: false,
+        error: "Server error",
+      })
+    );
   }
 };
 
@@ -307,19 +314,23 @@ export const resetPassword = async (req, res) => {
       logger.warn(
         `[resetPassword] Invalid or expired reset token for user ${userId}`
       );
-      return res.status(400).json({
-        success: false,
-        error: "Invalid or expired token",
-      });
+      return res.status(400).json(
+        formatResponse({
+          success: false,
+          error: "Invalid or expired token",
+        })
+      );
     }
 
     const user = await findUserById(userId);
     if (!user) {
       logger.warn(`[resetPassword] No user found for ID ${userId}`);
-      return res.status(400).json({
-        success: false,
-        error: "Invalid user",
-      });
+      return res.status(400).json(
+        formatResponse({
+          success: false,
+          error: "Invalid user",
+        })
+      );
     }
 
     user.password = newPassword;
@@ -328,15 +339,19 @@ export const resetPassword = async (req, res) => {
     await ResetToken.deleteMany({ userId });
 
     logger.info(`[resetPassword] Password reset successful for user ${userId}`);
-    return res.json({
-      success: true,
-      message: "Password has been reset successfully",
-    });
+    return res.json(
+      formatResponse({
+        success: true,
+        message: "Password has been reset successfully",
+      })
+    );
   } catch (error) {
     logger.error(`[resetPassword] Error: ${error.message}`);
-    return res.status(500).json({
-      success: false,
-      error: "Server error",
-    });
+    return res.status(500).json(
+      formatResponse({
+        success: false,
+        error: "Server error",
+      })
+    );
   }
 };
