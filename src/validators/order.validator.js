@@ -16,7 +16,7 @@ import mongoose from "mongoose";
 export const orderValidator = Joi.object({
   user: Joi.string()
     .custom((value, helpers) => {
-      if (!mongoose.Types.objectId.isValid(value)) {
+      if (!mongoose.Types.ObjectId.isValid(value)) {
         return helpers.error("any.invalid");
       }
       return value; // must return the value if valid
