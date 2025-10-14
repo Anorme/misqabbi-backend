@@ -140,7 +140,15 @@ const options = {
             },
             status: {
               type: "string",
-              enum: ["pending", "paid", "shipped", "delivered", "cancelled"],
+              enum: [
+                "accepted",
+                "processing",
+                "ready",
+                "enroute_pickup",
+                "picked_up",
+                "in_transit",
+                "arrived",
+              ],
               description: "Current status of the order",
             },
             createdAt: {
@@ -164,7 +172,7 @@ const options = {
               },
             ],
             totalPrice: 99.98,
-            status: "paid",
+            status: "accepted",
             createdAt: "2025-08-21T14:32:00.000Z",
             updatedAt: "2025-08-21T15:10:00.000Z",
           },
