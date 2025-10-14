@@ -55,6 +55,30 @@ export async function getOrdersByUser(userId) {
   }
 }
 
+export async function getPaginatedOrdersByUser(userId, page, limit) {
+  try {
+    const skip = (page - 1) * limit;
+
+    return await Order.find({ user: userId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate({ path: "items.product", select: "name slug images price" });
+  } catch (error) {
+    logger.warn(error.message);
+    throw new Error(error.message);
+  }
+}
+
+export async function countOrdersByUser(userId) {
+  try {
+    return await Order.countDocuments({ user: userId });
+  } catch (error) {
+    logger.warn(error.message);
+    throw new Error(error.message);
+  }
+}
+
 export async function fetchOrderById(orderId, userId) {
   try {
     // Retrieve a specific order by ID, scoped to the logged-in user
