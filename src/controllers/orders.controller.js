@@ -9,7 +9,12 @@ import logger from "../config/logger.js";
 export const createOrder = async (req, res) => {
   const { user, items, totalPrice } = req.body;
   try {
-    const order = await createOrderFromCart(user, items, totalPrice, "pending");
+    const order = await createOrderFromCart(
+      user,
+      items,
+      totalPrice,
+      "accepted"
+    );
     res.status(201).json({ order });
   } catch (error) {
     logger.warn(error);
