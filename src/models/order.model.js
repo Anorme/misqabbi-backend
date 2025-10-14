@@ -107,7 +107,9 @@ export async function updateOrderStatus(id, status) {
         new: true,
         runValidators: true,
       }
-    );
+    )
+      .populate({ path: "items.product", select: "name slug images price" })
+      .populate({ path: "user", select: "name email" });
     return updated;
   } catch (error) {
     logger.error(
@@ -138,7 +140,9 @@ export async function getPaginatedPublishedOrders(page, limit, query) {
     return await Order.find(filterOptions)
       .sort({ createdAt: -1 })
       .skip(startIndex)
-      .limit(limit);
+      .limit(limit)
+      .populate({ path: "items.product", select: "name slug images price" })
+      .populate({ path: "user", select: "name email" });
   } catch (error) {
     logger.error(
       `[orders.model] Error fetching paginated orders: ${error.message}`
