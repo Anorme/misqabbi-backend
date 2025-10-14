@@ -45,8 +45,16 @@ const OrderSchema = new Schema(
     // Status of the order (enum ensures only allowed values are accepted)
     status: {
       type: String,
-      enum: ["pending", "paid", "shipped", "delivered", "cancelled"],
-      default: "pending",
+      enum: [
+        "accepted",
+        "processing",
+        "ready",
+        "enroute_pickup",
+        "picked_up",
+        "in_transit",
+        "arrived",
+      ],
+      default: "accepted",
     },
   },
   {
