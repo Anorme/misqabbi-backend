@@ -82,7 +82,10 @@ export async function countOrdersByUser(userId) {
 export async function fetchOrderById(orderId, userId) {
   try {
     // Retrieve a specific order by ID, scoped to the logged-in user
-    const order = await Order.findOne({ _id: orderId, user: userId });
+    const order = await Order.findOne({ _id: orderId, user: userId }).populate({
+      path: "items.product",
+      select: "name slug images price",
+    });
 
     // If no order is found or user doesn't own it
     if (!order) {
