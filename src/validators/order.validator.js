@@ -10,7 +10,7 @@ import mongoose from "mongoose";
  *     - quantity: required, number, min 1
  *     - price: required, number, min 0
  * - totalPrice: optional, number, min 0
- * - status: optional, string, one of ['pending', 'paid', 'shipped', 'delivered', 'cancelled'], defaults to 'pending'
+ * - status: optional, string, one of ['accepted', 'processing', 'ready', 'enroute_pickup', 'picked_up', 'in_transit', 'arrived'], defaults to 'accepted'
  */
 
 export const orderValidator = Joi.object({
@@ -44,6 +44,14 @@ export const orderValidator = Joi.object({
     .required(),
   totalPrice: Joi.number().min(0).optional(), // validate total price (min 0)
   status: Joi.string()
-    .valid("pending", "paid", "shipped", "delivered", "cancelled")
-    .default("pending"), // validate status with default value
+    .valid(
+      "accepted",
+      "processing",
+      "ready",
+      "enroute_pickup",
+      "picked_up",
+      "in_transit",
+      "arrived"
+    )
+    .default("accepted"), // validate status with default value
 });
