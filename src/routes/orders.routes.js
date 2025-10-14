@@ -51,15 +51,47 @@ router.post("/checkout", validateOrder, authenticateToken, createOrder);
  *       - Orders
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of orders per page
  *     responses:
  *       200:
- *         description: User orders
+ *         description: User orders (paginated)
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Order'
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Order'
+ *                 total:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ *                 currentPage:
+ *                   type: integer
+ *             example:
+ *               success: true
+ *               data: []
+ *               total: 0
+ *               totalPages: 0
+ *               currentPage: 1
  */
 router.get("/", authenticateToken, getOrders);
 
@@ -81,11 +113,28 @@ router.get("/", authenticateToken, getOrders);
  *          type: string
  *     responses:
  *       200:
- *         description: Order
+ *         description: Order by ID
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Order'
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/Order'
+ *             example:
+ *               success: true
+ *               data:
+ *                 _id: "orderId"
+ *                 items:
+ *                   - product:
+ *                       name: "Product name"
+ *                       slug: "product-slug"
+ *                       images: ["https://.../image.jpg"]
+ *                       price: 100
+ *                     quantity: 1
+ *                     price: 100
  */
 router.get("/:id", authenticateToken, getOrderById);
 
