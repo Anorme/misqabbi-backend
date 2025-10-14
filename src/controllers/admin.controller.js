@@ -36,7 +36,7 @@ export async function getAllOrders(req, res) {
 
 /**
  * @desc    Update an existing order's status
- * @route   PUT /admin/orders/:id
+ * @route   PATCH /admin/orders/:id
  * @access  Admin
  */
 export async function updateOrderStatusHandler(req, res) {
