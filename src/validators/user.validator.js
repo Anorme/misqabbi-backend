@@ -51,3 +51,9 @@ export const userValidator = Joi.object({
     .optional(), // validate previous orders (ObjectId strings)
   profileComplete: Joi.boolean().default(false), // profile completion status
 });
+
+export const updateProfileSchema = Joi.object({
+  displayName: Joi.string().optional(),
+  contact: Joi.string().optional(),
+  location: Joi.string().optional(),
+});
