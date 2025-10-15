@@ -24,6 +24,8 @@ const baseSchema = {
   GOOGLE_REDIRECT_URL: url(),
   BASE_URL: url(),
   EMAIL_PASS: str(),
+  EMAIL_USER: str(),
+  EMAIL_FROM: str(),
 
   COOKIE_ENV: str({
     choices: ["local", "development", "staging", "production"],
