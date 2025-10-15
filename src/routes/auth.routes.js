@@ -4,10 +4,14 @@ import {
   handleGoogleCallback,
   loginUser,
   registerUser,
+  updateUserProfile,
 } from "../controllers/users.controller.js";
 import passport from "passport";
-import { validateUser } from "../middleware/validator.middleware.js";
-import { validateUser } from "../middleware/validator.middleware.js";
+import {
+  updateUserProfilevalidator,
+  validateUser,
+} from "../middleware/validator.middleware.js";
+import { authenticateToken } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
@@ -57,4 +61,10 @@ router.get(
   handleGoogleCallback
 );
 
+router.post(
+  "/update-profile",
+  updateUserProfilevalidator,
+  authenticateToken,
+  updateUserProfile
+);
 export default router;

@@ -4,8 +4,6 @@ const STRONG_PASSWORD_REGEX =
 
 const OBJECTID_REGEX = /^[0-9a-fA-F]{24}$/;
 
-const OBJECTID_REGEX = /^[0-9a-fA-F]{24}$/;
-
 export function isPasswordValidOrGoogleUser(value, doc) {
   return doc.googleId || STRONG_PASSWORD_REGEX.test(value);
 }
