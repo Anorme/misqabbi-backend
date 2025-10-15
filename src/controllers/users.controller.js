@@ -1,7 +1,11 @@
 import passport from "passport";
 
 import logger from "../config/logger.js";
-import { createUser, findUserByEmail } from "../models/user.model.js";
+import {
+  createUser,
+  findUserByEmail,
+  findUserById,
+} from "../models/user.model.js";
 import { signToken } from "../services/jwtService.js";
 
 /**
@@ -111,3 +115,35 @@ function issueToken(req, res, options = {}) {
 }
 
 export { registerUser, loginUser };
+
+export const updateUserProfile = async (req, res) => {
+  const userId = req.user._id;
+  const { displayName, contact, location } = req.body;
+  try {
+    const user = await findUserById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    user.displayName = displayName || user.displayName;
+    user.contact = contact || user.contact;
+    user.location = location || user.location;
+
+    user.profileComplete = Boolean(
+      user.displayName && user.contact && user.location
+    );
+
+    await user.save();
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        displayName: user.displayName,
+        contact: user.contact,
+        location: user.location,
+        profileComplete: user.profileComplete,
+      },
+    });
+  } catch (error) {
+    logger.error(`[updateUserProfile] ${error.message}`);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
