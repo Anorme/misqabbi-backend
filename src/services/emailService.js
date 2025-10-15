@@ -1,11 +1,10 @@
 import nodemailer from "nodemailer";
 import logger from "../config/logger.js";
-import dotenv from "dotenv";
-dotenv.config();
+import env from "../config/env.js";
 
 let transporter;
-console.log("EMAIL_USER:", process.env.EMAIL_USER);
-console.log("EMAIL_PASS:", process.env.EMAIL_PASS ? "Loaded" : "Missing");
+console.log("EMAIL_USER:", env.EMAIL_USER);
+console.log("EMAIL_PASS:", env.EMAIL_PASS ? "Loaded" : "Missing");
 
 try {
   transporter = nodemailer.createTransport({
@@ -13,8 +12,8 @@ try {
     port: 465,
     secure: true, // true for 465, false for 587
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+      user: env.EMAIL_USER,
+      pass: env.EMAIL_PASS,
     },
   });
 
@@ -33,7 +32,7 @@ try {
 export const sendEmail = async (to, subject, text) => {
   try {
     const mailOptions = {
-      from: process.env.EMAIL_FROM,
+      from: env.EMAIL_FROM,
       to,
       subject,
       text,
