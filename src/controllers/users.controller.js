@@ -245,7 +245,7 @@ export const forgotPassword = async (req, res) => {
       return res.json(
         formatResponse({
           success: true,
-          message: "If the email exists, a reset link has been sent",
+          message: "Reset link sent successfully",
         })
       );
     }
