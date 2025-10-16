@@ -1,6 +1,6 @@
+import env from "../config/env.js";
 import nodemailer from "nodemailer";
 import logger from "../config/logger.js";
-import env from "../config/env.js";
 
 let transporter;
 console.log("EMAIL_USER:", env.EMAIL_USER);
