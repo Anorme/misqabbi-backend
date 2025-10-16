@@ -268,7 +268,6 @@ export const forgotPassword = async (req, res) => {
     await ResetToken.create({
       userId: user._id,
       token: hashedToken,
-      expiresAt: Date.now() + 30 * 60 * 1000, // 30 minutes
     });
 
     // Build reset URL with raw token (not hashed!)
