@@ -55,10 +55,37 @@ export async function getOrdersByUser(userId) {
   }
 }
 
+export async function getPaginatedOrdersByUser(userId, page, limit) {
+  try {
+    const skip = (page - 1) * limit;
+
+    return await Order.find({ user: userId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate({ path: "items.product", select: "name slug images price" });
+  } catch (error) {
+    logger.warn(error.message);
+    throw new Error(error.message);
+  }
+}
+
+export async function countOrdersByUser(userId) {
+  try {
+    return await Order.countDocuments({ user: userId });
+  } catch (error) {
+    logger.warn(error.message);
+    throw new Error(error.message);
+  }
+}
+
 export async function fetchOrderById(orderId, userId) {
   try {
     // Retrieve a specific order by ID, scoped to the logged-in user
-    const order = await Order.findOne({ _id: orderId, user: userId });
+    const order = await Order.findOne({ _id: orderId, user: userId }).populate({
+      path: "items.product",
+      select: "name slug images price",
+    });
 
     // If no order is found or user doesn't own it
     if (!order) {
@@ -80,7 +107,9 @@ export async function updateOrderStatus(id, status) {
         new: true,
         runValidators: true,
       }
-    );
+    )
+      .populate({ path: "items.product", select: "name slug images price" })
+      .populate({ path: "user", select: "name email" });
     return updated;
   } catch (error) {
     logger.error(
@@ -111,7 +140,9 @@ export async function getPaginatedPublishedOrders(page, limit, query) {
     return await Order.find(filterOptions)
       .sort({ createdAt: -1 })
       .skip(startIndex)
-      .limit(limit);
+      .limit(limit)
+      .populate({ path: "items.product", select: "name slug images price" })
+      .populate({ path: "user", select: "name email" });
   } catch (error) {
     logger.error(
       `[orders.model] Error fetching paginated orders: ${error.message}`

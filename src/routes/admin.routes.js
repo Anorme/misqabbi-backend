@@ -16,7 +16,7 @@ router.get("/dashboard", authenticateToken, checkAdmin, (req, res) => {
 
 router.get("/orders", authenticateToken, checkAdmin, getAllOrders);
 
-router.put(
+router.patch(
   "/orders/:id",
   authenticateToken,
   checkAdmin,
