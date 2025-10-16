@@ -1,11 +1,12 @@
 import env from "../config/env.js";
 import nodemailer from "nodemailer";
 import logger from "../config/logger.js";
+import { formatResponse } from "../utils/responseFormatter.js";
 
 let transporter;
 
-if(!env.EMAIL_USER || !env.EMAIL_PASS) {
-  logger.warn([emailService]: "Missing email credentials")
+if (!env.EMAIL_USER || !env.EMAIL_PASS) {
+  logger.warn("[emailService] Missing email credentials");
 }
 
 try {
@@ -24,19 +25,23 @@ try {
     .verify()
     .then(() => logger.info("Mail transporter is ready"))
     .catch(err =>
-      logger.error(`[sendEmail] Transporter verification failed: ${err.message}`)
+      logger.error(
+        `[emailService] Transporter verification failed: ${err.message}`
+      )
     );
 } catch (error) {
-  logger.error(`[sendEmail] Transporter creation failed: ${error.message}`);
-  console.error("Full error:", error);
+  logger.error(`[emailService] Transporter creation failed: ${error.message}`);
 }
 
 export const sendEmail = async (to, subject, text) => {
-  if(!transporter) {
-    logger.error("[sendEmail] Transporter is not initialized");
-    return { success: false, error: "Email service not available" }
-   }
-  
+  if (!transporter) {
+    logger.error("[emailService] Transporter is not initialized");
+    return formatResponse({
+      success: false,
+      error: "Email service not available",
+    });
+  }
+
   try {
     const mailOptions = {
       from: env.EMAIL_FROM,
@@ -46,10 +51,13 @@ export const sendEmail = async (to, subject, text) => {
     };
 
     await transporter.sendMail(mailOptions);
-    logger.info(`[sendEmail] Email sent successfully to ${to}`);
-    return { success: true };
+    logger.info(`[emailService] Email sent successfully to ${to}`);
+    return formatResponse({ message: "Email sent successfully" });
   } catch (error) {
-    logger.error(`[sendEmail] Error: ${error.message}`);
-    return { success: false, error: error.message };
+    logger.error(`[emailService] Error: ${error.message}`);
+    return formatResponse({
+      success: false,
+      error: error.message,
+    });
   }
 };
