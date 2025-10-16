@@ -13,7 +13,7 @@ const resetTokenSchema = new Schema(
       ref: "User",
     },
     token: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now, expires: 3600 }, // 1 hour expiration
+    expiresAt: { type: Date, default: Date.now, expires: 1800 }, // 30 minute expiration
   },
   { timestamps: true }
 );
