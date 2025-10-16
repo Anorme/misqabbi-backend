@@ -288,137 +288,137 @@ router.get("/me", authenticateToken, getCurrentUser);
  */
 router.post("/logout", logoutUser);
 
-/*
+/**
  * @swagger
  * /auth/forgot-password:
  *   post:
- *   summary: Initiates the password reset process for a user by sending a reset link to their email
- *  description: Initiates the password reset process for a user by sending a reset link to their email
- *  tags:
- *    - Users
- *  requestBody:
- *    description: Email address of the user requesting a password reset
- *   required: true
- *  content:
- *   application/json:
- *    schema:
- *    type: object
- *    properties:
- *    email:
- *    type: string
- *   description: User's email address
- * responses:
- *    200:
- *   description: Password reset email sent
- *  content:
- *   application/json:
- *   schema:
- *  type: object
- *  properties:
- *  success:
- *  type: boolean
- *  description: Indicates whether the password reset email was sent successfully
- *  message:
- * type: string
- * description: Success message
- *  500:
- *  description: Failed to send password reset email
- * content:
- *  application/json:
- *  schema:
- * type: object
- * properties:
- * success:
- * type: boolean
- * description: Indicates whether the password reset email was sent successfully
- * example: false
- * message:
- * type: string
- * description: Error message
- * error:
- * type: string
- * description: Error message
+ *     summary: Initiates the password reset process for a user by sending a reset link to their email
+ *     description: Initiates the password reset process for a user by sending a reset link to their email
+ *     tags:
+ *       - Users
+ *     requestBody:
+ *       description: Email address of the user requesting a password reset
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: User's email address
+ *     responses:
+ *       200:
+ *         description: Password reset email sent
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates whether the password reset email was sent successfully
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *       500:
+ *         description: Failed to send password reset email
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates whether the password reset email was sent successfully
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *                 error:
+ *                   type: string
+ *                   description: Error message
  */
 
 router.post("/forgot-password", forgotPassword);
 
-/*
+/**
  * @swagger
  * /auth/reset-password/{userId}/{token}:
- * post:
- * summary: Resets a user's password using a valid reset token
- * description: Resets a user's password using a valid reset token
- * tags:
- *  - Users
- * parameters:
- *   - in: path
- *   name: userId
- *   required: true
- *  schema:
- *   type: string
- *  description: ID of the user resetting their password
- *  - in: path
- * name: token
- * required: true
- * schema:
- *  type: string
- * description: Password reset token
- * requestBody:
- *  description: New password for the user
- * required: true
- *  content:
- *  application/json:
- *  schema:
- *   type: object
- *  properties:
- *  newPassword:
- *  type: string
- * description: New password for the user
- * responses:
- *  200:
- *  description: Password reset successful
- * content:
- * application/json:
- * schema:
- * type: object
- * properties:
- * success:
- * type: boolean
- * description: Indicates whether the password was reset successfully
- * message:
- * type: string
- * description: Success message
- * 400:
- * description: Invalid or expired token
- * content:
- * application/json:
- * schema:
- * type: object
- * properties:
- * success:
- * type: boolean
- * description: Indicates whether the password was reset successfully
- * example: false
- * message:
- * type: string
- * description: Error message
- * 500:
- * description: Failed to reset password
- * content:
- * application/json:
- * schema:
- * type: object
- * properties:
- * success:
- * type: boolean
- * description: Indicates whether the password was reset successfully
- * example: false
- * message:
- * type: string
- * description: Error message
- * error:
- * type: string
- * description: Error message
+ *   post:
+ *     summary: Resets a user's password using a valid reset token
+ *     description: Resets a user's password using a valid reset token
+ *     tags:
+ *       - Users
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the user resetting their password
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Password reset token
+ *     requestBody:
+ *       description: New password for the user
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               newPassword:
+ *                 type: string
+ *                 description: New password for the user
+ *     responses:
+ *       200:
+ *         description: Password reset successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates whether the password was reset successfully
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *       400:
+ *         description: Invalid or expired token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates whether the password was reset successfully
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *       500:
+ *         description: Failed to reset password
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates whether the password was reset successfully
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *                 error:
+ *                   type: string
+ *                   description: Error message
  */
 router.post("/reset-password/:userId/:token", resetPassword);
 
