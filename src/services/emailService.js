@@ -3,8 +3,10 @@ import nodemailer from "nodemailer";
 import logger from "../config/logger.js";
 
 let transporter;
-console.log("EMAIL_USER:", env.EMAIL_USER);
-console.log("EMAIL_PASS:", env.EMAIL_PASS ? "Loaded" : "Missing");
+
+if(!env.EMAIL_USER || !env.EMAIL_PASS) {
+  logger.warn([emailService]: "Missing email credentials")
+}
 
 try {
   transporter = nodemailer.createTransport({
@@ -17,12 +19,12 @@ try {
     },
   });
 
-  // Optionally verify connection once
+  // Verify connection once
   transporter
     .verify()
-    .then(() => logger.info("✅ Mail transporter is ready"))
+    .then(() => logger.info("Mail transporter is ready"))
     .catch(err =>
-      logger.error(`[sendEmail] Transporter verify failed: ${err.message}`)
+      logger.error(`[sendEmail] Transporter verification failed: ${err.message}`)
     );
 } catch (error) {
   logger.error(`[sendEmail] Transporter creation failed: ${error.message}`);
