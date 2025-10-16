@@ -32,6 +32,11 @@ try {
 }
 
 export const sendEmail = async (to, subject, text) => {
+  if(!transporter) {
+    logger.error("[sendEmail] Transporter is not initialized");
+    return { success: false, error: "Email service not available" }
+   }
+  
   try {
     const mailOptions = {
       from: env.EMAIL_FROM,
