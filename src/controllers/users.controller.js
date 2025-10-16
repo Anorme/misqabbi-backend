@@ -272,7 +272,7 @@ export const forgotPassword = async (req, res) => {
     });
 
     // Build reset URL with raw token (not hashed!)
-    const resetUrl = `${process.env.BASE_URL}/reset-password?token=${rawToken}&id=${user._id}`;
+    const resetUrl = `${env.BASE_URL}/reset-password?token=${rawToken}&id=${user._id}`;
 
     // Send email
     await sendEmail(
