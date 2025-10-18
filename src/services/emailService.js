@@ -12,8 +12,8 @@ if (!env.EMAIL_USER || !env.EMAIL_PASS) {
 try {
   transporter = nodemailer.createTransport({
     host: "smtp.zoho.com",
-    port: 465,
-    secure: true, // true for 465, false for 587
+    port: 587,
+    secure: false,
     auth: {
       user: env.EMAIL_USER,
       pass: env.EMAIL_PASS,
