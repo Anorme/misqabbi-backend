@@ -16,6 +16,7 @@ import authRoutes from "./routes/auth.routes.js";
 import favoritesRoutes from "./routes/favorites.routes.js";
 import orderRoutes from "./routes/orders.routes.js";
 import productRoutes from "./routes/products.routes.js";
+import newsletterRoutes from "./routes/newsletter.routes.js";
 
 import { errorHandler } from "./middleware/index.js";
 
@@ -41,6 +42,7 @@ app.use(`${API_PREFIX}/auth`, authRoutes);
 app.use(`${API_PREFIX}/favorites`, favoritesRoutes);
 app.use(`${API_PREFIX}/orders`, orderRoutes);
 app.use(`${API_PREFIX}/products`, productRoutes);
+app.use(`${API_PREFIX}/newsletter`, newsletterRoutes);
 
 app.use(errorHandler);
 
