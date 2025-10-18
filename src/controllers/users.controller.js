@@ -298,7 +298,7 @@ export const forgotPassword = async (req, res) => {
 };
 
 export const resetPassword = async (req, res) => {
-  const { userId, token } = req.params; // <-- from URL params
+  const { userId, token } = req.params;
   const { newPassword } = req.body;
 
   try {
