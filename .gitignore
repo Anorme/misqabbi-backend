@@ -141,3 +141,7 @@ vite.config.ts.timestamp-*
 #seed scripts
 seedAdmin.js
 seedProducts.js
+
+
+# seededAdmin
+seedAdmin.js

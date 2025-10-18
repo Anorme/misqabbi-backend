@@ -7,11 +7,15 @@ import {
   loginUser,
   logoutUser,
   registerUser,
+  updateUserProfile,
   resetPassword,
 } from "../controllers/users.controller.js";
 import passport from "passport";
+import {
+  updateUserProfilevalidator,
+  validateUser,
+} from "../middleware/validator.middleware.js";
 import { authenticateToken } from "../middleware/auth.middleware.js";
-import { validateUser } from "../middleware/validator.middleware.js";
 
 const router = express.Router();
 
@@ -95,6 +99,7 @@ const router = express.Router();
  *                   type: string
  *                   description: Error message
  */
+router.post("/signup", validateUser, registerUser);
 router.post("/signup", validateUser, registerUser);
 
 /**
@@ -422,4 +427,10 @@ router.post("/forgot-password", forgotPassword);
  */
 router.post("/reset-password/:userId/:token", resetPassword);
 
+router.post(
+  "/update-profile",
+  updateUserProfilevalidator,
+  authenticateToken,
+  updateUserProfile
+);
 export default router;

@@ -4,13 +4,11 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
-  getDiscoverableProducts,
-  countDiscoverableProducts,
- 
+  getPaginatedPublishedProducts,
+  countPublishedProducts,
 } from "../models/product.model.js";
 import logger from "../config/logger.js";
 import { formatResponse } from "../utils/responseFormatter.js";
-import { isValidSortOption } from "../utils/validators.js";
 
 /**
  * Retrieves a paginated list of discoverable (published, filtered, and/or searched) products.
@@ -22,46 +20,23 @@ import { isValidSortOption } from "../utils/validators.js";
  */
 export async function getProducts(req, res) {
   try {
-    const { q, category, minPrice, maxPrice, page, limit, sort } = req.query;
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.max(parseInt(req.query.limit) || 10, 1);
 
-    const pageNum = Math.max(parseInt(page) || 1, 1);
-    const limitNum = Math.max(parseInt(limit) || 10, 1);
-
-    // Validate sort parameter
-    if (sort && !isValidSortOption(sort)) {
-      return res.status(400).json(
-        formatResponse({
-          success: false,
-          error:
-            "Invalid sort option. Valid options are: latest, price-low-high, price-high-low, name-a-z, name-z-a",
-        })
-      );
-    }
-
-    const filters = {
-      q: q?.trim() || undefined,
-      category: category?.trim() || undefined,
-      minPrice: minPrice ? Number(minPrice) : undefined,
-      maxPrice: maxPrice ? Number(maxPrice) : undefined,
-      sort: sort?.trim() || undefined,
-    };
-
-    const total = await countDiscoverableProducts(filters);
-
-    if (pageNum > Math.ceil(total / limitNum) && total > 0) {
+    const totalPublishedProducts = await countPublishedProducts();
+    if (page > Math.ceil(totalPublishedProducts / limit)) {
       return res.status(400).json({
         success: false,
         error: "Requested page exceeds available product pages",
       });
     }
-    const products = await getDiscoverableProducts(filters, pageNum, limitNum);
-
+    const products = await getPaginatedPublishedProducts(page, limit);
     res.json({
       success: true,
       data: products,
-      total,
-      totalPages: Math.ceil(total / limitNum),
-      currentPage: pageNum,
+      total: totalPublishedProducts,
+      totalPages: Math.ceil(totalPublishedProducts / limit),
+      currentPage: page,
     });
   } catch (error) {
     logger.error(

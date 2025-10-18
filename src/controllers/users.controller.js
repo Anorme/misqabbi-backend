@@ -11,10 +11,6 @@ import {
   findUserByEmail,
   findUserById,
 } from "../models/user.model.js";
-import crypto from "crypto";
-import ResetToken from "../models/resetToken.mongo.js";
-import { sendEmail } from "../services/emailService.js";
-import { PASSWORD_RESET_EMAIL } from "../constants/emailTemplates.js";
 
 /**
  * @route   POST /signup
@@ -215,142 +211,34 @@ function finalizeAuth(req, res, options = {}) {
   }
 }
 
-/**
- * Logs out the currently authenticated user by clearing the authentication token cookie.
- * @function logoutUser
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @returns {Promise<void>} Sends a JSON response with a success message and clears the authentication token cookie
- */
-export const logoutUser = (req, res) => {
-  res.clearCookie("auth_token", getCookieOptions());
-  return res.status(200).json(
-    formatResponse({
-      message: "User logged out successfully",
-    })
-  );
-};
-
-export const forgotPassword = async (req, res) => {
-  const { email } = req.body;
-
+export const updateUserProfile = async (req, res) => {
+  const userId = req.user._id;
+  const { displayName, contact, location } = req.body;
   try {
-    const user = await findUserByEmail(email);
-
-    if (!user) {
-      logger.warn(
-        `[forgotPassword] Password reset requested for non-existent email: ${email}`
-      );
-      // Always respond the same way
-      return res.json(
-        formatResponse({
-          success: true,
-          message: "Reset link sent successfully",
-        })
-      );
-    }
-
-    // Generate raw token
-    const rawToken = crypto.randomBytes(32).toString("hex");
-    logger.info(`[forgotPassword] Generated reset token for user ${user._id}`);
-
-    // Hash token for DB
-    const hashedToken = crypto
-      .createHash("sha256")
-      .update(rawToken)
-      .digest("hex");
-    logger.info(`[forgotPassword] Hashed reset token for storage`);
-
-    // Cleanup old tokens
-    await ResetToken.deleteMany({ userId: user._id });
-
-    // Save new token
-    await ResetToken.create({
-      userId: user._id,
-      token: hashedToken,
-    });
-
-    // Build reset URL with raw token (not hashed!)
-    const resetUrl = `${env.BASE_URL}/reset-password/${user._id}/${rawToken}`;
-
-    // Send email
-    await sendEmail(
-      user.email,
-      "Password Reset",
-      PASSWORD_RESET_EMAIL(resetUrl)
-    );
-
-    return res.json(
-      formatResponse({
-        success: true,
-        message: "If the email exists, a reset link has been sent",
-      })
-    );
-  } catch (error) {
-    logger.error(`[forgotPassword] Error: ${error.message}`);
-    return res.status(500).json(
-      formatResponse({
-        success: false,
-        error: "Server error",
-      })
-    );
-  }
-};
-
-export const resetPassword = async (req, res) => {
-  const { userId, token } = req.params; // <-- from URL params
-  const { newPassword } = req.body;
-
-  try {
-    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-
-    const resetTokenDoc = await ResetToken.findOne({
-      userId,
-      token: hashedToken,
-    });
-
-    if (!resetTokenDoc) {
-      logger.warn(
-        `[resetPassword] Invalid or expired reset token for user ${userId}`
-      );
-      return res.status(400).json(
-        formatResponse({
-          success: false,
-          error: "Invalid or expired token",
-        })
-      );
-    }
-
     const user = await findUserById(userId);
     if (!user) {
-      logger.warn(`[resetPassword] No user found for ID ${userId}`);
-      return res.status(400).json(
-        formatResponse({
-          success: false,
-          error: "Invalid user",
-        })
-      );
+      return res.status(404).json({ message: "User not found" });
     }
+    user.displayName = displayName || user.displayName;
+    user.contact = contact || user.contact;
+    user.location = location || user.location;
 
-    user.password = newPassword;
+    user.profileComplete = Boolean(
+      user.displayName && user.contact && user.location
+    );
+
     await user.save();
-
-    await ResetToken.deleteMany({ userId });
-
-    logger.info(`[resetPassword] Password reset successful for user ${userId}`);
-    return res.json(
-      formatResponse({
-        success: true,
-        message: "Password has been reset successfully",
-      })
-    );
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        displayName: user.displayName,
+        contact: user.contact,
+        location: user.location,
+        profileComplete: user.profileComplete,
+      },
+    });
   } catch (error) {
-    logger.error(`[resetPassword] Error: ${error.message}`);
-    return res.status(500).json(
-      formatResponse({
-        success: false,
-        error: "Server error",
-      })
-    );
+    logger.error(`[updateUserProfile] ${error.message}`);
+    res.status(500).json({ error: "Internal server error" });
   }
 };

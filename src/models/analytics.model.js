@@ -3,11 +3,9 @@ import logger from "../config/logger.js";
 
 export async function getUserAnalytics(userId) {
   try {
-    const orders = await Order.find({ user: userId })
-      .sort({ createdAt: -1 })
-      .populate("user");
+    const orders = await Order.find({ userId }).sort({ createdAt: -1 });
 
-    const totalSpent = orders.reduce((sum, o) => sum + (o.totalPrice || 0), 0);
+    const totalSpent = orders.reduce((sum, o) => sum + o.total, 0);
 
     return {
       displayName: orders[0]?.user.displayName || null,
@@ -19,7 +17,7 @@ export async function getUserAnalytics(userId) {
       lastOrderDate: orders[0]?.createdAt || null,
       recentOrders: orders.slice(0, 5).map(o => ({
         id: o._id,
-        total: o.totalPrice,
+        total: o.total,
         status: o.status,
         date: o.createdAt,
         itemCount: o.items?.length || 0,
