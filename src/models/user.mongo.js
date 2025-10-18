@@ -71,6 +71,10 @@ const userSchema = new Schema(
       enum: ["user", "admin"],
       default: "user",
     },
+    contact: { type: String },
+    location: { type: String },
+    profileComplete: { type: Boolean, default: false },
+
     favorites: [favoriteItemSchema], // Embedded for fast access and frequent updates
     previousOrders: [
       {
