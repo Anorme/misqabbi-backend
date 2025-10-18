@@ -1,41 +1,26 @@
 import env from "../config/env.js";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import logger from "../config/logger.js";
 import { formatResponse } from "../utils/responseFormatter.js";
 
-let transporter;
+let resend;
 
-if (!env.EMAIL_USER || !env.EMAIL_PASS) {
-  logger.warn("[emailService] Missing email credentials");
+if (!env.RESEND_API_KEY) {
+  logger.warn("[emailService] Missing Resend API key");
 }
 
 try {
-  transporter = nodemailer.createTransport({
-    host: "smtp.zoho.com",
-    port: 587,
-    secure: false,
-    auth: {
-      user: env.EMAIL_USER,
-      pass: env.EMAIL_PASS,
-    },
-  });
-
-  // Verify connection once
-  transporter
-    .verify()
-    .then(() => logger.info("Mail transporter is ready"))
-    .catch(err =>
-      logger.error(
-        `[emailService] Transporter verification failed: ${err.message}`
-      )
-    );
+  resend = new Resend(env.RESEND_API_KEY);
+  logger.info("Resend client is ready");
 } catch (error) {
-  logger.error(`[emailService] Transporter creation failed: ${error.message}`);
+  logger.error(
+    `[emailService] Resend client creation failed: ${error.message}`
+  );
 }
 
 export const sendEmail = async (to, subject, text) => {
-  if (!transporter) {
-    logger.error("[emailService] Transporter is not initialized");
+  if (!resend) {
+    logger.error("[emailService] Resend client is not initialized");
     return formatResponse({
       success: false,
       error: "Email service not available",
@@ -43,14 +28,14 @@ export const sendEmail = async (to, subject, text) => {
   }
 
   try {
-    const mailOptions = {
+    const emailData = {
       from: env.EMAIL_FROM,
       to,
       subject,
       text,
     };
 
-    await transporter.sendMail(mailOptions);
+    await resend.emails.send(emailData);
     logger.info(`[emailService] Email sent successfully to ${to}`);
     return formatResponse({ message: "Email sent successfully" });
   } catch (error) {
