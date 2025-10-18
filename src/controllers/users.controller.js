@@ -241,39 +241,32 @@ export const forgotPassword = async (req, res) => {
       logger.warn(
         `[forgotPassword] Password reset requested for non-existent email: ${email}`
       );
-      // Always respond the same way
       return res.json(
         formatResponse({
-          success: true,
-          message: "Reset link sent successfully",
+          success: false,
+          message: "Email not found. Please check your email address.",
         })
       );
     }
 
-    // Generate raw token
     const rawToken = crypto.randomBytes(32).toString("hex");
     logger.info(`[forgotPassword] Generated reset token for user ${user._id}`);
 
-    // Hash token for DB
     const hashedToken = crypto
       .createHash("sha256")
       .update(rawToken)
       .digest("hex");
     logger.info(`[forgotPassword] Hashed reset token for storage`);
 
-    // Cleanup old tokens
     await ResetToken.deleteMany({ userId: user._id });
 
-    // Save new token
     await ResetToken.create({
       userId: user._id,
       token: hashedToken,
     });
 
-    // Build reset URL with raw token (not hashed!)
     const resetUrl = `${env.BASE_URL}/reset-password/${user._id}/${rawToken}`;
 
-    // Send email
     await sendEmail(
       user.email,
       "Password Reset",
@@ -282,8 +275,7 @@ export const forgotPassword = async (req, res) => {
 
     return res.json(
       formatResponse({
-        success: true,
-        message: "If the email exists, a reset link has been sent",
+        message: "Password reset link sent successfully",
       })
     );
   } catch (error) {
