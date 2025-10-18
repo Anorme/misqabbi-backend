@@ -23,9 +23,12 @@ const baseSchema = {
   GOOGLE_CALLBACK_URL: url(),
   GOOGLE_REDIRECT_URL: url(),
   BASE_URL: url(),
+  MAILCHIMP_API_KEY: str(),
+  MAILCHIMP_SERVER_PREFIX: str(),
+  MAILCHIMP_LIST_ID: str(),
+  EMAIL_FROM: str(),
   EMAIL_PASS: str(),
   EMAIL_USER: str(),
-  EMAIL_FROM: str(),
 
   COOKIE_ENV: str({
     choices: ["local", "development", "staging", "production"],
