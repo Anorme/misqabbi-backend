@@ -2,7 +2,13 @@ import Order from "../models/order.mongo.js";
 import logger from "../config/logger.js";
 import Product from "./product.mongo.js";
 
-export async function createOrderFromCart(user, items, totalPrice, status) {
+export async function createOrderFromCart(
+  user,
+  items,
+  shippingInfo,
+  totalPrice,
+  status
+) {
   try {
     // Check if items array is empty
     if (!items || items.length === 0) {
@@ -34,7 +40,7 @@ export async function createOrderFromCart(user, items, totalPrice, status) {
     }
 
     // Create the order
-    const order = new Order({ user, items, totalPrice, status });
+    const order = new Order({ user, items, shippingInfo, totalPrice, status });
     await order.save();
     return order;
   } catch (error) {
