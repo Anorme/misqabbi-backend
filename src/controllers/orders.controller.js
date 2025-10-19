@@ -25,14 +25,12 @@ export const createOrder = async (req, res) => {
       );
   } catch (error) {
     logger.warn(error);
-    res
-      .status(500)
-      .json(
-        formatResponse({
-          success: false,
-          error: "Order creation failed due to server error",
-        })
-      );
+    res.status(500).json(
+      formatResponse({
+        success: false,
+        error: "Order creation failed due to server error",
+      })
+    );
   }
 };
 
