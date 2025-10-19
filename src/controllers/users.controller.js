@@ -156,6 +156,9 @@ export async function getCurrentUser(req, res) {
           userId: user._id,
           email: user.email,
           displayName: user.displayName,
+          contact: user?.contact,
+          location: user?.location,
+          profileComplete: user?.profileComplete,
         },
       },
     })
@@ -184,6 +187,9 @@ function finalizeAuth(req, res, options = {}) {
     userId: req.user._id,
     email: req.user.email,
     displayName: req.user.displayName,
+    contact: req.user?.contact,
+    location: req.user?.location,
+    profileComplete: req.user?.profileComplete,
   };
 
   const isDev = env.NODE_ENV === "development";
@@ -353,7 +359,12 @@ export const updateUserProfile = async (req, res) => {
   try {
     const user = await findUserById(userId);
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          message: "User not found",
+        })
+      );
     }
     user.email = email || user.email;
     user.contact = contact || user.contact;
@@ -362,17 +373,27 @@ export const updateUserProfile = async (req, res) => {
     user.profileComplete = Boolean(user.contact && user.location);
 
     await user.save();
-    res.json({
-      message: "Profile updated successfully",
-      user: {
-        email: user.email,
-        contact: user.contact,
-        location: user.location,
-        profileComplete: user.profileComplete,
-      },
-    });
+    res.json(
+      formatResponse({
+        message: "Profile updated successfully",
+        data: {
+          user: {
+            userId: user._id,
+            email: user.email,
+            contact: user.contact,
+            location: user.location,
+            profileComplete: user.profileComplete,
+          },
+        },
+      })
+    );
   } catch (error) {
     logger.error(`[updateUserProfile] ${error.message}`);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json(
+      formatResponse({
+        success: false,
+        error: "Internal server error",
+      })
+    );
   }
 };
