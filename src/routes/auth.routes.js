@@ -514,6 +514,6 @@ router.post("/reset-password/:userId/:token", resetPassword);
  * type: string
  * description: Error message
  */
-router.post("/update-profile", authenticateToken, updateUserProfile);
+router.patch("/update-profile", authenticateToken, updateUserProfile);
 
 export default router;
