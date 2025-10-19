@@ -1,5 +1,5 @@
 import env from "../config/env.js";
-import Resend from "resend";
+import { Resend } from "resend";
 import logger from "../config/logger.js";
 import { formatResponse } from "../utils/responseFormatter.js";
 
