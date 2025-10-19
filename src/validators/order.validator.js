@@ -39,10 +39,29 @@ export const orderValidator = Joi.object({
           .required(),
         quantity: Joi.number().min(1).required(), // validate quantity (min 1)
         price: Joi.number().min(0).required(), // validate price (min 0)
+        size: Joi.string()
+          .valid("XS", "S", "M", "L", "XL", "XXL", "CUSTOM")
+          .required(),
+        customSize: Joi.when("size", {
+          is: "CUSTOM",
+          then: Joi.object({
+            waist: Joi.string().required(),
+            hip: Joi.string().required(),
+            length: Joi.string().required(),
+          }).unknown(true), // Allow additional measurement fields
+          otherwise: Joi.forbidden(),
+        }),
       })
     )
     .required(),
   totalPrice: Joi.number().min(0).optional(), // validate total price (min 0)
+  shippingInfo: Joi.object({
+    fullName: Joi.string().trim().required(),
+    email: Joi.string().email().trim().lowercase().required(),
+    phone: Joi.string().trim().required(),
+    deliveryAddress: Joi.string().trim().required(),
+    deliveryNotes: Joi.string().trim().allow("").optional(),
+  }).required(),
   status: Joi.string()
     .valid(
       "accepted",
