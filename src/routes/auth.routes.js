@@ -441,6 +441,9 @@ router.post("/reset-password/:userId/:token", resetPassword);
  *           schema:
  *             type: object
  *             properties:
+ *               email:
+ *                 type: string
+ *                 description: New email address for the user
  *               contact:
  *                 type: string
  *                 description: New contact information for the user
@@ -464,18 +467,24 @@ router.post("/reset-password/:userId/:token", resetPassword);
  *                 data:
  *                   type: object
  *                   properties:
- *                     userId:
- *                       type: string
- *                       description: User's ID
- *                     email:
- *                       type: string
- *                       description: User's email address
- *                     contact:
- *                       type: string
- *                       description: User's contact information
- *                     location:
- *                       type: string
- *                       description: User's location information
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         userId:
+ *                           type: string
+ *                           description: User's ID
+ *                         email:
+ *                           type: string
+ *                           description: User's email address
+ *                         contact:
+ *                           type: string
+ *                           description: User's contact information
+ *                         location:
+ *                           type: string
+ *                           description: User's location information
+ *                         profileComplete:
+ *                           type: boolean
+ *                           description: Whether the user's profile is complete
  *       400:
  *         description: Invalid profile data
  *         content:
