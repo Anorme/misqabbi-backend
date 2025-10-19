@@ -7,13 +7,16 @@ import {
 import logger from "../config/logger.js";
 
 export const createOrder = async (req, res) => {
-  const { user, items, totalPrice } = req.body;
+  const { items, shippingInfo, totalPrice, status } = req.body;
+  const user = req.user.userId;
+
   try {
     const order = await createOrderFromCart(
       user,
       items,
+      shippingInfo,
       totalPrice,
-      "accepted"
+      status || "accepted"
     );
     res.status(201).json({ order });
   } catch (error) {
