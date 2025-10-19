@@ -33,6 +33,19 @@ const OrderSchema = new Schema(
           min: 0,
           required: true,
         },
+        // Size of the product (standard sizes or CUSTOM)
+        size: {
+          type: String,
+          enum: ["XS", "S", "M", "L", "XL", "XXL", "CUSTOM"],
+          required: true,
+        },
+        // Custom measurements when size is CUSTOM
+        customSize: {
+          type: Schema.Types.Mixed,
+          required: function () {
+            return this.size === "CUSTOM";
+          },
+        },
       },
     ],
 
@@ -40,6 +53,36 @@ const OrderSchema = new Schema(
     totalPrice: {
       type: Number,
       min: 0,
+    },
+
+    // Shipping information
+    shippingInfo: {
+      fullName: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      email: {
+        type: String,
+        required: true,
+        trim: true,
+        lowercase: true,
+      },
+      phone: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      deliveryAddress: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      deliveryNotes: {
+        type: String,
+        trim: true,
+        default: "",
+      },
     },
 
     // Status of the order (enum ensures only allowed values are accepted)
