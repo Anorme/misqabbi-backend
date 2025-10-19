@@ -5,10 +5,10 @@ import {
   fetchOrderById,
 } from "../models/order.model.js";
 import logger from "../config/logger.js";
+import { formatResponse } from "../utils/responseFormatter.js";
 
 export const createOrder = async (req, res) => {
-  const { items, shippingInfo, totalPrice, status } = req.body;
-  const user = req.user.userId;
+  const { user, items, shippingInfo, totalPrice, status } = req.body;
 
   try {
     const order = await createOrderFromCart(
@@ -18,12 +18,21 @@ export const createOrder = async (req, res) => {
       totalPrice,
       status || "accepted"
     );
-    res.status(201).json({ order });
+    res
+      .status(201)
+      .json(
+        formatResponse({ message: "Order created successfully", data: order })
+      );
   } catch (error) {
     logger.warn(error);
     res
       .status(500)
-      .json({ error: "Order creation failed due to server error" });
+      .json(
+        formatResponse({
+          success: false,
+          error: "Order creation failed due to server error",
+        })
+      );
   }
 };
 
