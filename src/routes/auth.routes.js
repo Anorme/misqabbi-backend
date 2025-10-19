@@ -8,6 +8,7 @@ import {
   logoutUser,
   registerUser,
   resetPassword,
+  updateUserProfile,
 } from "../controllers/users.controller.js";
 import passport from "passport";
 import { validateUser } from "../middleware/validator.middleware.js";
@@ -421,5 +422,98 @@ router.post("/forgot-password", forgotPassword);
  *                   description: Error message
  */
 router.post("/reset-password/:userId/:token", resetPassword);
+
+/** * @swagger
+ * /auth/update-profile:
+ *   post:
+ *    summary: Update the profile of the currently authenticated user
+ *   description: Update the profile of the currently authenticated user
+ *   tags:
+ *    - Users
+ *  security:
+ *    - bearerAuth: []
+ *  requestBody:
+ *    description: Profile data to update
+ *   required: true
+ *  content:
+ *    application/json:
+ *     schema:
+ *      type: object
+ *     properties:
+ *      displayName:
+ *      type: string
+ *      description: New display name for the user
+ *     contact:
+ *    type: string
+ *   description: New contact information for the user
+ *    location:
+ *    type: string
+ *  description: New location information for the user
+ *   responses:
+ *    200:
+ *    description: User profile updated successfully
+ *
+ *   content:
+ *    application/json:
+ *   schema:
+ *    type: object
+ *   properties:
+ *    success:
+ *    type: boolean
+ *   description: Indicates whether the profile was updated successfully
+ *   message:
+ *   type: string
+ *  description: Success message
+ *      data:
+ *      type: object
+ *     properties:
+ *      userId:
+ *      type: string
+ *    description: User's ID
+ *   email:
+ *    type: string
+ *  description: User's email address
+ * displayName:
+ *   type: string
+ * description: User's display name
+ *      contact:
+ *     type: string
+ *   description: User's contact information
+ *    location:
+ *    type: string
+ *  description: User's location information
+ *      400:
+ *    description: Invalid profile data
+ *   content:
+ *   application/json:
+ *   schema:
+ *   type: object
+ *  properties:
+ *   success:
+ *  type: boolean
+ *  description: Indicates whether the profile was updated successfully
+ *  example: false
+ *  message:
+ *  type: string
+ * description: Error message
+ *    500:
+ *  description: Failed to update user profile
+ *  content:
+ *  application/json:
+ *  schema:
+ *  type: object
+ * properties:
+ *  success:
+ *  type: boolean
+ * description: Indicates whether the profile was updated successfully
+ * example: false
+ * message:
+ * type: string
+ * description: Error message
+ * error:
+ * type: string
+ * description: Error message
+ */
+router.post("/update-profile", authenticateToken, updateUserProfile);
 
 export default router;
