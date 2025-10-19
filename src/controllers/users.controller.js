@@ -349,12 +349,13 @@ export const resetPassword = async (req, res) => {
 
 export const updateUserProfile = async (req, res) => {
   const userId = req.user._id;
-  const { contact, location } = req.body;
+  const { contact, location, email } = req.body;
   try {
     const user = await findUserById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+    user.email = email || user.email;
     user.contact = contact || user.contact;
     user.location = location || user.location;
 
@@ -364,7 +365,7 @@ export const updateUserProfile = async (req, res) => {
     res.json({
       message: "Profile updated successfully",
       user: {
-        displayName: user.displayName,
+        email: user.email,
         contact: user.contact,
         location: user.location,
         profileComplete: user.profileComplete,
