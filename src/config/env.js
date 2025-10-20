@@ -28,6 +28,7 @@ const baseSchema = {
   MAILCHIMP_API_KEY: str(),
   MAILCHIMP_SERVER_PREFIX: str(),
   MAILCHIMP_LIST_ID: str(),
+  PAYSTACK_SECRET_KEY: str(),
 
   COOKIE_ENV: str({
     choices: ["local", "development", "staging", "production"],
