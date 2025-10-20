@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
 import User from "./user.mongo.js";
-import Product from "./product.mongo.js";
+import { OrderItemSchema } from "./schemas/orderItem.schema.js";
+import { ShippingInfoSchema } from "./schemas/shippingInfo.schema.js";
 
 // Define the order schema
 const OrderSchema = new Schema(
@@ -13,41 +14,7 @@ const OrderSchema = new Schema(
     },
 
     // List of ordered items
-    items: [
-      {
-        // Reference to the product
-        product: {
-          type: Schema.Types.ObjectId,
-          ref: Product,
-          required: true,
-        },
-        // Quantity of the product ordered
-        quantity: {
-          type: Number,
-          min: 1,
-          required: true,
-        },
-        // Price of the product at time of order
-        price: {
-          type: Number,
-          min: 0,
-          required: true,
-        },
-        // Size of the product (standard sizes or CUSTOM)
-        size: {
-          type: String,
-          enum: ["XS", "S", "M", "L", "XL", "XXL", "CUSTOM"],
-          required: true,
-        },
-        // Custom measurements when size is CUSTOM
-        customSize: {
-          type: Schema.Types.Mixed,
-          required: function () {
-            return this.size === "CUSTOM";
-          },
-        },
-      },
-    ],
+    items: [OrderItemSchema],
 
     // Total price of the entire order
     totalPrice: {
@@ -56,34 +23,7 @@ const OrderSchema = new Schema(
     },
 
     // Shipping information
-    shippingInfo: {
-      fullName: {
-        type: String,
-        required: true,
-        trim: true,
-      },
-      email: {
-        type: String,
-        required: true,
-        trim: true,
-        lowercase: true,
-      },
-      phone: {
-        type: String,
-        required: true,
-        trim: true,
-      },
-      deliveryAddress: {
-        type: String,
-        required: true,
-        trim: true,
-      },
-      deliveryNotes: {
-        type: String,
-        trim: true,
-        default: "",
-      },
-    },
+    shippingInfo: ShippingInfoSchema,
 
     // Status of the order (enum ensures only allowed values are accepted)
     status: {
@@ -115,13 +55,10 @@ const OrderSchema = new Schema(
     },
   },
   {
-    // Automatically adds createdAt and updatedAt timestamps
     timestamps: true,
   }
 );
 
-// Create the Order model from the schema
 const Order = model("Order", OrderSchema);
 
-// Export the model to be used in other parts of the app
 export default Order;

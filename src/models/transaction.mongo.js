@@ -1,6 +1,8 @@
 import { Schema, model } from "mongoose";
 import User from "./user.mongo.js";
 import Order from "./order.mongo.js";
+import { OrderItemSchema } from "./schemas/orderItem.schema.js";
+import { ShippingInfoSchema } from "./schemas/shippingInfo.schema.js";
 
 const TransactionSchema = new Schema(
   {
@@ -40,69 +42,9 @@ const TransactionSchema = new Schema(
 
     // Store order data for creating order after successful payment
     orderData: {
-      items: [
-        {
-          product: {
-            type: Schema.Types.ObjectId,
-            ref: "Product",
-            required: true,
-          },
-          quantity: {
-            type: Number,
-            min: 1,
-            required: true,
-          },
-          price: {
-            type: Number,
-            min: 0,
-            required: true,
-          },
-          size: {
-            type: String,
-            enum: ["XS", "S", "M", "L", "XL", "XXL", "CUSTOM"],
-            required: true,
-          },
-          customSize: {
-            type: Schema.Types.Mixed,
-            required: function () {
-              return this.size === "CUSTOM";
-            },
-          },
-        },
-      ],
-      shippingInfo: {
-        fullName: {
-          type: String,
-          required: true,
-          trim: true,
-        },
-        email: {
-          type: String,
-          required: true,
-          trim: true,
-          lowercase: true,
-        },
-        phone: {
-          type: String,
-          required: true,
-          trim: true,
-        },
-        deliveryAddress: {
-          type: String,
-          required: true,
-          trim: true,
-        },
-        deliveryNotes: {
-          type: String,
-          trim: true,
-          default: "",
-        },
-      },
-      totalPrice: {
-        type: Number,
-        min: 0,
-        required: true,
-      },
+      items: [OrderItemSchema],
+      shippingInfo: ShippingInfoSchema,
+      totalPrice: { type: Number, min: 0, required: true },
     },
 
     // Store full Paystack response for debugging/audit
@@ -123,7 +65,6 @@ const TransactionSchema = new Schema(
 );
 
 // Create indexes for better query performance
-TransactionSchema.index({ reference: 1 });
 TransactionSchema.index({ user: 1 });
 TransactionSchema.index({ status: 1 });
 TransactionSchema.index({ createdAt: -1 });
