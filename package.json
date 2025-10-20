@@ -38,6 +38,7 @@
     "@logtail/node": "^0.5.5",
     "@logtail/winston": "^0.5.5",
     "@mailchimp/mailchimp_marketing": "^3.0.80",
+    "axios": "^1.12.2",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
