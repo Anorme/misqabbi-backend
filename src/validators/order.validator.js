@@ -14,17 +14,6 @@ import mongoose from "mongoose";
  */
 
 export const orderValidator = Joi.object({
-  user: Joi.string()
-    .custom((value, helpers) => {
-      if (!mongoose.Types.ObjectId.isValid(value)) {
-        return helpers.error("any.invalid");
-      }
-      return value; // must return the value if valid
-    }, "ObjectId Validation")
-    .messages({
-      "any.invalid": "Invalid MongoDB ObjectId in user",
-    })
-    .required(),
   items: Joi.array()
     .items(
       Joi.object({
@@ -54,7 +43,6 @@ export const orderValidator = Joi.object({
       })
     )
     .required(),
-  totalPrice: Joi.number().min(0).optional(), // validate total price (min 0)
   shippingInfo: Joi.object({
     fullName: Joi.string().trim().required(),
     email: Joi.string().email().trim().lowercase().required(),
