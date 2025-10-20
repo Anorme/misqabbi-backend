@@ -18,35 +18,28 @@ export const initializeCheckout = async (req, res) => {
   const userId = req.user._id;
 
   try {
-    // Check if items array is empty
     if (!items || items.length === 0) {
-      return res.status(400).json(
-        formatResponse({
-          success: false,
-          error: "Cart is empty",
-        })
-      );
+      return res
+        .status(400)
+        .json(formatResponse({ success: false, error: "Cart is empty" }));
     }
 
-    // Get IDs of products in the items array
     const itemProductIds = items.map(item => item.product);
-
-    // Fetch published products that match the item IDs
+    // Fetch only currently published products that match the requested ids.
+    // This guards against ordering unpublished/disabled items even if the client includes them.
     const publishedProducts = await Product.find({
       _id: { $in: itemProductIds },
       isPublished: true,
     });
 
-    // Convert publishedProducts ids to strings and store in the publishedProductIds set
+    // Convert to a Set for O(1) membership checks when validating the incoming cart items.
     const publishedProductIds = new Set(
       publishedProducts.map(product => product._id.toString())
     );
 
-    // Check if every item's productId is present in the publishedProductIds set
     const allItemsArePublished = items.every(item =>
       publishedProductIds.has(item.product.toString())
     );
-
     if (!allItemsArePublished) {
       return res.status(400).json(
         formatResponse({
@@ -56,26 +49,19 @@ export const initializeCheckout = async (req, res) => {
       );
     }
 
-    // Calculate total price from product prices
     let calculatedTotalPrice = 0;
     const validatedItems = [];
-
     for (const item of items) {
+      // Re-derive authoritative price from the database to prevent client-side tampering.
       const product = publishedProducts.find(
         p => p._id.toString() === item.product.toString()
       );
       if (!product) {
-        return res.status(400).json(
-          formatResponse({
-            success: false,
-            error: "Product not found",
-          })
-        );
+        return res
+          .status(400)
+          .json(formatResponse({ success: false, error: "Product not found" }));
       }
-
-      const itemTotal = product.price * item.quantity;
-      calculatedTotalPrice += itemTotal;
-
+      calculatedTotalPrice += product.price * item.quantity;
       validatedItems.push({
         product: item.product,
         quantity: item.quantity,
@@ -85,13 +71,12 @@ export const initializeCheckout = async (req, res) => {
       });
     }
 
-    // Convert to pesewas
+    // Paystack amounts are in the smallest currency unit (pesewas).
     const amountInPesewas = convertToPesewas(calculatedTotalPrice);
 
-    // Generate unique reference
-    const reference = generateTransactionReference(userId);
+    // Generate a unique reference for the transaction
+    const reference = generateTransactionReference(userId.toString());
 
-    // Create transaction record
     const transactionData = {
       reference,
       user: userId,
@@ -104,10 +89,9 @@ export const initializeCheckout = async (req, res) => {
         totalPrice: calculatedTotalPrice,
       },
     };
-
     const transaction = await createTransaction(transactionData);
 
-    // Initialize Paystack transaction
+    // Initialize the Paystack transaction
     const paystackResponse = await initializeTransaction(
       req.user.email,
       amountInPesewas,
@@ -119,11 +103,10 @@ export const initializeCheckout = async (req, res) => {
       reference
     );
 
-    // Update transaction with Paystack response
     transaction.paystackResponse = paystackResponse;
     await transaction.save();
 
-    res.status(200).json(
+    return res.status(200).json(
       formatResponse({
         message: "Payment initialized successfully",
         data: {
@@ -138,7 +121,7 @@ export const initializeCheckout = async (req, res) => {
     logger.warn(
       `[orders.controller] Error initializing checkout: ${error.message}`
     );
-    res.status(500).json(
+    return res.status(500).json(
       formatResponse({
         success: false,
         error: "Checkout initialization failed due to server error",
@@ -147,7 +130,6 @@ export const initializeCheckout = async (req, res) => {
   }
 };
 
-//get all orders
 export const getOrders = async (req, res) => {
   const userId = req.user._id;
   const page = Number(req.query.page) || 1;
@@ -158,7 +140,7 @@ export const getOrders = async (req, res) => {
       countOrdersByUser(userId),
     ]);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: orders,
       total,
@@ -167,19 +149,18 @@ export const getOrders = async (req, res) => {
     });
   } catch (error) {
     logger.warn(error);
-    res.status(500).json({ error: "Failed to retrieve orders" });
+    return res.status(500).json({ error: "Failed to retrieve orders" });
   }
 };
 
-//get order by id
 export const getOrderById = async (req, res) => {
   const userId = req.user._id;
   const orderId = req.params.id;
   try {
     const order = await fetchOrderById(orderId, userId);
-    res.status(200).json({ success: true, data: order });
+    return res.status(200).json({ success: true, data: order });
   } catch (error) {
     logger.warn(error);
-    res.status(500).json({ error: "Failed to retrieve order" });
+    return res.status(500).json({ error: "Failed to retrieve order" });
   }
 };
