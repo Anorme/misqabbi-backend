@@ -1,7 +1,7 @@
 import express from "express";
 import { authenticateToken } from "../middleware/index.js";
 import {
-  createOrder,
+  initializeCheckout,
   getOrders,
   getOrderById,
 } from "../controllers/orders.controller.js";
@@ -11,35 +11,86 @@ const router = express.Router();
 
 /**
  * @swagger
- * /orders:
+ * /orders/checkout:
  *   post:
- *     summary: Creates a new order
- *     description: Creates a new order
+ *     summary: Initialize checkout process with Paystack payment
+ *     description: Initializes a Paystack transaction for order checkout. Returns payment URL for frontend redirect.
  *     tags:
  *       - Orders
  *     security:
  *       - bearerAuth: []
  *     requestBody:
- *       description: Order data
+ *       description: Order data for checkout
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             properties:
- *               products:
+ *               items:
  *                 type: array
  *                 items:
- *                   $ref: '#/components/schemas/CartItem'
+ *                   type: object
+ *                   properties:
+ *                     product:
+ *                       type: string
+ *                       description: Product ID
+ *                     quantity:
+ *                       type: number
+ *                       minimum: 1
+ *                     size:
+ *                       type: string
+ *                       enum: [XS, S, M, L, XL, XXL, CUSTOM]
+ *                     customSize:
+ *                       type: object
+ *                       description: Required when size is CUSTOM
+ *               shippingInfo:
+ *                 type: object
+ *                 properties:
+ *                   fullName:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ *                     format: email
+ *                   phone:
+ *                     type: string
+ *                   deliveryAddress:
+ *                     type: string
+ *                   deliveryNotes:
+ *                     type: string
  *     responses:
- *       201:
- *         description: Created order
+ *       200:
+ *         description: Payment initialized successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Order'
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     authorizationUrl:
+ *                       type: string
+ *                       description: Paystack payment URL
+ *                     reference:
+ *                       type: string
+ *                       description: Transaction reference
+ *                     amount:
+ *                       type: number
+ *                       description: Amount in Ghana Cedis
+ *                     currency:
+ *                       type: string
+ *                       example: GHS
+ *       400:
+ *         description: Bad request (empty cart, invalid products, etc.)
+ *       500:
+ *         description: Server error
  */
-router.post("/checkout", validateOrder, authenticateToken, createOrder);
+router.post("/checkout", validateOrder, authenticateToken, initializeCheckout);
 
 /**
  * @swagger
