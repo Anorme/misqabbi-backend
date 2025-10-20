@@ -99,6 +99,20 @@ const OrderSchema = new Schema(
       ],
       default: "accepted",
     },
+
+    // Payment reference from Paystack transaction
+    paymentReference: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+
+    // Payment status
+    paymentStatus: {
+      type: String,
+      enum: ["paid", "refunded", "pending"],
+      default: "paid", // Orders are only created after successful payment
+    },
   },
   {
     // Automatically adds createdAt and updatedAt timestamps
