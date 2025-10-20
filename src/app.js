@@ -15,6 +15,7 @@ import adminRoutes from "./routes/admin.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import favoritesRoutes from "./routes/favorites.routes.js";
 import orderRoutes from "./routes/orders.routes.js";
+import paymentRoutes from "./routes/payment.routes.js";
 import productRoutes from "./routes/products.routes.js";
 import newsletterRoutes from "./routes/newsletter.routes.js";
 
@@ -41,6 +42,7 @@ app.use(`${API_PREFIX}/admin`, adminRoutes);
 app.use(`${API_PREFIX}/auth`, authRoutes);
 app.use(`${API_PREFIX}/favorites`, favoritesRoutes);
 app.use(`${API_PREFIX}/orders`, orderRoutes);
+app.use(`${API_PREFIX}/payment`, paymentRoutes);
 app.use(`${API_PREFIX}/products`, productRoutes);
 app.use(`${API_PREFIX}/newsletter`, newsletterRoutes);
 
