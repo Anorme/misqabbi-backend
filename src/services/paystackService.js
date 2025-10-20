@@ -27,7 +27,8 @@ export async function initializeTransaction(
         amount,
         reference,
         metadata,
-        currency: "GHS", // Ghana Cedis
+        callback_url: env.PAYSTACK_CALLBACK_URL,
+        currency: "GHS",
       },
       {
         headers: {
