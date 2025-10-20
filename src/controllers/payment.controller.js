@@ -103,6 +103,14 @@ async function handleSuccessfulPayment(data) {
       return;
     }
 
+    // Idempotent check: if order already exists, return early to prevent duplicates
+    if (transaction.status === "success" && transaction.order) {
+      logger.info(
+        `[payment.controller] Order already exists for transaction: ${reference}, Order: ${transaction.order}`
+      );
+      return;
+    }
+
     // Verify amount matches
     if (transaction.amount !== amount) {
       logger.warn(
