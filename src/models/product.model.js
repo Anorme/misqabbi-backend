@@ -1,6 +1,7 @@
 import Product from "./product.mongo.js";
 import logger from "../config/logger.js";
 import { buildProductQuery } from "../utils/buildProductQuery.js";
+import slugify from "slugify";
 
 /**
  * @desc    Retrieve all products from the database (regardless of publish status)
@@ -143,6 +144,15 @@ async function getProductBySlug(slug) {
  */
 async function createProduct(data) {
   try {
+    // Generate slug if not provided
+    if (!data.slug && data.name) {
+      data.slug = slugify(data.name, {
+        lower: true,
+        strict: true,
+        trim: true,
+      });
+    }
+
     const product = await Product.create(data);
     return product;
   } catch (error) {
