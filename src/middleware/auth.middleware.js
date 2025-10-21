@@ -1,11 +1,13 @@
 import { verifyToken } from "../services/jwtService.js";
 import { findUserById } from "../models/user.model.js";
+import getCookieOptions from "../utils/getCookieOptions.js";
 import logger from "../config/logger.js";
 
 /**
  * Verifies the presence and validity of an authentication token
  * sent in a cookie, and if valid, populates `req.user` with the
- * corresponding user document.
+ * corresponding user document. Automatically clears invalid/expired
+ * cookies to maintain consistent authentication state.
  *
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -25,13 +27,19 @@ async function authenticateToken(req, res, next) {
     const decoded = verifyToken(token);
 
     const user = await findUserById(decoded.id);
-    if (!user) return res.status(401).json({ message: "User not found" });
+    if (!user) {
+      // Clear invalid cookie when user not found
+      res.clearCookie("auth_token", getCookieOptions());
+      return res.status(401).json({ message: "User not found" });
+    }
     req.user = user;
     next();
   } catch (error) {
     logger.error(
       `[auth.middleware] Token verification failed: ${error.message}`
     );
+    // Clear invalid/expired cookie
+    res.clearCookie("auth_token", getCookieOptions());
     return res.status(403).json({ message: "Invalid or expired token" });
   }
 }
