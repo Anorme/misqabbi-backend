@@ -10,6 +10,8 @@ import {
   updateProductHandler,
 } from "../controllers/products.controller.js";
 import { validateProduct } from "../middleware/validator.middleware.js";
+import { attachImagesToBody } from "../middleware/upload.middleware.js";
+import { productUploads } from "../config/cloudinary.js";
 
 const router = express.Router();
 
@@ -294,9 +296,12 @@ router.get("/:slug", getProductBySlugHandler);
  */
 router.post(
   "/",
-  validateProduct,
+
   authenticateToken,
   checkAdmin,
+  productUploads.array("images", 5),
+  attachImagesToBody,
+  validateProduct,
   createProductHandler
 );
 
