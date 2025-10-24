@@ -4,11 +4,19 @@
 
 This is the backend for the **Misqabbi Store**, an e-commerce platform that powers a women-owned fashion brand specializing in made-to-measure pieces designed exclusively for women.
 
-Built with Node.js, Express and MongoDB, this backend is designed for scalability, security, and collaboration.
+Built with Node.js, Express, MongoDB, and Redis, this backend is designed for scalability & security
 
 ---
 
 ## ⚙️ Installation
+
+### Prerequisites
+
+- **Node.js** (v20 or higher)
+- **Docker** and **Docker Compose**
+- **MongoDB Atlas** account (or local MongoDB)
+
+### Setup Steps
 
 1. Clone the repository:
 
@@ -38,13 +46,25 @@ Built with Node.js, Express and MongoDB, this backend is designed for scalabilit
 
 ## 🚀 Usage
 
-To start the development server in watch mode:
+### Development with Docker Compose
+
+Start Redis and the backend service:
 
 ```bash
-npm run dev
+# Start all services
+npm run docker:dev
+
+# Or start in detached mode
+npm run docker:dev:d
+
+# View logs
+npm run docker:logs
+
+# Stop services
+npm run docker:down
 ```
 
-To start the server normally:
+### Production
 
 ```bash
 npm start
