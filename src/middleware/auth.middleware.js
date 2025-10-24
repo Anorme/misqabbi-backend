@@ -1,6 +1,6 @@
 import { verifyToken } from "../services/jwtService.js";
 import { findUserById } from "../models/user.model.js";
-import getCookieOptions from "../utils/getCookieOptions.js";
+import { getAccessTokenCookieOptions } from "../utils/getCookieOptions.js";
 import logger from "../config/logger.js";
 
 /**
@@ -29,7 +29,7 @@ async function authenticateToken(req, res, next) {
     const user = await findUserById(decoded.id);
     if (!user) {
       // Clear invalid cookie when user not found
-      res.clearCookie("auth_token", getCookieOptions());
+      res.clearCookie("auth_token", getAccessTokenCookieOptions());
       return res.status(401).json({ message: "User not found" });
     }
     req.user = user;
@@ -39,7 +39,7 @@ async function authenticateToken(req, res, next) {
       `[auth.middleware] Token verification failed: ${error.message}`
     );
     // Clear invalid/expired cookie
-    res.clearCookie("auth_token", getCookieOptions());
+    res.clearCookie("auth_token", getAccessTokenCookieOptions());
     return res.status(403).json({ message: "Invalid or expired token" });
   }
 }
