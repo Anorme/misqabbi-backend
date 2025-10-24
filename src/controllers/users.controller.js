@@ -3,8 +3,11 @@ import env from "../config/env.js";
 import passport from "passport";
 
 import logger from "../config/logger.js";
-import { signToken } from "../services/jwtService.js";
-import getCookieOptions from "../utils/getCookieOptions.js";
+import { signAccessToken } from "../services/jwtService.js";
+import {
+  getAccessTokenCookieOptions,
+  getRefreshTokenCookieOptions,
+} from "../utils/getCookieOptions.js";
 import { formatResponse } from "../utils/responseFormatter.js";
 import {
   createLocalUser,
@@ -15,6 +18,12 @@ import crypto from "crypto";
 import ResetToken from "../models/resetToken.mongo.js";
 import { sendEmail } from "../services/emailService.js";
 import { PASSWORD_RESET_EMAIL } from "../constants/emailTemplates.js";
+import {
+  generateRefreshToken,
+  storeRefreshToken,
+  validateRefreshToken,
+  revokeRefreshToken,
+} from "../services/refreshTokenService.js";
 
 /**
  * @route   POST /signup
@@ -167,9 +176,10 @@ export async function getCurrentUser(req, res) {
 
 /**
  * Helper function to finalize authentication workflow
- * - Generates a JWT with user ID and role as payload
- * - Sets an http-only cookie with the token with environment aware options
- * - Returns a JSON response with basic user data and logs the token in development
+ * - Generates both access token (15 min) and refresh token (7 days)
+ * - Stores refresh token in Redis with TTL
+ * - Sets both tokens as HTTP-only cookies with appropriate paths
+ * - Returns a JSON response with basic user data
  * - Handles errors with structured response and logging
  *
  * @param {Object} req   - Express request object
@@ -178,30 +188,53 @@ export async function getCurrentUser(req, res) {
  * @param {String} [options.redirectUrl] - Redirect URL for production; defaults to false
  * @returns {void}
  */
-function finalizeAuth(req, res, options = {}) {
-  const token = signToken({ id: req.user._id, role: req.user.role });
-
-  const cookieOptions = getCookieOptions();
-
-  const user = {
-    userId: req.user._id,
-    email: req.user.email,
-    displayName: req.user.displayName,
-    contact: req.user?.contact,
-    location: req.user?.location,
-    profileComplete: req.user?.profileComplete,
-  };
-
-  const isDev = env.NODE_ENV === "development";
-
+async function finalizeAuth(req, res, options = {}) {
   try {
-    res.cookie("auth_token", token, cookieOptions);
+    // Generate tokens
+    const accessToken = signAccessToken({
+      id: req.user._id,
+      role: req.user.role,
+    });
+    const refreshToken = generateRefreshToken();
+
+    // Store refresh token in Redis
+    const refreshTokenStored = await storeRefreshToken(
+      req.user._id.toString(),
+      refreshToken,
+      Number(env.REFRESH_TOKEN_EXPIRES_IN)
+    );
+
+    if (!refreshTokenStored) {
+      throw new Error("Failed to store refresh token");
+    }
+
+    // Get cookie options
+    const accessTokenCookieOptions = getAccessTokenCookieOptions();
+    const refreshTokenCookieOptions = getRefreshTokenCookieOptions();
+
+    const user = {
+      userId: req.user._id,
+      email: req.user.email,
+      displayName: req.user.displayName,
+      contact: req.user?.contact,
+      location: req.user?.location,
+      profileComplete: req.user?.profileComplete,
+    };
+
+    const isDev = env.NODE_ENV === "development";
+
+    // Set both cookies
+    res.cookie("auth_token", accessToken, accessTokenCookieOptions);
+    res.cookie("refresh_token", refreshToken, refreshTokenCookieOptions);
 
     if (options.redirectUrl) {
       return res.redirect(options.redirectUrl);
     }
 
-    if (isDev) logger.info(`[finalizeAuth] Token issued: ${token}`);
+    if (isDev)
+      logger.info(`[finalizeAuth] Access token issued: ${accessToken}`);
+    if (isDev)
+      logger.info(`[finalizeAuth] Refresh token issued: ${refreshToken}`);
 
     return res.status(200).json(
       formatResponse({
@@ -222,19 +255,148 @@ function finalizeAuth(req, res, options = {}) {
 }
 
 /**
- * Logs out the currently authenticated user by clearing the authentication token cookie.
+ * Logs out the currently authenticated user by clearing both authentication cookies
+ * and revoking the refresh token from Redis.
  * @function logoutUser
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
- * @returns {Promise<void>} Sends a JSON response with a success message and clears the authentication token cookie
+ * @returns {Promise<void>} Sends a JSON response with a success message and clears both cookies
  */
-export const logoutUser = (req, res) => {
-  res.clearCookie("auth_token", getCookieOptions());
-  return res.status(200).json(
-    formatResponse({
-      message: "User logged out successfully",
-    })
-  );
+export const logoutUser = async (req, res) => {
+  try {
+    // Get refresh token from cookie
+    const refreshToken = req.cookies?.refresh_token;
+
+    // Revoke refresh token from Redis if it exists
+    if (refreshToken) {
+      await revokeRefreshToken(refreshToken);
+    }
+
+    // Clear both cookies
+    res.clearCookie("auth_token", getAccessTokenCookieOptions());
+    res.clearCookie("refresh_token", getRefreshTokenCookieOptions());
+
+    return res.status(200).json(
+      formatResponse({
+        message: "User logged out successfully",
+      })
+    );
+  } catch (error) {
+    logger.error(`[logoutUser] Error during logout: ${error.message}`);
+    return res.status(500).json(
+      formatResponse({
+        success: false,
+        message: "Logout failed",
+        error: "Internal server error",
+      })
+    );
+  }
+};
+
+/**
+ * Refresh access token using refresh token
+ * @route POST /auth/refresh
+ * @desc Refresh access token with refresh token
+ * @access Public
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>} New access token and rotated refresh token
+ */
+export const refreshAccessToken = async (req, res) => {
+  try {
+    const refreshToken = req.cookies?.refresh_token;
+
+    if (!refreshToken) {
+      logger.warn("[refreshAccessToken] No refresh token provided");
+      return res.status(401).json(
+        formatResponse({
+          success: false,
+          message: "Refresh token required",
+        })
+      );
+    }
+
+    // Validate refresh token
+    const tokenData = await validateRefreshToken(refreshToken);
+
+    if (!tokenData) {
+      logger.warn("[refreshAccessToken] Invalid refresh token");
+      return res.status(401).json(
+        formatResponse({
+          success: false,
+          message: "Invalid refresh token",
+        })
+      );
+    }
+
+    // Get user data
+    const user = await findUserById(tokenData.userId);
+
+    if (!user) {
+      logger.warn(`[refreshAccessToken] User not found: ${tokenData.userId}`);
+      return res.status(401).json(
+        formatResponse({
+          success: false,
+          message: "User not found",
+        })
+      );
+    }
+
+    // Generate new tokens (token rotation)
+    const newAccessToken = signAccessToken({ id: user._id, role: user.role });
+    const newRefreshToken = generateRefreshToken();
+
+    // Store new refresh token and revoke old one
+    const refreshTokenStored = await storeRefreshToken(
+      user._id.toString(),
+      newRefreshToken,
+      Number(env.REFRESH_TOKEN_EXPIRES_IN)
+    );
+
+    if (!refreshTokenStored) {
+      throw new Error("Failed to store new refresh token");
+    }
+
+    // Revoke old refresh token
+    await revokeRefreshToken(refreshToken);
+
+    // Get cookie options
+    const accessTokenCookieOptions = getAccessTokenCookieOptions();
+    const refreshTokenCookieOptions = getRefreshTokenCookieOptions();
+
+    // Set new cookies
+    res.cookie("auth_token", newAccessToken, accessTokenCookieOptions);
+    res.cookie("refresh_token", newRefreshToken, refreshTokenCookieOptions);
+
+    const userData = {
+      userId: user._id,
+      email: user.email,
+      displayName: user.displayName,
+      contact: user?.contact,
+      location: user?.location,
+      profileComplete: user?.profileComplete,
+    };
+
+    logger.info(`[refreshAccessToken] Tokens refreshed for user ${user._id}`);
+
+    return res.status(200).json(
+      formatResponse({
+        message: "Tokens refreshed successfully",
+        data: { user: userData },
+      })
+    );
+  } catch (error) {
+    logger.error(
+      `[refreshAccessToken] Error refreshing tokens: ${error.message}`
+    );
+    return res.status(500).json(
+      formatResponse({
+        success: false,
+        message: "Token refresh failed",
+        error: "Internal server error",
+      })
+    );
+  }
 };
 
 export const forgotPassword = async (req, res) => {
