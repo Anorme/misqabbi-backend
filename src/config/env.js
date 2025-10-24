@@ -15,6 +15,7 @@ const baseSchema = {
     default: "development",
   }),
   PORT: port({ default: 3000 }),
+  API_PREFIX: str({ default: "/api/v1" }),
   MONGO_URL: str(),
   JWT_SECRET: str(),
   JWT_EXPIRES_IN: num(),
