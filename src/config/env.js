@@ -18,6 +18,8 @@ const baseSchema = {
   MONGO_URL: str(),
   JWT_SECRET: str(),
   JWT_EXPIRES_IN: num(),
+  ACCESS_TOKEN_EXPIRES_IN: num({ default: 900 }), // 15 minutes
+  REFRESH_TOKEN_EXPIRES_IN: num({ default: 604800 }), // 7 days
   GOOGLE_CLIENT_ID: str(),
   GOOGLE_CLIENT_SECRET: str(),
   GOOGLE_CALLBACK_URL: url(),
@@ -35,6 +37,12 @@ const baseSchema = {
     choices: ["local", "development", "staging", "production"],
     default: "local",
   }),
+
+  // Redis configuration
+  REDIS_URL: str({ default: "" }),
+  REDIS_HOST: str({ default: "localhost" }),
+  REDIS_PORT: port({ default: 6379 }),
+  REDIS_PASSWORD: str({ default: "" }),
 };
 
 const fullSchema = {
