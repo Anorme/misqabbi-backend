@@ -41,7 +41,7 @@ export function getRefreshTokenCookieOptions() {
     secure: opts.secure,
     sameSite: opts.sameSite,
     domain: opts.domain,
-    path: "/auth/refresh", // Restrict to refresh endpoint
+    path: `${env.API_PREFIX}/auth/refresh`,
     maxAge:
       Number(env.REFRESH_TOKEN_EXPIRES_IN) * 1000 || 7 * 24 * 60 * 60 * 1000, // 7 days
   };

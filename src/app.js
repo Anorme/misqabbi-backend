@@ -23,15 +23,14 @@ import { errorHandler } from "./middleware/index.js";
 
 const app = express();
 
-// TODO: Move API_PREFIX to environment config for flexibility across environments
-const API_PREFIX = "/api/v1";
+const API_PREFIX = env.API_PREFIX || "/api/v1";
 
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(cookieParser());
 app.use(express.json());
 app.use(cors(corsOptions(env.NODE_ENV)));
-app.use("/api-docs", serve, setup(swaggerSpec));
+app.use(`${API_PREFIX}/api-docs`, serve, setup(swaggerSpec));
 
 app.get("/", (req, res) => {
   res.status(200).json({ message: "Misqabbi backend is live" });
