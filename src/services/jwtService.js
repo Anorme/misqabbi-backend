@@ -7,8 +7,14 @@ function signToken(payload) {
   });
 }
 
+function signAccessToken(payload) {
+  return jwt.sign(payload, env.JWT_SECRET, {
+    expiresIn: Number(env.ACCESS_TOKEN_EXPIRES_IN) || 900, // 15 minutes
+  });
+}
+
 function verifyToken(token) {
   return jwt.verify(token, env.JWT_SECRET);
 }
 
-export { signToken, verifyToken };
+export { signToken, signAccessToken, verifyToken };
