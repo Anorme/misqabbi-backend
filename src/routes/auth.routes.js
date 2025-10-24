@@ -9,6 +9,7 @@ import {
   registerUser,
   resetPassword,
   updateUserProfile,
+  refreshAccessToken,
 } from "../controllers/users.controller.js";
 import passport from "passport";
 import { validateUser } from "../middleware/validator.middleware.js";
@@ -518,5 +519,76 @@ router.post("/reset-password/:userId/:token", resetPassword);
  *                   description: Error message
  */
 router.patch("/update-profile", authenticateToken, updateUserProfile);
+
+/**
+ * @swagger
+ * /auth/refresh:
+ *   post:
+ *     summary: Refresh access token using refresh token
+ *     description: Refresh access token using refresh token
+ *     tags:
+ *       - Users
+ *     responses:
+ *       200:
+ *         description: Tokens refreshed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates whether the tokens were refreshed successfully
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         userId:
+ *                           type: string
+ *                           description: User's ID
+ *                         email:
+ *                           type: string
+ *                           description: User's email address
+ *                         displayName:
+ *                           type: string
+ *                           description: User's display name
+ *       401:
+ *         description: Invalid refresh token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates whether the tokens were refreshed successfully
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *       500:
+ *         description: Token refresh failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates whether the tokens were refreshed successfully
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ */
+router.post("/refresh", refreshAccessToken);
 
 export default router;
