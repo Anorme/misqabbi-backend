@@ -15,51 +15,48 @@ function initializeRedis() {
   }
 
   try {
-    let redisConfig;
+    let client;
 
     // Use REDIS_URL if provided (for Railway/Render)
     if (env.REDIS_URL) {
-      redisConfig = {
-        url: env.REDIS_URL,
-        retryDelayOnFailover: 100,
+      client = new Redis(env.REDIS_URL, {
         enableReadyCheck: false,
         maxRetriesPerRequest: null,
-      };
+      });
       logger.info("[redis] Connecting to Redis using REDIS_URL");
     } else {
       // Use host/port configuration (for local development)
-      redisConfig = {
+      const redisConfig = {
         host: env.REDIS_HOST,
         port: env.REDIS_PORT,
         password: env.REDIS_PASSWORD || undefined,
-        retryDelayOnFailover: 100,
         enableReadyCheck: false,
         maxRetriesPerRequest: null,
       };
       logger.info(
         `[redis] Connecting to Redis at ${env.REDIS_HOST}:${env.REDIS_PORT}`
       );
+      client = new Redis(redisConfig);
     }
 
-    redisClient = new Redis(redisConfig);
-
     // Event handlers
-    redisClient.on("connect", () => {
+    client.on("connect", () => {
       logger.info("[redis] Connected to Redis successfully");
     });
 
-    redisClient.on("error", error => {
+    client.on("error", error => {
       logger.error(`[redis] Redis connection error: ${error.message}`);
     });
 
-    redisClient.on("close", () => {
+    client.on("close", () => {
       logger.warn("[redis] Redis connection closed");
     });
 
-    redisClient.on("reconnecting", () => {
+    client.on("reconnecting", () => {
       logger.info("[redis] Reconnecting to Redis...");
     });
 
+    redisClient = client;
     return redisClient;
   } catch (error) {
     logger.error(`[redis] Failed to initialize Redis: ${error.message}`);
