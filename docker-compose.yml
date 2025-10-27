@@ -24,6 +24,9 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+    dns:
+      - 8.8.8.8 # Google DNS
+      - 8.8.4.4 # Google DNS backup
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=${PORT:-5000}
