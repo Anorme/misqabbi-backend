@@ -9,6 +9,7 @@ import {
   getPaginatedAllProducts,
   countAllProducts,
 } from "../models/product.model.js";
+import { deleteAssets } from "../config/cloudinary.js";
 import logger from "../config/logger.js";
 import { formatResponse } from "../utils/responseFormatter.js";
 import { isValidSortOption } from "../utils/validators.js";
@@ -186,8 +187,8 @@ export async function createProductAdmin(req, res) {
 export async function updateProductAdmin(req, res) {
   try {
     const { id } = req.params;
-    const product = await updateProduct(id, req.body);
-    if (!product) {
+    const existing = await getProductById(id);
+    if (!existing) {
       return res.status(404).json(
         formatResponse({
           success: false,
@@ -195,11 +196,38 @@ export async function updateProductAdmin(req, res) {
         })
       );
     }
+    const payload = { ...req.body };
+    // If images are provided, compute diff and delete removed images
+    if (Array.isArray(payload.images)) {
+      const incoming = payload.images.map(img =>
+        typeof img === "string" ? { url: img } : img
+      );
+      const existingByPublicId = new Map(
+        (existing.images || [])
+          .filter(img => typeof img !== "string" && img?.publicId)
+          .map(img => [img.publicId, img])
+      );
+      const incomingPublicIds = new Set(
+        incoming.filter(img => img && img.publicId).map(img => img.publicId)
+      );
+      const removedPublicIds = Array.from(existingByPublicId.keys()).filter(
+        pid => !incomingPublicIds.has(pid)
+      );
+      if (removedPublicIds.length > 0) {
+        try {
+          await deleteAssets(removedPublicIds);
+        } catch (err) {
+          logger.warn(
+            `[products.controller] Failed to delete some Cloudinary assets on update for product ${id}: ${err.message}`
+          );
+        }
+      }
+      payload.images = incoming;
+    }
+
+    const product = await updateProduct(id, payload);
     res.json(
-      formatResponse({
-        message: "Product updated successfully",
-        data: product,
-      })
+      formatResponse({ message: "Product updated successfully", data: product })
     );
   } catch (error) {
     logger.error(
@@ -227,6 +255,27 @@ export async function updateProductAdmin(req, res) {
 export async function deleteProductAdmin(req, res) {
   try {
     const { id } = req.params;
+    // Fetch product to gather Cloudinary publicIds
+    const existing = await getProductById(id);
+    if (!existing) {
+      return res
+        .status(404)
+        .json(formatResponse({ success: false, error: "Product not found" }));
+    }
+    const publicIds = Array.isArray(existing.images)
+      ? existing.images
+          .map(img => (typeof img === "string" ? null : img?.publicId))
+          .filter(Boolean)
+      : [];
+    if (publicIds.length > 0) {
+      try {
+        await deleteAssets(publicIds);
+      } catch (err) {
+        logger.warn(
+          `[products.controller] Failed to delete some Cloudinary assets for product ${id}: ${err.message}`
+        );
+      }
+    }
     const deleted = await deleteProduct(id);
     if (!deleted) {
       return res.status(404).json(
