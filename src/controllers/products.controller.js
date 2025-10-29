@@ -57,13 +57,14 @@ export async function getProducts(req, res) {
     }
     const products = await getDiscoverableProducts(filters, pageNum, limitNum);
 
-    res.json({
-      success: true,
-      data: products,
-      total,
-      totalPages: Math.ceil(total / limitNum),
-      currentPage: pageNum,
-    });
+    res.status(200).json(
+      formatResponse({
+        data: products,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+        currentPage: pageNum,
+      })
+    );
   } catch (error) {
     logger.error(
       `[products.controller] Failed to fetch products: ${error.message}`
