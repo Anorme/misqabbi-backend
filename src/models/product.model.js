@@ -199,6 +199,55 @@ async function deleteProduct(id) {
   }
 }
 
+/**
+ * @desc    Count the number of all products matching search/filter criteria (admin only - includes unpublished).
+ * @param   {Object} params - Query parameters for filtering/searching products (e.g., q, category, minPrice, maxPrice, isPublished)
+ * @returns {Promise<Number>} Count of products matching the criteria
+ */
+async function countAllProducts(params) {
+  try {
+    const { query } = buildProductQuery({
+      ...params,
+      includeUnpublished: true,
+    });
+    return await Product.countDocuments(query);
+  } catch (error) {
+    logger.error(
+      `[products.model] Error counting all products: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+/**
+ * @desc    Retrieve a paginated set of all products matching search/filter criteria (admin only - includes unpublished).
+ * @param   {Object} params - Query parameters for filtering/searching products (e.g., q, category, minPrice, maxPrice, isPublished, sort)
+ * @param   {Number} page - Page number (default: 1)
+ * @param   {Number} limit - Number of results per page (default: 10)
+ * @returns {Promise<Array>} Array of products matching the criteria
+ */
+async function getPaginatedAllProducts(params, page = 1, limit = 10) {
+  try {
+    const { query, projection, sort } = buildProductQuery({
+      ...params,
+      includeUnpublished: true,
+    });
+    const skip = (page - 1) * limit;
+
+    const products = await Product.find(query, projection)
+      .sort(sort)
+      .skip(skip)
+      .limit(limit);
+
+    return products;
+  } catch (error) {
+    logger.error(
+      `[products.model] Error getting paginated all products: ${error.message}`
+    );
+    throw error;
+  }
+}
+
 export {
   getAllProducts,
   getAllPublishedProducts,
@@ -206,6 +255,8 @@ export {
   countPublishedProducts,
   countDiscoverableProducts,
   getDiscoverableProducts,
+  countAllProducts,
+  getPaginatedAllProducts,
   getProductById,
   getProductBySlug,
   createProduct,
