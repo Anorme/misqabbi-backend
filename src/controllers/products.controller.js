@@ -153,7 +153,12 @@ export async function createProductAdmin(req, res) {
   try {
     const data = { ...req.body, createdBy: req.user._id };
     const product = await createProduct(data);
-    res.status(201).json(formatResponse({ data: product }));
+    res.status(201).json(
+      formatResponse({
+        message: "Product created successfully",
+        data: product,
+      })
+    );
   } catch (error) {
     logger.error(
       `[products.controller] Error creating product: ${error.message}`
@@ -161,6 +166,7 @@ export async function createProductAdmin(req, res) {
     res.status(400).json(
       formatResponse({
         success: false,
+        message: "Product creation failed",
         error: "Invalid product data",
       })
     );
@@ -189,7 +195,12 @@ export async function updateProductAdmin(req, res) {
         })
       );
     }
-    res.json(formatResponse({ data: product }));
+    res.json(
+      formatResponse({
+        message: "Product updated successfully",
+        data: product,
+      })
+    );
   } catch (error) {
     logger.error(
       `[products.controller] Product update failed: ${error.message}`
@@ -297,9 +308,9 @@ export async function getProductsAdmin(req, res) {
 
     const products = await getPaginatedAllProducts(filters, pageNum, limitNum);
 
-    res.json(
+    res.status(200).json(
       formatResponse({
-        success: true,
+        message: "Products fetched successfully",
         data: products,
         total,
         totalPages: Math.ceil(total / limitNum),
