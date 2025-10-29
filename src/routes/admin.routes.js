@@ -14,6 +14,7 @@ import {
   createProductAdmin,
   updateProductAdmin,
   deleteProductAdmin,
+  getProductsAdmin,
 } from "../controllers/products.controller.js";
 
 const router = express.Router();
@@ -31,6 +32,101 @@ router.patch(
   checkAdmin,
   updateOrderStatusAdmin
 );
+
+/**
+ * @swagger
+ * /admin/products:
+ *   get:
+ *     summary: Get all products including unpublished (admin only)
+ *     description: Retrieve a paginated list of all products with support for filtering, searching, and sorting. Includes both published and unpublished products.
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of products per page
+ *       - in: query
+ *         name: q
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Search query for product name, description, or category
+ *       - in: query
+ *         name: category
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Filter products by category
+ *       - in: query
+ *         name: minPrice
+ *         required: false
+ *         schema:
+ *           type: number
+ *         description: Minimum price filter
+ *       - in: query
+ *         name: maxPrice
+ *         required: false
+ *         schema:
+ *           type: number
+ *         description: Maximum price filter
+ *       - in: query
+ *         name: isPublished
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [true, false, all]
+ *         description: Filter by publish status. Use "true" for published only, "false" for unpublished only, "all" for all products (default)
+ *       - in: query
+ *         name: sort
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [latest, price-low-high, price-high-low, name-a-z, name-z-a]
+ *           default: latest
+ *         description: Sort products by specified criteria
+ *     responses:
+ *       200:
+ *         description: A list of products (published and unpublished)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indicates whether the request was successful
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: "#/components/schemas/Product"
+ *                 total:
+ *                   type: integer
+ *                   description: Total number of products matching filters
+ *                 totalPages:
+ *                   type: integer
+ *                   description: Total number of pages available
+ *                 currentPage:
+ *                   type: integer
+ *                   description: Current page number
+ *       400:
+ *         description: Invalid request parameters
+ *       500:
+ *         description: Failed to load products
+ */
+router.get("/products", authenticateToken, checkAdmin, getProductsAdmin);
 
 router.get(
   "/analytics/:userId",
