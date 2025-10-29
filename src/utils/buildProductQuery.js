@@ -1,9 +1,28 @@
 export function buildProductQuery(params) {
-  const { q, category, minPrice, maxPrice, sort: sortParam } = params;
+  const {
+    q,
+    category,
+    minPrice,
+    maxPrice,
+    sort: sortParam,
+    includeUnpublished,
+    isPublished,
+  } = params;
 
-  const query = { isPublished: true };
+  const query = {};
   const projection = {};
   const sort = {};
+
+  // Handle published filter
+  // Public endpoints default to published only. Admin endpoints can pass
+  // includeUnpublished=true and an optional boolean isPublished filter.
+  if (!includeUnpublished) {
+    query.isPublished = true;
+  } else if (isPublished === true) {
+    query.isPublished = true;
+  } else if (isPublished === false) {
+    query.isPublished = false;
+  }
 
   // Handle sorting
   if (sortParam) {
