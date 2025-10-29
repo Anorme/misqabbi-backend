@@ -6,6 +6,8 @@ import {
   deleteProduct,
   getDiscoverableProducts,
   countDiscoverableProducts,
+  getPaginatedAllProducts,
+  countAllProducts,
 } from "../models/product.model.js";
 import logger from "../config/logger.js";
 import { formatResponse } from "../utils/responseFormatter.js";
@@ -231,6 +233,86 @@ export async function deleteProductAdmin(req, res) {
       formatResponse({
         success: false,
         error: "Product deletion failed",
+      })
+    );
+  }
+}
+
+/**
+ * Retrieves a paginated list of all products including unpublished (admin only).
+ * @async
+ * @function getProductsAdmin
+ * @route GET /admin/products
+ * @access Admin
+ * @param {Request} req - Express request object with optional query params: q, category, minPrice, maxPrice, isPublished, page, limit, sort
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} Sends JSON response with product data, total count, total pages, and current page
+ */
+export async function getProductsAdmin(req, res) {
+  try {
+    const { q, category, minPrice, maxPrice, isPublished, page, limit, sort } =
+      req.query;
+
+    const pageNum = Math.max(parseInt(page) || 1, 1);
+    const limitNum = Math.max(parseInt(limit) || 10, 1);
+
+    // Validate sort parameter
+    if (sort && !isValidSortOption(sort)) {
+      return res.status(400).json(
+        formatResponse({
+          success: false,
+          error:
+            "Invalid sort option. Valid options are: latest, price-low-high, price-high-low, name-a-z, name-z-a",
+        })
+      );
+    }
+
+    const filters = {
+      q: q?.trim() || undefined,
+      category: category?.trim() || undefined,
+      minPrice: minPrice ? Number(minPrice) : undefined,
+      maxPrice: maxPrice ? Number(maxPrice) : undefined,
+      isPublished:
+        isPublished === "true"
+          ? true
+          : isPublished === "false"
+            ? false
+            : isPublished === "all"
+              ? "all"
+              : undefined,
+      sort: sort?.trim() || undefined,
+    };
+
+    const total = await countAllProducts(filters);
+
+    if (pageNum > Math.ceil(total / limitNum) && total > 0) {
+      return res.status(400).json(
+        formatResponse({
+          success: false,
+          error: "Requested page exceeds available product pages",
+        })
+      );
+    }
+
+    const products = await getPaginatedAllProducts(filters, pageNum, limitNum);
+
+    res.json(
+      formatResponse({
+        success: true,
+        data: products,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+        currentPage: pageNum,
+      })
+    );
+  } catch (error) {
+    logger.error(
+      `[products.controller] Failed to fetch all products: ${error.message}`
+    );
+    res.status(500).json(
+      formatResponse({
+        success: false,
+        error: "Failed to load products",
       })
     );
   }
