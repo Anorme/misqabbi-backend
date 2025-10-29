@@ -2,6 +2,9 @@ import express from "express";
 
 import { authenticateToken, checkAdmin } from "../middleware/index.js";
 import { validateProduct } from "../middleware/validator.middleware.js";
+import { attachImagesToBody } from "../middleware/upload.middleware.js";
+import { productUploads } from "../config/cloudinary.js";
+
 import { getUserAnalyticsHandler } from "../controllers/admin.controller.js";
 import {
   getAllOrdersAdmin,
@@ -41,18 +44,41 @@ router.get(
  * /admin/products:
  *   post:
  *     summary: Create a new product (admin only)
- *     description: Create a new product
+ *     description: Create a new product with support for uploading up to 5 images. The images must be sent as multipart/form-data along with the product data fields.
  *     tags:
  *       - Admin
  *     security:
  *       - bearerAuth: []
  *     requestBody:
- *       description: Product data to create
+ *       description: Product data to create, with image uploads. Use 'multipart/form-data' and send field `images` as up to 5 files.
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
- *             $ref: "#/components/schemas/Product"
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: The product name.
+ *               description:
+ *                 type: string
+ *                 description: The product description.
+ *               price:
+ *                 type: number
+ *                 description: The product price.
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: Up to 5 product images.
+ *                 maxItems: 5
+ *               category:
+ *                 type: string
+ *                 description: The product category.
+ *               stock:
+ *                 type: integer
+ *                 description: Product stock quantity.
  *     responses:
  *       201:
  *         description: Created product
@@ -85,9 +111,11 @@ router.get(
  */
 router.post(
   "/products",
-  validateProduct,
   authenticateToken,
   checkAdmin,
+  productUploads.array("images", 5),
+  attachImagesToBody,
+  validateProduct,
   createProductAdmin
 );
 
