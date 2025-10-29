@@ -137,15 +137,16 @@ export const getProductBySlugHandler = async (req, res) => {
 };
 
 /**
- * Creates a new product using request body data.
+ * Creates a new product using request body data (admin only).
  * @async
- * @function createProductHandler
+ * @function createProductAdmin
+ * @route POST /admin/products
+ * @access Admin
  * @param {Request} req - Express request object with product data in body
  * @param {Response} res - Express response object
  * @returns {Promise<void>} Sends JSON response with created product or error
  */
-
-export async function createProductHandler(req, res) {
+export async function createProductAdmin(req, res) {
   try {
     const data = { ...req.body, createdBy: req.user._id };
     const product = await createProduct(data);
@@ -164,15 +165,16 @@ export async function createProductHandler(req, res) {
 }
 
 /**
- * Updates an existing product by ID using request body data.
+ * Updates an existing product by ID using request body data (admin only).
  * @async
- * @function updateProductHandler
+ * @function updateProductAdmin
+ * @route PUT /admin/products/:id
+ * @access Admin
  * @param {Request} req - Express request object with path param: id and update data in body
  * @param {Response} res - Express response object
  * @returns {Promise<void>} Sends JSON response with updated product or error
  */
-
-export async function updateProductHandler(req, res) {
+export async function updateProductAdmin(req, res) {
   try {
     const { id } = req.params;
     const product = await updateProduct(id, req.body);
@@ -199,15 +201,16 @@ export async function updateProductHandler(req, res) {
 }
 
 /**
- * Deletes a product by its ID.
+ * Deletes a product by its ID (admin only).
  * @async
- * @function deleteProductHandler
+ * @function deleteProductAdmin
+ * @route DELETE /admin/products/:id
+ * @access Admin
  * @param {Request} req - Express request object with path param: id
  * @param {Response} res - Express response object
  * @returns {Promise<void>} Sends 204 status or error response
  */
-
-export async function deleteProductHandler(req, res) {
+export async function deleteProductAdmin(req, res) {
   try {
     const { id } = req.params;
     const deleted = await deleteProduct(id);
