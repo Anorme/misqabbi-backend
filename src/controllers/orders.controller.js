@@ -2,6 +2,9 @@ import {
   getPaginatedOrdersByUser,
   countOrdersByUser,
   fetchOrderById,
+  countPublishedOrders,
+  getPaginatedPublishedOrders,
+  updateOrderStatus,
 } from "../models/order.model.js";
 import { createTransaction } from "../models/transaction.model.js";
 import Product from "../models/product.mongo.js";
@@ -164,3 +167,77 @@ export const getOrderById = async (req, res) => {
     return res.status(500).json({ error: "Failed to retrieve order" });
   }
 };
+
+/**
+ * @desc    Get all orders (admin only)
+ * @route   GET /admin/orders
+ * @access  Admin
+ */
+export async function getAllOrdersAdmin(req, res) {
+  try {
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+
+    const totalPublishedOrders = await countPublishedOrders();
+    if (page > Math.ceil(totalPublishedOrders / limit)) {
+      return res.status(400).json(
+        formatResponse({
+          success: false,
+          error: "Requested page exceeds available order pages",
+        })
+      );
+    }
+    const orders = await getPaginatedPublishedOrders(page, limit, req.query);
+    res.json(
+      formatResponse({
+        success: true,
+        data: orders,
+        total: totalPublishedOrders,
+        totalPages: Math.ceil(totalPublishedOrders / limit),
+        currentPage: page,
+      })
+    );
+  } catch (error) {
+    logger.error(
+      `[orders.controller] Failed to fetch orders: ${error.message}`
+    );
+    res.status(500).json(
+      formatResponse({
+        success: false,
+        error: "Failed to load orders",
+      })
+    );
+  }
+}
+
+/**
+ * @desc    Update an existing order's status (admin only)
+ * @route   PATCH /admin/orders/:id
+ * @access  Admin
+ */
+export async function updateOrderStatusAdmin(req, res) {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const order = await updateOrderStatus(id, status);
+    if (!order) {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Order not found",
+        })
+      );
+    }
+    res.json(formatResponse({ success: true, data: order }));
+  } catch (error) {
+    logger.error(
+      `[orders.controller] Order status update failed: ${error.message}`
+    );
+    res.status(400).json(
+      formatResponse({
+        success: false,
+        error: "Order status update failed",
+      })
+    );
+  }
+}
