@@ -33,13 +33,25 @@ const productSchema = new Schema(
       min: 0,
     },
     images: {
-      type: [String],
+      type: [
+        {
+          url: { type: String, required: true, trim: true },
+          publicId: { type: String, required: false, trim: true },
+        },
+      ],
       default: [],
       validate: {
         validator: function (array) {
-          return array.length <= 5;
+          return Array.isArray(array) && array.length <= 5;
         },
         message: "Maximum of 5 images allowed",
+      },
+      set: function (val) {
+        // Backward compatibility: allow strings and coerce to { url }
+        if (!Array.isArray(val)) return [];
+        return val
+          .filter(v => v !== undefined && v !== null)
+          .map(v => (typeof v === "string" ? { url: v } : v));
       },
     },
     category: {
