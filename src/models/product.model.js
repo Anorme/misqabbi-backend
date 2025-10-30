@@ -249,6 +249,27 @@ async function getPaginatedAllProducts(params, page = 1, limit = 10) {
   }
 }
 
+async function countAllProductsRaw() {
+  try {
+    return await Product.countDocuments({});
+  } catch (error) {
+    logger.error(`[products.model] Error counting products: ${error.message}`);
+    throw error;
+  }
+}
+
+async function getLowStockProducts(limit = 5, threshold = 10) {
+  try {
+    return await Product.find({ stock: { $lt: threshold } })
+      .select("name stock slug isPublished")
+      .sort({ stock: 1, updatedAt: -1 })
+      .limit(limit);
+  } catch (error) {
+    logger.error(`[products.model] Error fetching low stock: ${error.message}`);
+    throw error;
+  }
+}
+
 export {
   getAllProducts,
   getAllPublishedProducts,
@@ -263,4 +284,6 @@ export {
   createProduct,
   updateProduct,
   deleteProduct,
+  countAllProductsRaw,
+  getLowStockProducts,
 };
