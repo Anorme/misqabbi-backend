@@ -86,6 +86,12 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
+// Text index for admin search capabilities (displayName and email)
+userSchema.index(
+  { displayName: "text", email: "text" },
+  { name: "UserTextIndex" }
+);
+
 /**
  * Hash the password before saving the user.
  *
