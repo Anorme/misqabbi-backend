@@ -104,6 +104,18 @@ export async function fetchOrderById(orderId, userId) {
   }
 }
 
+export async function fetchOrderByIdAdmin(orderId) {
+  try {
+    const order = await Order.findOne({ _id: orderId })
+      .populate({ path: "items.product", select: "name slug images price" })
+      .populate({ path: "user", select: "name email" });
+    return order;
+  } catch (error) {
+    logger.warn(error.message);
+    throw new Error(error.message);
+  }
+}
+
 export async function updateOrderStatus(id, status) {
   try {
     const updated = await Order.findByIdAndUpdate(
