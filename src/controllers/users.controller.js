@@ -13,6 +13,10 @@ import {
   createLocalUser,
   findUserByEmail,
   findUserById,
+  getPaginatedUsers,
+  countUsers,
+  deleteUserById,
+  updateUserRole,
 } from "../models/user.model.js";
 import crypto from "crypto";
 import ResetToken from "../models/resetToken.mongo.js";
@@ -514,6 +518,90 @@ export const resetPassword = async (req, res) => {
     );
   }
 };
+
+export async function getUsersAdmin(req, res) {
+  try {
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+    const q = req.query.q?.trim();
+    const [users, total] = await Promise.all([
+      getPaginatedUsers(page, limit, { q }),
+      countUsers({ q }),
+    ]);
+    return res.status(200).json(
+      formatResponse({
+        data: users,
+        total,
+        totalPages: Math.ceil(total / limit),
+        currentPage: page,
+      })
+    );
+  } catch (error) {
+    logger.error(`[users.controller] Failed to list users: ${error.message}`);
+    return res
+      .status(500)
+      .json(formatResponse({ success: false, error: "Failed to load users" }));
+  }
+}
+
+export async function deleteUserByIdAdmin(req, res) {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res
+        .status(400)
+        .json(formatResponse({ success: false, error: "Invalid user id" }));
+    }
+    const deleted = await deleteUserById(id);
+    if (!deleted) {
+      return res
+        .status(404)
+        .json(formatResponse({ success: false, error: "User not found" }));
+    }
+    return res
+      .status(200)
+      .json(
+        formatResponse({ message: "User deleted successfully", data: { id } })
+      );
+  } catch (error) {
+    logger.error(`[users.controller] Failed to delete user: ${error.message}`);
+    return res
+      .status(500)
+      .json(formatResponse({ success: false, error: "Failed to delete user" }));
+  }
+}
+
+export async function updateUserRoleAdmin(req, res) {
+  try {
+    const { id } = req.params;
+    const { role } = req.body || {};
+    if (!id) {
+      return res
+        .status(400)
+        .json(formatResponse({ success: false, error: "Invalid user id" }));
+    }
+    const allowed = ["user", "admin"];
+    if (!allowed.includes(role)) {
+      return res
+        .status(400)
+        .json(
+          formatResponse({ success: false, error: "Invalid role supplied" })
+        );
+    }
+    const updated = await updateUserRole(id, role);
+    if (!updated) {
+      return res
+        .status(404)
+        .json(formatResponse({ success: false, error: "User not found" }));
+    }
+    return res.status(200).json(formatResponse({ data: updated }));
+  } catch (error) {
+    logger.error(`[users.controller] Failed to update role: ${error.message}`);
+    return res
+      .status(500)
+      .json(formatResponse({ success: false, error: "Failed to update role" }));
+  }
+}
 
 export const updateUserProfile = async (req, res) => {
   const userId = req.user._id;
