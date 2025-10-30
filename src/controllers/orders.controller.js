@@ -2,18 +2,21 @@ import {
   getPaginatedOrdersByUser,
   countOrdersByUser,
   fetchOrderById,
+  fetchOrderByIdAdmin,
   countPublishedOrders,
   getPaginatedPublishedOrders,
   updateOrderStatus,
 } from "../models/order.model.js";
 import { createTransaction } from "../models/transaction.model.js";
 import Product from "../models/product.mongo.js";
+
 import {
   initializeTransaction,
   generateTransactionReference,
   convertToPesewas,
 } from "../services/paystackService.js";
 import logger from "../config/logger.js";
+import { OBJECTID_REGEX } from "../utils/validators.js";
 import { formatResponse } from "../utils/responseFormatter.js";
 
 export const initializeCheckout = async (req, res) => {
@@ -167,6 +170,34 @@ export const getOrderById = async (req, res) => {
     return res.status(500).json({ error: "Failed to retrieve order" });
   }
 };
+
+/**
+ * @desc    Get a specific order by ID (admin only)
+ * @route   GET /admin/orders/id/:orderId
+ * @access  Admin
+ */
+export async function getOrderByIdAdmin(req, res) {
+  try {
+    const { orderId } = req.params;
+    if (!orderId || !OBJECTID_REGEX.test(orderId)) {
+      return res
+        .status(400)
+        .json(formatResponse({ success: false, error: "Invalid order id" }));
+    }
+    const order = await fetchOrderByIdAdmin(orderId);
+    if (!order) {
+      return res
+        .status(404)
+        .json(formatResponse({ success: false, error: "Order not found" }));
+    }
+    return res.status(200).json(formatResponse({ data: order }));
+  } catch (error) {
+    logger.error(`[orders.controller] Failed to fetch order: ${error.message}`);
+    return res
+      .status(500)
+      .json(formatResponse({ success: false, error: "Failed to load order" }));
+  }
+}
 
 /**
  * @desc    Get all orders (admin only)
