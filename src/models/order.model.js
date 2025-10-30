@@ -179,3 +179,85 @@ export async function countPublishedOrders() {
     throw error;
   }
 }
+
+export async function countAllOrders() {
+  try {
+    return await Order.countDocuments();
+  } catch (error) {
+    logger.error(`[orders.model] Error counting orders: ${error.message}`);
+    throw error;
+  }
+}
+
+export async function getRecentOrders(limit = 5) {
+  try {
+    return await Order.find({})
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .populate({ path: "items.product", select: "name slug images price" })
+      .populate({ path: "user", select: "name email" });
+  } catch (error) {
+    logger.error(
+      `[orders.model] Error fetching recent orders: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+export async function aggregateRevenueByMonth(limitMonths = 12) {
+  try {
+    const now = new Date();
+    const from = new Date(
+      now.getFullYear(),
+      now.getMonth() - (limitMonths - 1),
+      1
+    );
+    const pipeline = [
+      { $match: { createdAt: { $gte: from } } },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" },
+          },
+          total: { $sum: "$totalPrice" },
+        },
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
+      {
+        $project: {
+          _id: 0,
+          year: "$_id.year",
+          month: "$_id.month",
+          total: 1,
+        },
+      },
+    ];
+    return await Order.aggregate(pipeline);
+  } catch (error) {
+    logger.error(`[orders.model] Error aggregating revenue: ${error.message}`);
+    throw error;
+  }
+}
+
+// Total revenue over the last N days (default: previous 30 days)
+export async function aggregateRevenueLastNDays(days = 30) {
+  try {
+    const now = new Date();
+    const from = new Date(now);
+    from.setHours(0, 0, 0, 0);
+    from.setDate(from.getDate() - (days - 1));
+
+    const res = await Order.aggregate([
+      { $match: { createdAt: { $gte: from } } },
+      { $group: { _id: null, total: { $sum: "$totalPrice" } } },
+      { $project: { _id: 0, total: 1 } },
+    ]);
+    return res[0]?.total || 0;
+  } catch (error) {
+    logger.error(
+      `[orders.model] Error aggregating 30-day revenue: ${error.message}`
+    );
+    throw error;
+  }
+}
