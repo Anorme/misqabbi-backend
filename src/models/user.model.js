@@ -79,3 +79,67 @@ async function findUserById(id) {
 }
 
 export { createLocalUser, createGoogleUser, findUserByEmail, findUserById };
+
+// Admin listing helpers
+export async function getPaginatedUsers(page = 1, limit = 10, params = {}) {
+  try {
+    const skip = (page - 1) * limit;
+    const { q } = params;
+    const filter = {};
+    const projection = {};
+    const sort = { createdAt: -1 };
+    if (q && typeof q === "string") {
+      filter.$text = { $search: q };
+      projection.score = { $meta: "textScore" };
+      // Sort primarily by text score, then by recency
+      sort.score = { $meta: "textScore" };
+    }
+    return await User.find(filter, projection)
+      .select("email displayName name role createdAt score")
+      .sort(sort)
+      .skip(skip)
+      .limit(limit);
+  } catch (error) {
+    logger.error(`[users.model] Error getting users: ${error.message}`);
+    throw error;
+  }
+}
+
+export async function countUsers(params = {}) {
+  try {
+    const { q } = params;
+    const filter = q && typeof q === "string" ? { $text: { $search: q } } : {};
+    return await User.countDocuments(filter);
+  } catch (error) {
+    logger.error(`[users.model] Error counting users: ${error.message}`);
+    throw error;
+  }
+}
+
+export async function deleteUserById(userId) {
+  try {
+    if (!Types.ObjectId.isValid(userId)) return null;
+    return await User.findByIdAndDelete(userId);
+  } catch (error) {
+    logger.error(
+      `[users.model] Error deleting user ${userId}: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+export async function updateUserRole(userId, role) {
+  try {
+    if (!Types.ObjectId.isValid(userId)) return null;
+    return await User.findByIdAndUpdate(
+      userId,
+      { role },
+      { new: true, runValidators: true }
+    ).select("email displayName name role createdAt");
+  } catch (error) {
+    logger.error(
+      `[users.model] Error updating user role ${userId}: ${error.message}`
+    );
+    throw error;
+  }
+}
