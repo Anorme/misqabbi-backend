@@ -9,6 +9,7 @@ import { getUserAnalyticsHandler } from "../controllers/admin.controller.js";
 import {
   getAllOrdersAdmin,
   updateOrderStatusAdmin,
+  getOrderByIdAdmin,
 } from "../controllers/orders.controller.js";
 import {
   createProductAdmin,
@@ -24,13 +25,225 @@ router.get("/dashboard", authenticateToken, checkAdmin, (req, res) => {
   res.status(200).json({ message: "Admin dashboard placeholder" });
 });
 
+/**
+ * @swagger
+ * /admin/orders:
+ *   get:
+ *     summary: Get all orders (admin only)
+ *     description: Retrieve all orders in the system. Only accessible to admins.
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: The page number for pagination
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of orders per page
+ *     responses:
+ *       200:
+ *         description: A list of orders
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Order'
+ *                 total:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ *                 currentPage:
+ *                   type: integer
+ *       400:
+ *         description: Requested page exceeds available order pages
+ *       500:
+ *         description: Failed to load orders
+ */
+
 router.get("/orders", authenticateToken, checkAdmin, getAllOrdersAdmin);
+
+/**
+ * @swagger
+ * /admin/orders/id/{orderId}:
+ *   get:
+ *     summary: Get a specific order by ID (admin only)
+ *     description: Retrieve a specific order by its ID. Only accessible to admins.
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the order to retrieve
+ *     responses:
+ *       200:
+ *         description: Order retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/Order'
+ *       400:
+ *         description: Invalid order id supplied
+ *       404:
+ *         description: Order not found
+ *       500:
+ *         description: Failed to load order
+ */
+router.get(
+  "/orders/id/:orderId",
+  authenticateToken,
+  checkAdmin,
+  getOrderByIdAdmin
+);
+
+/**
+ * @swagger
+ * /admin/orders/{id}:
+ *   patch:
+ *     summary: Update the status of an order (admin only)
+ *     description: Update the status of a specific order by its ID. Only accessible to admins.
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the order to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 description: New status for the order (e.g., 'pending', 'shipped', 'delivered', 'cancelled')
+ *             required:
+ *               - status
+ *     responses:
+ *       200:
+ *         description: Order status updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/Order'
+ *       400:
+ *         description: Invalid order id or invalid request body
+ *       404:
+ *         description: Order not found
+ *       500:
+ *         description: Failed to update order status
+ */
 
 router.patch(
   "/orders/:id",
   authenticateToken,
   checkAdmin,
   updateOrderStatusAdmin
+);
+
+/**
+ * @swagger
+ * /admin/orders:
+ *   get:
+ *     summary: Get all orders (admin only)
+ *     description: Retrieve a paginated list of all published orders. Only accessible to admins.
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of orders per page
+ *       - in: query
+ *         name: [additional filters]
+ *         schema:
+ *           type: string
+ *         description: Optional query filters for orders (implementation-dependent)
+ *     responses:
+ *       200:
+ *         description: A paginated list of orders
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Order'
+ *                 total:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ *                 currentPage:
+ *                   type: integer
+ *       400:
+ *         description: Bad request, typically when page exceeds available order pages
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized (missing/invalid token)
+ *       403:
+ *         description: Forbidden (not an admin user)
+ *       500:
+ *         description: Server error
+ */
+
+router.get(
+  "/orders/id/:orderId",
+  authenticateToken,
+  checkAdmin,
+  getOrderByIdAdmin
 );
 
 /**
@@ -127,6 +340,44 @@ router.patch(
  *         description: Failed to load products
  */
 router.get("/products", authenticateToken, checkAdmin, getProductsAdmin);
+
+/**
+ * @swagger
+ * /admin/analytics/{userId}:
+ *   get:
+ *     summary: Get analytics for a specific user (admin only)
+ *     description: Retrieve analytics data for a user specified by userId. Only accessible to admins.
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the user to get analytics for
+ *     responses:
+ *       200:
+ *         description: Analytics data retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   description: Analytics data for the specified user
+ *       400:
+ *         description: Invalid user id supplied
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Failed to retrieve user analytics
+ */
 
 router.get(
   "/analytics/:userId",
