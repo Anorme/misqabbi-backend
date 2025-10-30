@@ -24,10 +24,19 @@ export const productValidator = Joi.object({
     "number.min": "Price must be at least 0",
     "any.required": "Price is required",
   }),
-  images: Joi.array().items(Joi.string().uri()).max(5).optional().messages({
-    "array.max": "Maximum of 5 images allowed",
-    "string.uri": "Invalid image URL format",
-  }),
+  images: Joi.array()
+    .items(
+      Joi.object({
+        url: Joi.string().uri().required(),
+        publicId: Joi.string().optional(),
+      })
+    )
+    .max(5)
+    .optional()
+    .messages({
+      "array.max": "Maximum of 5 images allowed",
+      "string.uri": "Invalid image URL format",
+    }),
   category: Joi.string().lowercase().trim().required(),
   stock: Joi.number().min(0).required().messages({
     "number.min": "Stock must be at least 0",
