@@ -5,7 +5,10 @@ import { validateProduct } from "../middleware/validator.middleware.js";
 import { attachImagesToBody } from "../middleware/upload.middleware.js";
 import { productUploads } from "../config/cloudinary.js";
 
-import { getUserAnalyticsHandler } from "../controllers/admin.controller.js";
+import {
+  getUserAnalyticsHandler,
+  getAdminDashboardHandler,
+} from "../controllers/admin.controller.js";
 import {
   getAllOrdersAdmin,
   updateOrderStatusAdmin,
@@ -25,10 +28,80 @@ import {
 
 const router = express.Router();
 
-// TODO: Replace placeholder with real admin dashboard logic
-router.get("/dashboard", authenticateToken, checkAdmin, (req, res) => {
-  res.status(200).json({ message: "Admin dashboard placeholder" });
-});
+/**
+ * @swagger
+ * /admin/dashboard:
+ *   get:
+ *     summary: Get admin dashboard KPIs (admin only)
+ *     description: Retrieve key performance indicators for the admin dashboard. Only accessible to admins.
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 5
+ *         description: Number of recent orders to display
+ *       - in: query
+ *         name: threshold
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Low stock threshold for products
+ *       - in: query
+ *         name: months
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 12
+ *         description: Number of months to aggregate revenue by
+ *     responses:
+ *       200:
+ *         description: Admin dashboard KPIs retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totals:
+ *                       type: object
+ *                       properties:
+ *                         products:
+ *                           type: integer
+ *                         orders:
+ *                           type: integer
+ *                         users:
+ *                           type: integer
+ *                         revenueByMonth:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               year:
+ *                                 type: integer
+ *                               month:
+ *                                 type: integer
+ *                               total:
+ *                                 type: number
+ *       500:
+ *         description: Failed to load dashboard
+ */
+router.get(
+  "/dashboard",
+  authenticateToken,
+  checkAdmin,
+  getAdminDashboardHandler
+);
 
 /**
  * @swagger
