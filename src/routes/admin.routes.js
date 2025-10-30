@@ -12,6 +12,11 @@ import {
   getOrderByIdAdmin,
 } from "../controllers/orders.controller.js";
 import {
+  getUsersAdmin,
+  deleteUserByIdAdmin,
+  updateUserRoleAdmin,
+} from "../controllers/users.controller.js";
+import {
   createProductAdmin,
   updateProductAdmin,
   deleteProductAdmin,
@@ -577,6 +582,20 @@ router.delete(
   authenticateToken,
   checkAdmin,
   deleteProductAdmin
+);
+
+// Admin: list users
+router.get("/users", authenticateToken, checkAdmin, getUsersAdmin);
+
+// Admin: delete user by id
+router.delete("/users/:id", authenticateToken, checkAdmin, deleteUserByIdAdmin);
+
+// Admin: update user role
+router.patch(
+  "/users/:id/role",
+  authenticateToken,
+  checkAdmin,
+  updateUserRoleAdmin
 );
 
 export default router;
