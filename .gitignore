@@ -141,3 +141,6 @@ vite.config.ts.timestamp-*
 #seed scripts
 seedAdmin.js
 seedProducts.js
+
+# migration scripts
+migrateProductImages.js
