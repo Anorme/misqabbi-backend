@@ -116,6 +116,15 @@ export async function countUsers(params = {}) {
   }
 }
 
+export async function countAllUsers() {
+  try {
+    return await User.countDocuments({});
+  } catch (error) {
+    logger.error(`[users.model] Error counting all users: ${error.message}`);
+    throw error;
+  }
+}
+
 export async function deleteUserById(userId) {
   try {
     if (!Types.ObjectId.isValid(userId)) return null;
