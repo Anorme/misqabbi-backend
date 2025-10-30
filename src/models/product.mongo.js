@@ -40,6 +40,7 @@ const productSchema = new Schema(
         },
       ],
       default: [],
+      _id: false,
       validate: {
         validator: function (array) {
           return Array.isArray(array) && array.length <= 5;
