@@ -172,6 +172,7 @@ export async function getCurrentUser(req, res) {
           contact: user?.contact,
           location: user?.location,
           profileComplete: user?.profileComplete,
+          role: user?.role,
         },
       },
     })
