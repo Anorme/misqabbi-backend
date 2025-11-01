@@ -28,6 +28,7 @@ const baseSchema = {
   BASE_URL: url(),
   RESEND_API_KEY: str(),
   EMAIL_FROM: str(),
+  EMAIL_USER: str(),
   MAILCHIMP_API_KEY: str(),
   MAILCHIMP_SERVER_PREFIX: str(),
   MAILCHIMP_LIST_ID: str(),
