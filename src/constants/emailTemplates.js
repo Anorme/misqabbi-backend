@@ -14,3 +14,18 @@ Remember, taking care of your digital space is an act of self-care. You've got t
 With love and support,
 The Misqabbi Team
 `;
+
+export const CONTACT_FORM_EMAIL = (name, email, message) => `
+New Contact Form Submission
+
+You have received a new message from the Misqabbi contact form:
+
+From: ${name}
+Email: ${email}
+
+Message:
+${message}
+
+---
+This message was sent via the Misqabbi contact form.
+`;
