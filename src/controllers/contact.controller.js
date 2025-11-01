@@ -26,7 +26,7 @@ export async function submitContact(req, res) {
     const subject = `New Contact Form Submission from ${name}`;
     const emailContent = CONTACT_FORM_EMAIL(name, email, message);
 
-    const result = await sendEmail(env.EMAIL_FROM, subject, emailContent);
+    const result = await sendEmail(env.EMAIL_USER, subject, emailContent);
 
     if (result.success !== false) {
       logger.info(
