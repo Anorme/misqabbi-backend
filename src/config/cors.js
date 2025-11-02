@@ -1,18 +1,20 @@
 const allowedOrigins = {
   development: [
     "http://localhost:3000",
+    "https://www.misqabbigh.com",
     "https://misqabbigh.netlify.app",
     "https://checkout.paystack.com",
     "https://api.paystack.co",
   ],
   staging: [
     "https://misqabbigh.netlify.app",
+    "https://www.misqabbigh.com",
     "https://checkout.paystack.com",
     "https://api.paystack.co",
   ],
   production: [
-    "https://shop.misqabbi.com",
-    "https://www.misqabbi.com",
+    "https://shop.misqabbigh.com",
+    "https://www.misqabbigh.com",
     "https://misqabbigh.netlify.app",
     "https://checkout.paystack.com",
     "https://api.paystack.co",
