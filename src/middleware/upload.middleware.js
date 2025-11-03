@@ -22,7 +22,7 @@ export const attachImagesToBody = (req, res, next) => {
     });
   }
   logger.info(
-    `[upload.middleware] Attached ${req.files.length} images to request body`
+    `[upload.middleware] Attached ${req.files?.length || 0} images to request body`
   );
   next();
 };
