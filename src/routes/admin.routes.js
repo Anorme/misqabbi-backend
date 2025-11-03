@@ -613,7 +613,15 @@ router.post(
  *                   description: Error message
  *                   example: "Product update failed"
  */
-router.put("/products/:id", authenticateToken, checkAdmin, updateProductAdmin);
+router.put(
+  "/products/:id",
+  authenticateToken,
+  checkAdmin,
+  productUploads.array("images", 5),
+  attachImagesToBody,
+  validateProduct,
+  updateProductAdmin
+);
 
 /**
  * @swagger
