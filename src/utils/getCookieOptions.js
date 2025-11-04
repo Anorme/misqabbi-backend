@@ -4,14 +4,17 @@ const cookieEnv = env.COOKIE_ENV || "local";
 
 const COOKIE_SETTINGS = {
   local: { secure: false, sameSite: "lax", domain: undefined },
-  development: { secure: true, sameSite: "none", domain: undefined },
-  staging: { secure: true, sameSite: "none", domain: undefined },
-  production: { secure: true, sameSite: "none", domain: undefined },
+  development: { secure: true, sameSite: "none", domain: ".misqabbigh.com" },
+  staging: { secure: true, sameSite: "none", domain: ".misqabbigh.com" },
+  production: { secure: true, sameSite: "none", domain: ".misqabbigh.com" },
 };
 
-export default function getCookieOptions() {
-  const opts = COOKIE_SETTINGS[cookieEnv] || COOKIE_SETTINGS["local"];
+function resolveOpts() {
+  return COOKIE_SETTINGS[cookieEnv] || COOKIE_SETTINGS["local"];
+}
 
+export default function getCookieOptions() {
+  const opts = resolveOpts();
   return {
     httpOnly: true,
     secure: opts.secure,
@@ -22,7 +25,7 @@ export default function getCookieOptions() {
 }
 
 export function getAccessTokenCookieOptions() {
-  const opts = COOKIE_SETTINGS[cookieEnv] || COOKIE_SETTINGS["local"];
+  const opts = resolveOpts();
 
   return {
     httpOnly: true,
@@ -34,7 +37,7 @@ export function getAccessTokenCookieOptions() {
 }
 
 export function getRefreshTokenCookieOptions() {
-  const opts = COOKIE_SETTINGS[cookieEnv] || COOKIE_SETTINGS["local"];
+  const opts = resolveOpts();
 
   return {
     httpOnly: true,
