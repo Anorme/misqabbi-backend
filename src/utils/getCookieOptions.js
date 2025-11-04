@@ -5,8 +5,8 @@ const cookieEnv = env.COOKIE_ENV || "local";
 const COOKIE_SETTINGS = {
   local: { secure: false, sameSite: "lax", domain: undefined },
   development: { secure: true, sameSite: "none", domain: undefined },
-  staging: { secure: true, sameSite: "none", domain: ".misqabbi.com" },
-  production: { secure: true, sameSite: "none", domain: ".misqabbi.com" },
+  staging: { secure: true, sameSite: "none", domain: undefined },
+  production: { secure: true, sameSite: "none", domain: undefined },
 };
 
 export default function getCookieOptions() {
