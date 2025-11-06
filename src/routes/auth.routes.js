@@ -4,6 +4,7 @@ import {
   forgotPassword,
   getCurrentUser,
   handleGoogleCallback,
+  handleAuthSuccess,
   loginUser,
   logoutUser,
   registerUser,
@@ -229,6 +230,30 @@ router.get(
   passport.authenticate("google", { session: false }),
   handleGoogleCallback
 );
+
+/**
+ * @swagger
+ * /auth/success:
+ *   get:
+ *     summary: Intermediate authentication success page
+ *     description: Serves an HTML page that allows cookies to be persisted before redirecting to frontend. This works around Safari's ITP restrictions.
+ *     tags:
+ *       - Users
+ *     parameters:
+ *       - in: query
+ *         name: redirect
+ *         schema:
+ *           type: string
+ *         description: URL to redirect to after authentication
+ *     responses:
+ *       200:
+ *         description: Success page HTML
+ *         content:
+ *           text/html:
+ *             schema:
+ *               type: string
+ */
+router.get("/success", handleAuthSuccess);
 
 /**
  * @swagger
