@@ -119,18 +119,18 @@
     </div>
     <script>
       try {
-        const continueBtn = document.getElementById('continueBtn');
-        
+        const continueBtn = document.getElementById("continueBtn");
+
         if (continueBtn) {
-          continueBtn.addEventListener('click', function() {
-            window.location.href = 'https://www.misqabbigh.com/auth/callback';
+          continueBtn.addEventListener("click", function () {
+            window.location.href = "https://www.misqabbigh.com/auth/callback";
           });
         } else {
-          console.error('Continue button not found');
+          console.error("Continue button not found");
         }
       } catch (error) {
-        console.error('Error initializing redirect:', error);
-        window.location.href = 'https://www.misqabbigh.com/auth/callback';
+        console.error("Error initializing redirect:", error);
+        window.location.href = "https://www.misqabbigh.com/auth/callback";
       }
     </script>
   </body>
