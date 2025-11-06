@@ -252,12 +252,7 @@ async function finalizeAuth(req, res) {
  */
 export function handleAuthSuccess(req, res) {
   try {
-    const redirectUrl = env.LOGIN_REDIRECT_URL || "/";
-
-    // Pass URL as JSON stringified value for proper JavaScript string literal
-    const html = renderView("auth-success", {
-      REDIRECT_URL: JSON.stringify(redirectUrl),
-    });
+    const html = renderView("auth-success");
 
     res.setHeader("Content-Type", "text/html");
     res.status(200).send(html);
