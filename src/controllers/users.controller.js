@@ -1,14 +1,25 @@
 import env from "../config/env.js";
 
+import crypto from "crypto";
 import passport from "passport";
 
 import logger from "../config/logger.js";
 import { signAccessToken } from "../services/jwtService.js";
+import { renderView } from "../services/viewService.js";
+import { sendEmail } from "../services/emailService.js";
+import {
+  generateRefreshToken,
+  storeRefreshToken,
+  validateRefreshToken,
+  revokeRefreshToken,
+} from "../services/refreshTokenService.js";
+
+import { formatResponse } from "../utils/responseFormatter.js";
 import {
   getAccessTokenCookieOptions,
   getRefreshTokenCookieOptions,
 } from "../utils/getCookieOptions.js";
-import { formatResponse } from "../utils/responseFormatter.js";
+
 import {
   createLocalUser,
   findUserByEmail,
@@ -18,16 +29,9 @@ import {
   deleteUserById,
   updateUserRole,
 } from "../models/user.model.js";
-import crypto from "crypto";
 import ResetToken from "../models/resetToken.mongo.js";
-import { sendEmail } from "../services/emailService.js";
+
 import { PASSWORD_RESET_EMAIL } from "../constants/emailTemplates.js";
-import {
-  generateRefreshToken,
-  storeRefreshToken,
-  validateRefreshToken,
-  revokeRefreshToken,
-} from "../services/refreshTokenService.js";
 
 /**
  * @route   POST /signup
@@ -233,7 +237,10 @@ async function finalizeAuth(req, res, options = {}) {
     res.cookie("refresh_token", refreshToken, refreshTokenCookieOptions);
 
     if (options.redirectUrl) {
-      return res.redirect(options.redirectUrl);
+      // Redirect to intermediate success page on backend domain first
+      // This allows Safari to persist cookies before cross-origin redirect
+      const intermediateUrl = `${env.BASE_URL}${env.API_PREFIX}/auth/success?redirect=${encodeURIComponent(options.redirectUrl)}`;
+      return res.redirect(intermediateUrl);
     }
 
     if (isDev)
@@ -256,6 +263,32 @@ async function finalizeAuth(req, res, options = {}) {
         error: "Authentication error",
       })
     );
+  }
+}
+
+/**
+ * @route   GET /auth/success
+ * @desc    Intermediate success page for authentication
+ * @access  Public
+ *
+ * Serves an HTML page that allows Safari to persist cookies before
+ * redirecting to the frontend. This works around Safari's ITP restrictions
+ * on cookies set during cross-origin redirects.
+ */
+export function handleAuthSuccess(req, res) {
+  try {
+    const redirectUrl = req.query.redirect || env.GOOGLE_REDIRECT_URL || "/";
+
+    // Pass URL as JSON stringified value for proper JavaScript string literal
+    const html = renderView("auth-success", {
+      REDIRECT_URL: JSON.stringify(redirectUrl),
+    });
+
+    res.setHeader("Content-Type", "text/html");
+    res.status(200).send(html);
+  } catch (error) {
+    logger.error(`[handleAuthSuccess] Error rendering view: ${error.message}`);
+    res.status(500).send("Internal server error");
   }
 }
 
