@@ -30,6 +30,7 @@ app.use(helmet());
 app.use(morgan("dev"));
 app.use(cookieParser());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsOptions(env.NODE_ENV)));
 app.use(`${API_PREFIX}/api-docs`, serve, setup(swaggerSpec));
 
