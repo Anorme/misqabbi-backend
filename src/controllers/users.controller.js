@@ -188,8 +188,8 @@ export async function getCurrentUser(req, res) {
  * - Generates both access token (15 min) and refresh token (7 days)
  * - Stores refresh token in Redis with TTL
  * - Sets both tokens as HTTP-only cookies with appropriate paths
- * - Always redirects to intermediate success page for Safari cookie persistence
- * - Works for both OAuth and local auth (login/register)
+ * - Redirects to intermediate success page for Safari cookie persistence
+ * - Works for both OAuth (Google) and local auth (login/register via form submission)
  * - Handles errors with structured response and logging
  *
  * @param {Object} req   - Express request object
@@ -226,6 +226,7 @@ async function finalizeAuth(req, res) {
 
     // Redirect to intermediate success page on backend domain
     // This allows Safari to persist cookies before cross-origin redirect
+    // Works for both Google OAuth and local auth (form submission)
     const intermediateUrl = `${env.BASE_URL}${env.API_PREFIX}/auth/success`;
     return res.redirect(intermediateUrl);
   } catch (error) {
