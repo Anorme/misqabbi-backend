@@ -127,7 +127,7 @@ export async function loginUser(req, res, next) {
  */
 export function handleGoogleCallback(req, res) {
   try {
-    finalizeAuth(req, res, { redirectUrl: env.LOGIN_REDIRECT_URL });
+    finalizeAuth(req, res);
   } catch (error) {
     logger.error(`[GoogleCallback] Token issuance failed: ${error.message}`);
     res.status(500).json(
@@ -188,16 +188,15 @@ export async function getCurrentUser(req, res) {
  * - Generates both access token (15 min) and refresh token (7 days)
  * - Stores refresh token in Redis with TTL
  * - Sets both tokens as HTTP-only cookies with appropriate paths
- * - Returns a JSON response with basic user data
+ * - Always redirects to intermediate success page for Safari cookie persistence
+ * - Works for both OAuth and local auth (login/register)
  * - Handles errors with structured response and logging
  *
  * @param {Object} req   - Express request object
  * @param {Object} res   - Express response object
- * @param {Object} [options] - Optional configuration object
- * @param {String} [options.redirectUrl] - Redirect URL for production; defaults to false
  * @returns {void}
  */
-async function finalizeAuth(req, res, options = {}) {
+async function finalizeAuth(req, res) {
   try {
     // Generate tokens
     const accessToken = signAccessToken({
@@ -225,11 +224,9 @@ async function finalizeAuth(req, res, options = {}) {
     res.cookie("auth_token", accessToken, accessTokenCookieOptions);
     res.cookie("refresh_token", refreshToken, refreshTokenCookieOptions);
 
-    // Always redirect to intermediate success page on backend domain first
+    // Redirect to intermediate success page on backend domain
     // This allows Safari to persist cookies before cross-origin redirect
-    // Works for both OAuth and local auth (login/register)
-    const redirectUrl = options.redirectUrl || env.LOGIN_REDIRECT_URL || "/";
-    const intermediateUrl = `${env.BASE_URL}${env.API_PREFIX}/auth/success?redirect=${encodeURIComponent(redirectUrl)}`;
+    const intermediateUrl = `${env.BASE_URL}${env.API_PREFIX}/auth/success`;
     return res.redirect(intermediateUrl);
   } catch (error) {
     logger.error(`[finalizeAuth] Token delivery failed: ${error.message}`);
@@ -254,7 +251,7 @@ async function finalizeAuth(req, res, options = {}) {
  */
 export function handleAuthSuccess(req, res) {
   try {
-    const redirectUrl = req.query.redirect || env.LOGIN_REDIRECT_URL || "/";
+    const redirectUrl = env.LOGIN_REDIRECT_URL || "/";
 
     // Pass URL as JSON stringified value for proper JavaScript string literal
     const html = renderView("auth-success", {
