@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Authentication Successful</title>
-    <title>Authentication Successful</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -44,6 +43,7 @@
           var(--color-msq-purple) 100%
         );
         color: white;
+        -webkit-tap-highlight-color: transparent;
       }
 
       .container {
@@ -85,6 +85,14 @@
           transform 0.2s ease;
         border: none;
         cursor: pointer;
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-tap-highlight-color: rgba(255, 255, 255, 0.3);
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        position: relative;
+        z-index: 1;
       }
 
       .continue-button:hover {
@@ -106,14 +114,23 @@
       <h2>Authentication successful</h2>
       <p>Click below to continue.</p>
       <div class="button-container">
-        <button class="continue-button" onclick="redirect()">Continue</button>
+        <button class="continue-button" id="continueBtn">Continue</button>
       </div>
     </div>
     <script>
-      const redirectUrl = {{REDIRECT_URL}};
-
-      function redirect() {
-        window.location.href = redirectUrl;
+      try {
+        const continueBtn = document.getElementById('continueBtn');
+        
+        if (continueBtn) {
+          continueBtn.addEventListener('click', function() {
+            window.location.href = 'https://www.misqabbigh.com/auth/callback';
+          });
+        } else {
+          console.error('Continue button not found');
+        }
+      } catch (error) {
+        console.error('Error initializing redirect:', error);
+        window.location.href = 'https://www.misqabbigh.com/auth/callback';
       }
     </script>
   </body>
