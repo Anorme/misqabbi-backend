@@ -9,6 +9,7 @@ import {
 } from "../models/order.model.js";
 import { createTransaction } from "../models/transaction.model.js";
 import Product from "../models/product.mongo.js";
+import { validateStockAvailabilityWithProducts } from "../models/product.model.js";
 
 import {
   initializeTransaction,
@@ -31,12 +32,12 @@ export const initializeCheckout = async (req, res) => {
     }
 
     const itemProductIds = items.map(item => item.product);
-    // Fetch only currently published products that match the requested ids.
+    // Fetch only currently published products that match the requested ids with stock info.
     // This guards against ordering unpublished/disabled items even if the client includes them.
     const publishedProducts = await Product.find({
       _id: { $in: itemProductIds },
       isPublished: true,
-    });
+    }).select("_id name price stock"); // Include stock for validation
 
     // Convert to a Set for O(1) membership checks when validating the incoming cart items.
     const publishedProductIds = new Set(
@@ -51,6 +52,21 @@ export const initializeCheckout = async (req, res) => {
         formatResponse({
           success: false,
           error: "Some products are not available or unpublished",
+        })
+      );
+    }
+
+    // Check stock before payment
+    const stockValidation = validateStockAvailabilityWithProducts(
+      items,
+      publishedProducts
+    );
+
+    if (!stockValidation.valid) {
+      return res.status(400).json(
+        formatResponse({
+          success: false,
+          error: stockValidation.errors.join("; "),
         })
       );
     }
