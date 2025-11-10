@@ -270,6 +270,147 @@ async function getLowStockProducts(limit = 5, threshold = 10) {
   }
 }
 
+/**
+ * @desc    Validate stock availability using pre-fetched products (synchronous)
+ * @param   {Array} items - Array of { product, quantity } or { productId, quantity } objects
+ * @param   {Array} products - Pre-fetched product documents
+ * @returns {{valid: boolean, errors: Array, products: Array}}
+ */
+function validateStockAvailabilityWithProducts(items, products) {
+  const productMap = new Map(products.map(p => [p._id.toString(), p]));
+
+  const errors = [];
+  const validItems = [];
+
+  for (const item of items) {
+    const productId = (item.productId || item.product).toString();
+    const product = productMap.get(productId);
+    const quantity = item.quantity;
+
+    if (!product) {
+      errors.push(`Product not found: ${productId}`);
+      continue;
+    }
+
+    if (product.stock < quantity) {
+      errors.push(
+        `${product.name}: Insufficient stock. Available: ${product.stock}, Requested: ${quantity}`
+      );
+      continue;
+    }
+
+    validItems.push({ product, quantity });
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    products: validItems,
+  };
+}
+
+/**
+ * @desc    Validate stock availability for multiple products (fetches from DB)
+ * @param   {Array} items - Array of { productId, quantity } or { product, quantity } objects
+ * @param   {Object} session - MongoDB session for transaction (optional)
+ * @returns {Promise<{valid: boolean, errors: Array, products: Array}>}
+ */
+async function validateStockAvailability(items, session = null) {
+  try {
+    const productIds = items.map(item => item.productId || item.product);
+    const query = Product.find({ _id: { $in: productIds } });
+
+    if (session) {
+      query.session(session);
+    }
+
+    const products = await query.select("_id name stock");
+
+    return validateStockAvailabilityWithProducts(items, products);
+  } catch (error) {
+    logger.error(`[products.model] Error validating stock: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
+ * @desc    Decrement stock for multiple products atomically (with pre-fetched products)
+ * @param   {Array} items - Array of { product, quantity } objects (product must be full document)
+ * @param   {Object} session - MongoDB session for transaction (optional)
+ * @returns {Promise<Array>} Array of updated product documents
+ * @throws  {Error} If update fails or stock goes negative
+ */
+async function decrementProductStockWithProducts(items, session = null) {
+  try {
+    // Decrement stock for all products atomically
+    const updatePromises = items.map(({ product, quantity }) => {
+      const updateQuery = Product.findByIdAndUpdate(
+        product._id,
+        { $inc: { stock: -quantity } },
+        { new: true, runValidators: true }
+      );
+
+      if (session) {
+        updateQuery.session(session);
+      }
+
+      return updateQuery;
+    });
+
+    const updatedProducts = await Promise.all(updatePromises);
+
+    // Safety check: verify no stock went negative
+    const negativeStock = updatedProducts.filter(p => p && p.stock < 0);
+    if (negativeStock.length > 0) {
+      const productNames = negativeStock.map(p => p.name).join(", ");
+      logger.error(
+        `[products.model] WARNING: Stock went negative for products: ${productNames}`
+      );
+      throw new Error(
+        `Stock decrement resulted in negative values for: ${productNames}`
+      );
+    }
+
+    logger.info(
+      `[products.model] Stock decremented successfully for ${updatedProducts.length} products`
+    );
+
+    return updatedProducts;
+  } catch (error) {
+    logger.error(`[products.model] Error decrementing stock: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
+ * @desc    Decrement stock for multiple products atomically (fetches from DB)
+ * @param   {Array} items - Array of { productId, quantity } or { product, quantity } objects
+ * @param   {Object} session - MongoDB session for transaction (optional)
+ * @returns {Promise<Array>} Array of updated product documents
+ * @throws  {Error} If stock validation fails or update fails
+ */
+async function decrementProductStock(items, session = null) {
+  try {
+    // First validate stock availability
+    const validation = await validateStockAvailability(items, session);
+
+    if (!validation.valid) {
+      throw new Error(
+        `Stock validation failed: ${validation.errors.join("; ")}`
+      );
+    }
+
+    // Decrement stock using the validated products
+    return await decrementProductStockWithProducts(
+      validation.products,
+      session
+    );
+  } catch (error) {
+    logger.error(`[products.model] Error decrementing stock: ${error.message}`);
+    throw error;
+  }
+}
+
 export {
   getAllProducts,
   getAllPublishedProducts,
@@ -286,4 +427,8 @@ export {
   deleteProduct,
   countAllProductsRaw,
   getLowStockProducts,
+  validateStockAvailability,
+  validateStockAvailabilityWithProducts,
+  decrementProductStock,
+  decrementProductStockWithProducts,
 };
