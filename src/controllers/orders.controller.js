@@ -66,7 +66,7 @@ export const initializeCheckout = async (req, res) => {
       return res.status(400).json(
         formatResponse({
           success: false,
-          error: stockValidation.errors.join("; "),
+          message: stockValidation.errors.join("; "),
         })
       );
     }
