@@ -1,6 +1,11 @@
 import Order from "../models/order.mongo.js";
 import logger from "../config/logger.js";
 import Product from "./product.mongo.js";
+import {
+  validateStockAvailabilityWithProducts,
+  decrementProductStockWithProducts,
+} from "./product.model.js";
+import mongoose from "mongoose";
 
 export async function createOrderFromCart(
   user,
@@ -9,6 +14,10 @@ export async function createOrderFromCart(
   totalPrice,
   status
 ) {
+  // Start a MongoDB session for transaction
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     // Check if items array is empty
     if (!items || items.length === 0) {
@@ -18,12 +27,14 @@ export async function createOrderFromCart(
     // Get IDs of products in the items array
     const itemProductIds = items.map(item => item.product);
 
-    // Fetch published products that match the item IDs
+    // Fetch published products that match the item IDs WITH STOCK INFO
+    // Use session to ensure we're reading within the transaction
     const publishedProducts = await Product.find({
-      // Fetch all products from the database whose _id matches any of the IDs in the cart
       _id: { $in: itemProductIds },
       isPublished: true,
-    });
+    })
+      .session(session)
+      .select("_id name stock");
 
     // Convert publishedProducts ids to strings and store in the publishedProductIds set
     const publishedProductIds = new Set(
@@ -39,13 +50,43 @@ export async function createOrderFromCart(
       throw new Error("Some products are not available or unpublished");
     }
 
-    // Create the order
+    // EARLY STOCK VALIDATION
+    const stockValidation = validateStockAvailabilityWithProducts(
+      items,
+      publishedProducts
+    );
+
+    if (!stockValidation.valid) {
+      throw new Error(
+        `Stock validation failed: ${stockValidation.errors.join("; ")}`
+      );
+    }
+
+    // Decrement stock
+    await decrementProductStockWithProducts(stockValidation.products, session);
+
+    // Create the order within the transaction
     const order = new Order({ user, items, shippingInfo, totalPrice, status });
-    await order.save();
+    await order.save({ session });
+
+    // Commit the transaction
+    await session.commitTransaction();
+
+    logger.info(
+      `[order.model] Order created successfully: ${order._id}, Stock decremented for ${items.length} products`
+    );
+
     return order;
   } catch (error) {
-    logger.warn(error.message);
+    // Rollback the transaction on error
+    await session.abortTransaction();
+    logger.error(
+      `[order.model] Error creating order: ${error.message}. Transaction rolled back.`
+    );
     throw new Error(error.message);
+  } finally {
+    // End the session
+    session.endSession();
   }
 }
 
