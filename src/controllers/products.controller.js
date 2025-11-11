@@ -8,6 +8,7 @@ import {
   countDiscoverableProducts,
   getPaginatedAllProducts,
   countAllProducts,
+  getRelatedProducts,
 } from "../models/product.model.js";
 import { deleteAssets } from "../config/cloudinary.js";
 import logger from "../config/logger.js";
@@ -117,6 +118,8 @@ export async function getProductByIdHandler(req, res) {
 export const getProductBySlugHandler = async (req, res) => {
   try {
     const { slug } = req.params;
+    const includeRelated = req.query.includeRelated === "true";
+
     const product = await getProductBySlug(slug);
     if (!product || !product.isPublished) {
       return res.status(404).json(
@@ -126,7 +129,17 @@ export const getProductBySlugHandler = async (req, res) => {
         })
       );
     }
-    res.status(200).json(formatResponse({ data: product }));
+
+    // Product is already a plain object from .lean(), so we can directly add properties
+    const responseData = { ...product };
+
+    // Only include related products if query parameter is explicitly set to "true"
+    if (includeRelated) {
+      const relatedProducts = await getRelatedProducts(product, 4);
+      responseData.relatedProducts = relatedProducts;
+    }
+
+    res.status(200).json(formatResponse({ data: responseData }));
   } catch (error) {
     logger.error(
       `[products.controller] Error getting product by slug ${req.params.slug}: ${error.message}`
