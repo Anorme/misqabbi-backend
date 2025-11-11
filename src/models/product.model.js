@@ -125,11 +125,11 @@ async function getProductById(id) {
 /**
  * @desc    Retrieves a single product by its slug.
  * @param   {String} slug - Product slug
- * @returns {Promise<Object|null>} Product document or null if not found
+ * @returns {Promise<Object|null>} Product plain object or null if not found
  */
 async function getProductBySlug(slug) {
   try {
-    return await Product.findOne({ slug });
+    return await Product.findOne({ slug }).lean();
   } catch (error) {
     logger.error(
       `[product.model] Error finding product by slug ${slug}: ${error.message}`
@@ -411,6 +411,101 @@ async function decrementProductStock(items, session = null) {
   }
 }
 
+/**
+ * @desc    Retrieve related products using text search similarity on name within same category,
+ *          with fallback to same category products if not enough matches
+ * @param   {Object} currentProduct - The current product object (must have _id, name, category)
+ * @param   {Number} limit - Maximum number of related products to return (default: 4)
+ * @returns {Promise<Array>} Array of related product documents, sorted by relevance
+ */
+async function getRelatedProducts(currentProduct, limit = 4) {
+  try {
+    // Validate that we have the required fields
+    if (
+      !currentProduct ||
+      !currentProduct._id ||
+      !currentProduct.name ||
+      !currentProduct.category
+    ) {
+      logger.warn(
+        `[products.model] Missing required fields for related products: ${currentProduct?._id}`
+      );
+      return [];
+    }
+
+    // Extract keywords from product name (filter short words for better matching)
+    const nameKeywords = currentProduct.name
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(word => word.length > 3) // Filter short words
+      .join(" ");
+
+    // If no keywords after filtering, use the full name
+    const searchTerms = nameKeywords || currentProduct.name.toLowerCase();
+
+    let relatedProducts = [];
+
+    // First tier: Try same category + similar name (text search)
+    // Only attempt text search if we have search terms
+    if (searchTerms) {
+      try {
+        const primaryQuery = {
+          $text: { $search: searchTerms },
+          _id: { $ne: currentProduct._id },
+          category: currentProduct.category,
+          isPublished: true,
+          stock: { $gt: 0 },
+        };
+
+        relatedProducts = await Product.find(primaryQuery)
+          .select("name description price images category stock slug createdAt")
+          .limit(limit)
+          .sort({ score: { $meta: "textScore" } })
+          .lean();
+      } catch (textSearchError) {
+        // Text search might fail if no matches or index issues
+        // Log but continue to fallback
+        logger.warn(
+          `[products.model] Text search failed for related products: ${textSearchError.message}`
+        );
+        relatedProducts = [];
+      }
+    }
+
+    // Second tier: Fallback to same category only if not enough results
+    if (relatedProducts.length < limit) {
+      const excludeIds = [
+        currentProduct._id,
+        ...relatedProducts.map(p => p._id),
+      ];
+
+      const fallbackQuery = {
+        _id: { $nin: excludeIds }, // Exclude current product and already found products
+        category: currentProduct.category,
+        isPublished: true,
+        stock: { $gt: 0 },
+      };
+
+      const fallbackProducts = await Product.find(fallbackQuery)
+        .select("name description price images category stock slug createdAt")
+        .limit(limit - relatedProducts.length)
+        .sort({ createdAt: -1 }) // Sort by latest if no text search relevance
+        .lean();
+
+      relatedProducts = [...relatedProducts, ...fallbackProducts];
+    }
+
+    // Return up to the limit (always return array, even if empty)
+    return relatedProducts.slice(0, limit);
+  } catch (error) {
+    logger.error(
+      `[products.model] Error getting related products for ${currentProduct._id}: ${error.message}`
+    );
+    // Return empty array on error (graceful degradation)
+    return [];
+  }
+}
+
 export {
   getAllProducts,
   getAllPublishedProducts,
@@ -431,4 +526,5 @@ export {
   validateStockAvailabilityWithProducts,
   decrementProductStock,
   decrementProductStockWithProducts,
+  getRelatedProducts,
 };
