@@ -26,6 +26,7 @@ const baseSchema = {
   GOOGLE_CALLBACK_URL: url(),
   LOGIN_REDIRECT_URL: url(),
   BASE_URL: url(),
+  CLIENT_URL: url(),
   RESEND_API_KEY: str(),
   EMAIL_FROM: str(),
   EMAIL_USER: str(),
