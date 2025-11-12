@@ -6,7 +6,9 @@ import {
   countPublishedOrders,
   getPaginatedPublishedOrders,
   updateOrderStatus,
+  fetchOrderStatus,
 } from "../models/order.model.js";
+import { sendCustomerStatusUpdateNotification } from "../services/orderEmailService.js";
 import { createTransaction } from "../models/transaction.model.js";
 import Product from "../models/product.mongo.js";
 import { validateStockAvailabilityWithProducts } from "../models/product.model.js";
@@ -266,6 +268,11 @@ export async function updateOrderStatusAdmin(req, res) {
   try {
     const { id } = req.params;
     const { status } = req.body;
+
+    // Get previous status before update
+    const previousOrder = await fetchOrderStatus(id);
+    const previousStatus = previousOrder?.status;
+
     const order = await updateOrderStatus(id, status);
     if (!order) {
       return res.status(404).json(
@@ -275,6 +282,12 @@ export async function updateOrderStatusAdmin(req, res) {
         })
       );
     }
+
+    // Send customer notification if status changed
+    if (previousStatus && previousStatus !== status) {
+      sendCustomerStatusUpdateNotification(order);
+    }
+
     res.json(formatResponse({ success: true, data: order }));
   } catch (error) {
     logger.error(
