@@ -157,6 +157,21 @@ export async function fetchOrderByIdAdmin(orderId) {
   }
 }
 
+/**
+ * Fetch order by ID to get current status (for status change detection)
+ * @param {string} orderId - Order ID
+ * @returns {Promise<Object>} Order with status field
+ */
+export async function fetchOrderStatus(orderId) {
+  try {
+    const order = await Order.findById(orderId).select("status");
+    return order;
+  } catch (error) {
+    logger.warn(`[order.model] Error fetching order status: ${error.message}`);
+    throw new Error(error.message);
+  }
+}
+
 export async function updateOrderStatus(id, status) {
   try {
     const updated = await Order.findByIdAndUpdate(
