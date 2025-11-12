@@ -7,6 +7,10 @@ import {
   verifyTransaction,
   verifyWebhookSignature,
 } from "../services/paystackService.js";
+import {
+  sendAdminNewOrderNotification,
+  sendCustomerStatusUpdateNotification,
+} from "../services/orderEmailService.js";
 import logger from "../config/logger.js";
 import { formatResponse } from "../utils/responseFormatter.js";
 
@@ -159,6 +163,18 @@ async function handleSuccessfulPayment(data) {
     logger.info(
       `[payment.controller] Order created successfully for transaction: ${reference}, Order: ${order._id}`
     );
+
+    // Populate order for email notification (no extra query needed)
+    await order.populate([
+      { path: "items.product", select: "name slug images price" },
+      { path: "user", select: "displayName email" },
+    ]);
+
+    // Send admin notification asynchronously
+    sendAdminNewOrderNotification(order);
+
+    // Send customer confirmation email (status: accepted)
+    sendCustomerStatusUpdateNotification(order);
   } catch (error) {
     logger.error(
       `[payment.controller] Error handling successful payment: ${error.message}`
