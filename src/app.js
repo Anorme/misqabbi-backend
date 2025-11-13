@@ -42,7 +42,7 @@ app.get("/", (req, res) => {
 
 // Mount versioned routes
 app.use(`${API_PREFIX}/admin`, routeLimiters.admin, adminRoutes);
-app.use(`${API_PREFIX}/auth`, routeLimiters.auth, authRoutes);
+app.use(`${API_PREFIX}/auth`, authRoutes);
 app.use(`${API_PREFIX}/favorites`, favoritesRoutes);
 app.use(`${API_PREFIX}/orders`, routeLimiters.order, orderRoutes);
 app.use(`${API_PREFIX}/payment`, routeLimiters.payment, paymentRoutes);
