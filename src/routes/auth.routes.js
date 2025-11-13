@@ -14,11 +14,15 @@ import {
   refreshAccessToken,
 } from "../controllers/users.controller.js";
 
-import { routeLimiters } from "../config/rateLimiter.js";
+import { createRateLimiter, routeLimiters } from "../config/rateLimiter.js";
 import { validateUser } from "../middleware/validator.middleware.js";
 import { authenticateToken } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
+
+const hydrateLimiter = createRateLimiter(200, {
+  message: "Too many requests, please try again later.",
+});
 
 /**
  * @swagger
@@ -301,7 +305,7 @@ router.get("/success", routeLimiters.auth, handleAuthSuccess);
  *                 message:
  *                   type: string
  */
-router.get("/me", authenticateToken, getCurrentUser);
+router.get("/me", hydrateLimiter, authenticateToken, getCurrentUser);
 
 /**
  * @swagger
@@ -627,6 +631,6 @@ router.patch(
  *                   type: string
  *                   description: Error message
  */
-router.post("/refresh", refreshAccessToken);
+router.post("/refresh", hydrateLimiter, refreshAccessToken);
 
 export default router;
