@@ -631,6 +631,6 @@ router.patch(
  *                   type: string
  *                   description: Error message
  */
-router.post("/refresh", hydrateLimiter, refreshAccessToken);
+router.post("/refresh", routeLimiters.auth, refreshAccessToken);
 
 export default router;
