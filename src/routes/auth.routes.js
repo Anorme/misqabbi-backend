@@ -1,4 +1,5 @@
 import express from "express";
+import passport from "passport";
 
 import {
   forgotPassword,
@@ -12,7 +13,8 @@ import {
   updateUserProfile,
   refreshAccessToken,
 } from "../controllers/users.controller.js";
-import passport from "passport";
+
+import { routeLimiters } from "../config/rateLimiter.js";
 import { validateUser } from "../middleware/validator.middleware.js";
 import { authenticateToken } from "../middleware/auth.middleware.js";
 
@@ -98,7 +100,7 @@ const router = express.Router();
  *                   type: string
  *                   description: Error message
  */
-router.post("/signup", validateUser, registerUser);
+router.post("/signup", routeLimiters.auth, validateUser, registerUser);
 
 /**
  * @swagger
@@ -177,7 +179,7 @@ router.post("/signup", validateUser, registerUser);
  *                   type: string
  *                   description: Error message
  */
-router.post("/login", loginUser);
+router.post("/login", routeLimiters.auth, loginUser);
 
 /**
  * @swagger
@@ -193,6 +195,7 @@ router.post("/login", loginUser);
  */
 router.get(
   "/google",
+  routeLimiters.auth,
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
@@ -227,6 +230,7 @@ router.get(
  */
 router.get(
   "/google/callback",
+  routeLimiters.auth,
   passport.authenticate("google", { session: false }),
   handleGoogleCallback
 );
@@ -253,7 +257,7 @@ router.get(
  *             schema:
  *               type: string
  */
-router.get("/success", handleAuthSuccess);
+router.get("/success", routeLimiters.auth, handleAuthSuccess);
 
 /**
  * @swagger
@@ -367,7 +371,7 @@ router.post("/logout", logoutUser);
  *                   description: Error message
  */
 
-router.post("/forgot-password", forgotPassword);
+router.post("/forgot-password", routeLimiters.auth, forgotPassword);
 
 /**
  * @swagger
@@ -447,7 +451,11 @@ router.post("/forgot-password", forgotPassword);
  *                   type: string
  *                   description: Error message
  */
-router.post("/reset-password/:userId/:token", resetPassword);
+router.post(
+  "/reset-password/:userId/:token",
+  routeLimiters.auth,
+  resetPassword
+);
 
 /**
  * @swagger
@@ -543,7 +551,12 @@ router.post("/reset-password/:userId/:token", resetPassword);
  *                   type: string
  *                   description: Error message
  */
-router.patch("/update-profile", authenticateToken, updateUserProfile);
+router.patch(
+  "/update-profile",
+  routeLimiters.auth,
+  authenticateToken,
+  updateUserProfile
+);
 
 /**
  * @swagger
