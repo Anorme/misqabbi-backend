@@ -10,6 +10,7 @@ import { serve, setup } from "swagger-ui-express";
 import "./config/passport.js";
 import corsOptions from "./config/cors.js";
 import swaggerSpec from "./config/swagger.js";
+import { rateLimiters, routeLimiters } from "./config/rateLimiter.js";
 
 import adminRoutes from "./routes/admin.routes.js";
 import authRoutes from "./routes/auth.routes.js";
@@ -27,6 +28,7 @@ const app = express();
 const API_PREFIX = env.API_PREFIX || "/api/v1";
 
 app.use(helmet());
+app.use(rateLimiters.general); // Global rate limiter
 app.use(morgan("dev"));
 app.use(cookieParser());
 app.use(express.json());
@@ -39,14 +41,14 @@ app.get("/", (req, res) => {
 });
 
 // Mount versioned routes
-app.use(`${API_PREFIX}/admin`, adminRoutes);
-app.use(`${API_PREFIX}/auth`, authRoutes);
+app.use(`${API_PREFIX}/admin`, routeLimiters.admin, adminRoutes);
+app.use(`${API_PREFIX}/auth`, routeLimiters.auth, authRoutes);
 app.use(`${API_PREFIX}/favorites`, favoritesRoutes);
-app.use(`${API_PREFIX}/orders`, orderRoutes);
-app.use(`${API_PREFIX}/payment`, paymentRoutes);
-app.use(`${API_PREFIX}/products`, productRoutes);
-app.use(`${API_PREFIX}/newsletter`, newsletterRoutes);
-app.use(`${API_PREFIX}/contact`, contactRoutes);
+app.use(`${API_PREFIX}/orders`, routeLimiters.order, orderRoutes);
+app.use(`${API_PREFIX}/payment`, routeLimiters.payment, paymentRoutes);
+app.use(`${API_PREFIX}/products`, routeLimiters.products, productRoutes);
+app.use(`${API_PREFIX}/newsletter`, routeLimiters.newsletter, newsletterRoutes);
+app.use(`${API_PREFIX}/contact`, routeLimiters.contact, contactRoutes);
 
 app.use(errorHandler);
 
