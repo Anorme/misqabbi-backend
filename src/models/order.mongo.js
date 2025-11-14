@@ -53,6 +53,19 @@ const OrderSchema = new Schema(
       enum: ["paid", "refunded", "pending"],
       default: "paid", // Orders are only created after successful payment
     },
+
+    // Express service flag
+    expressService: {
+      type: Boolean,
+      default: false,
+    },
+
+    // Express service fee amount
+    expressFee: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
   },
   {
     timestamps: true,
