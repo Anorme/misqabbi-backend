@@ -144,7 +144,9 @@ async function handleSuccessfulPayment(data) {
       transaction.orderData.items,
       transaction.orderData.shippingInfo,
       transaction.orderData.totalPrice,
-      "accepted" // Default status for new orders
+      "accepted", // Default status for new orders
+      transaction.orderData.expressService || false,
+      transaction.orderData.expressFee || 0
     );
 
     // Update order with payment reference
