@@ -19,6 +19,14 @@ const router = express.Router();
  *       - Orders
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: expressService
+ *         required: false
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *         description: Opt-in for express service (150 GHS per product piece)
  *     requestBody:
  *       description: Order data for checkout
  *       required: true
