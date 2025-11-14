@@ -22,9 +22,23 @@ import logger from "../config/logger.js";
 import { OBJECTID_REGEX } from "../utils/validators.js";
 import { formatResponse } from "../utils/responseFormatter.js";
 
+// Helper function to parse boolean query parameters (query params are always strings)
+function parseBooleanQueryParam(value, defaultValue = false) {
+  if (!value) {
+    return defaultValue;
+  }
+  return value.toLowerCase().trim() === "true";
+}
+
 export const initializeCheckout = async (req, res) => {
   const { items, shippingInfo } = req.body;
   const userId = req.user._id;
+
+  // Parse expressService from query parameter (defaults to false)
+  const expressService = parseBooleanQueryParam(
+    req.query.expressService,
+    false
+  );
 
   try {
     if (!items || items.length === 0) {
@@ -95,8 +109,36 @@ export const initializeCheckout = async (req, res) => {
       });
     }
 
+    // Calculate total quantity for express fee calculation
+    const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+
+    // Calculate express fee: 150 GHS per item
+    const expressFee = expressService ? totalQuantity * 150 : 0;
+
+    // Validate express fee calculation
+    if (expressService && expressFee !== totalQuantity * 150) {
+      return res.status(400).json(
+        formatResponse({
+          success: false,
+          error: "Express fee calculation error",
+        })
+      );
+    }
+
+    if (!expressService && expressFee !== 0) {
+      return res.status(400).json(
+        formatResponse({
+          success: false,
+          error: "Express fee should be zero when express service is disabled",
+        })
+      );
+    }
+
+    // Add express fee to total
+    const finalTotal = calculatedTotalPrice + expressFee;
+
     // Paystack amounts are in the smallest currency unit (pesewas).
-    const amountInPesewas = convertToPesewas(calculatedTotalPrice);
+    const amountInPesewas = convertToPesewas(finalTotal);
 
     // Generate a unique reference for the transaction
     const reference = generateTransactionReference(userId.toString());
@@ -110,7 +152,9 @@ export const initializeCheckout = async (req, res) => {
       orderData: {
         items: validatedItems,
         shippingInfo,
-        totalPrice: calculatedTotalPrice,
+        totalPrice: finalTotal,
+        expressService,
+        expressFee,
       },
     };
     const transaction = await createTransaction(transactionData);
@@ -136,7 +180,7 @@ export const initializeCheckout = async (req, res) => {
         data: {
           authorizationUrl: paystackResponse.data.authorization_url,
           reference,
-          amount: calculatedTotalPrice,
+          amount: finalTotal,
           currency: "GHS",
         },
       })
