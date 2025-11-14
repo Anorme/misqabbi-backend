@@ -45,6 +45,8 @@ const TransactionSchema = new Schema(
       items: [OrderItemSchema],
       shippingInfo: ShippingInfoSchema,
       totalPrice: { type: Number, min: 0, required: true },
+      expressService: { type: Boolean, default: false },
+      expressFee: { type: Number, min: 0, default: 0 },
     },
 
     // Store full Paystack response for debugging/audit
