@@ -12,7 +12,9 @@ export async function createOrderFromCart(
   items,
   shippingInfo,
   totalPrice,
-  status
+  status,
+  expressService = false,
+  expressFee = 0
 ) {
   // Start a MongoDB session for transaction
   const session = await mongoose.startSession();
@@ -66,7 +68,15 @@ export async function createOrderFromCart(
     await decrementProductStockWithProducts(stockValidation.products, session);
 
     // Create the order within the transaction
-    const order = new Order({ user, items, shippingInfo, totalPrice, status });
+    const order = new Order({
+      user,
+      items,
+      shippingInfo,
+      totalPrice,
+      status,
+      expressService,
+      expressFee,
+    });
     await order.save({ session });
 
     // Commit the transaction
