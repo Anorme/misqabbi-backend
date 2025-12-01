@@ -7,6 +7,7 @@ import slugify from "slugify";
  * @property {String} description    - Description of the product
  * @property {Number} price          - Product price in local currency (required, min: 0)
  * @property {String[]} images       - Array of image URLs (max: 5)
+ * @property {Object} swatchImage    - Swatch image for color/print picker (required if isVariant is true)
  * @property {String} category       - Category label (required, lowercase)
  * @property {Number} stock          - Units in stock (required, min: 0)
  * @property {Boolean} isPublished   - Visibility toggle for public listing
@@ -110,6 +111,16 @@ const productSchema = new Schema(
       type: [Schema.Types.ObjectId],
       ref: "Product",
       default: [],
+    },
+    swatchImage: {
+      type: {
+        url: { type: String, required: true, trim: true },
+        publicId: { type: String, required: false, trim: true },
+      },
+      required: function () {
+        return this.isVariant === true;
+      },
+      _id: false,
     },
   },
   { timestamps: true }
