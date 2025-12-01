@@ -9,6 +9,7 @@ import mongoose from "mongoose";
  * - description: optional, string, trimmed
  * - price: required, number, min 0
  * - images: optional, array of strings (URLs), max length 5
+ * - swatchImage: optional, object with url and optional publicId (for base products)
  * - category: required, string, lowercase, trimmed
  * - stock: required, number, min 0
  * - isPublished: optional, boolean
@@ -43,6 +44,13 @@ export const productValidator = Joi.object({
     "any.required": "Stock is required",
   }),
   isPublished: Joi.boolean().optional(),
+  swatchImage: Joi.object({
+    url: Joi.string().uri().required().messages({
+      "string.uri": "Swatch image URL must be a valid URI",
+      "any.required": "Swatch image URL is required",
+    }),
+    publicId: Joi.string().optional(),
+  }).optional(),
   createdBy: Joi.string()
     .custom((value, helpers) => {
       if (!mongoose.Types.ObjectId.isValid(value)) {
