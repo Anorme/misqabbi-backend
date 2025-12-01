@@ -1,8 +1,14 @@
 import express from "express";
 
 import { authenticateToken, checkAdmin } from "../middleware/index.js";
-import { validateProduct } from "../middleware/validator.middleware.js";
-import { attachImagesToBody } from "../middleware/upload.middleware.js";
+import {
+  validateProduct,
+  validateVariantProduct,
+} from "../middleware/validator.middleware.js";
+import {
+  attachImagesToBody,
+  attachVariantImagesToBody,
+} from "../middleware/upload.middleware.js";
 import { productUploads } from "../config/cloudinary.js";
 
 import {
@@ -24,6 +30,10 @@ import {
   updateProductAdmin,
   deleteProductAdmin,
   getProductsAdmin,
+  getProductVariantsAdmin,
+  createVariantProductAdmin,
+  deleteVariantAdmin,
+  updateVariantSwatchImageAdmin,
 } from "../controllers/products.controller.js";
 
 const router = express.Router();
@@ -663,6 +673,244 @@ router.delete(
   authenticateToken,
   checkAdmin,
   deleteProductAdmin
+);
+
+/**
+ * @swagger
+ * /admin/products/{id}/variants:
+ *   get:
+ *     summary: Get all variants for a product (admin only)
+ *     description: Retrieve all variant products associated with a base product
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Base product ID
+ *     responses:
+ *       200:
+ *         description: List of variant products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: "#/components/schemas/Product"
+ *       500:
+ *         description: Server error
+ */
+router.get(
+  "/products/:id/variants",
+  authenticateToken,
+  checkAdmin,
+  getProductVariantsAdmin
+);
+
+/**
+ * @swagger
+ * /admin/products/{baseProductId}/variants:
+ *   post:
+ *     summary: Create a new variant product (admin only)
+ *     description: Create a variant product (color or print) for a base product. Supports uploading up to 5 images.
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: baseProductId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Base product ID
+ *     requestBody:
+ *       description: Variant product data with image uploads. Use 'multipart/form-data' with separate fields for swatchImage and gallery images.
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - variantType
+ *               - name
+ *               - price
+ *               - category
+ *               - stock
+ *               - swatchImage
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: The variant product name (typically same as base product)
+ *               description:
+ *                 type: string
+ *                 description: The variant product description
+ *               price:
+ *                 type: number
+ *                 description: The variant product price
+ *               swatchImage:
+ *                 type: string
+ *                 format: binary
+ *                 description: Swatch image for color/print picker (required, single file)
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: Gallery images for the variant (optional, max 5 files)
+ *                 maxItems: 5
+ *               category:
+ *                 type: string
+ *                 description: The variant product category
+ *               stock:
+ *                 type: integer
+ *                 description: Variant product stock quantity
+ *               variantType:
+ *                 type: string
+ *                 enum: [color, print]
+ *                 description: Type of variant (color or print)
+ *               isPublished:
+ *                 type: boolean
+ *                 description: Whether the variant is published
+ *     responses:
+ *       201:
+ *         description: Variant created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: "#/components/schemas/Product"
+ *       400:
+ *         description: Invalid variant data
+ */
+router.post(
+  "/products/:baseProductId/variants",
+  authenticateToken,
+  checkAdmin,
+  productUploads.fields([
+    { name: "swatchImage", maxCount: 1 },
+    { name: "images", maxCount: 5 },
+  ]),
+  attachVariantImagesToBody,
+  validateVariantProduct,
+  createVariantProductAdmin
+);
+
+/**
+ * @swagger
+ * /admin/products/{baseProductId}/variants/{variantId}:
+ *   delete:
+ *     summary: Delete a variant product (admin only)
+ *     description: Delete a variant product and remove it from the base product's variants array. Also deletes associated images from Cloudinary.
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: baseProductId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Base product ID
+ *       - in: path
+ *         name: variantId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Variant product ID to delete
+ *     responses:
+ *       204:
+ *         description: Variant deleted successfully
+ *       404:
+ *         description: Variant not found
+ *       400:
+ *         description: Bad request (e.g., variant doesn't belong to base product)
+ */
+router.delete(
+  "/products/:baseProductId/variants/:variantId",
+  authenticateToken,
+  checkAdmin,
+  deleteVariantAdmin
+);
+
+/**
+ * @swagger
+ * /admin/products/{baseProductId}/variants/{variantId}/swatch-image:
+ *   put:
+ *     summary: Update swatch image for a variant (admin only)
+ *     description: Update the swatch image (color/print picker image) for a variant product. Replaces the existing swatch image.
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: baseProductId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Base product ID
+ *       - in: path
+ *         name: variantId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Variant product ID
+ *     requestBody:
+ *       description: New swatch image file. Use 'multipart/form-data' with field name 'swatchImage'.
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - swatchImage
+ *             properties:
+ *               swatchImage:
+ *                 type: string
+ *                 format: binary
+ *                 description: New swatch image file (single file)
+ *     responses:
+ *       200:
+ *         description: Swatch image updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: "#/components/schemas/Product"
+ *       400:
+ *         description: Bad request (missing swatch image or variant doesn't belong to base)
+ *       404:
+ *         description: Variant not found
+ */
+router.put(
+  "/products/:baseProductId/variants/:variantId/swatch-image",
+  authenticateToken,
+  checkAdmin,
+  productUploads.fields([{ name: "swatchImage", maxCount: 1 }]),
+  updateVariantSwatchImageAdmin
 );
 
 // Admin: list users
