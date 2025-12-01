@@ -10,6 +10,10 @@ import slugify from "slugify";
  * @property {String} category       - Category label (required, lowercase)
  * @property {Number} stock          - Units in stock (required, min: 0)
  * @property {Boolean} isPublished   - Visibility toggle for public listing
+ * @property {Boolean} isVariant     - Whether this product is a variant of another product
+ * @property {Schema.Types.ObjectId} baseProduct - Reference to base product (required if isVariant is true)
+ * @property {String} variantType    - Type of variant: 'color' or 'print' (required if isVariant is true)
+ * @property {Schema.Types.ObjectId[]} variants - Array of variant product IDs (on base products only)
  * @property {Schema.Types.ObjectId} createdBy - Admin user who created the product
  * @property {Date} createdAt        - Timestamp of creation (auto-generated)
  * @property {Date} updatedAt        - Timestamp of last update (auto-generated)
@@ -80,6 +84,32 @@ const productSchema = new Schema(
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
+    },
+    isVariant: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    baseProduct: {
+      type: Schema.Types.ObjectId,
+      ref: "Product",
+      required: function () {
+        return this.isVariant === true;
+      },
+      index: true,
+      default: null,
+    },
+    variantType: {
+      type: String,
+      enum: ["color", "print"],
+      required: function () {
+        return this.isVariant === true;
+      },
+    },
+    variants: {
+      type: [Schema.Types.ObjectId],
+      ref: "Product",
+      default: [],
     },
   },
   { timestamps: true }
