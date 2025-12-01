@@ -29,28 +29,68 @@ export async function createOrderFromCart(
     // Get IDs of products in the items array
     const itemProductIds = items.map(item => item.product);
 
-    // Fetch published products that match the item IDs WITH STOCK INFO
+    // Fetch products that match the item IDs WITH STOCK INFO
+    // For base products: must be published
+    // For variants: can be unpublished (they're accessible through their published base product)
     // Use session to ensure we're reading within the transaction
-    const publishedProducts = await Product.find({
+    const products = await Product.find({
       _id: { $in: itemProductIds },
-      isPublished: true,
+      $or: [
+        { isPublished: true }, // Published base products
+        { isVariant: true }, // Variants (can be unpublished)
+      ],
     })
       .session(session)
-      .select("_id name stock");
+      .select("_id name stock isVariant baseProduct isPublished");
 
-    // Convert publishedProducts ids to strings and store in the publishedProductIds set
-    const publishedProductIds = new Set(
-      publishedProducts.map(product => product._id.toString())
+    // Convert product ids to strings and store in the validProductIds set
+    const validProductIds = new Set(
+      products.map(product => product._id.toString())
     );
 
-    // Check if every item's productId is present in the publishedProductIds set
-    const allItemsArePublished = items.every(item =>
-      publishedProductIds.has(item.product.toString())
+    // For variants, also verify their base product is published
+    const variantProducts = products.filter(p => p.isVariant);
+    if (variantProducts.length > 0) {
+      const baseProductIds = variantProducts
+        .map(v => v.baseProduct?.toString())
+        .filter(Boolean);
+      if (baseProductIds.length > 0) {
+        const baseProducts = await Product.find({
+          _id: { $in: baseProductIds },
+          isPublished: true,
+        })
+          .session(session)
+          .select("_id");
+        const publishedBaseProductIds = new Set(
+          baseProducts.map(bp => bp._id.toString())
+        );
+
+        // Check that all variants have published base products
+        const allVariantsHavePublishedBase = variantProducts.every(
+          variant =>
+            !variant.baseProduct ||
+            publishedBaseProductIds.has(variant.baseProduct.toString())
+        );
+
+        if (!allVariantsHavePublishedBase) {
+          throw new Error(
+            "Some variant products have unpublished base products"
+          );
+        }
+      }
+    }
+
+    // Check if every item's productId is present in the validProductIds set
+    const allItemsAreValid = items.every(item =>
+      validProductIds.has(item.product.toString())
     );
 
-    if (!allItemsArePublished) {
+    if (!allItemsAreValid) {
       throw new Error("Some products are not available or unpublished");
     }
+
+    // Use products for stock validation (renamed from publishedProducts)
+    const publishedProducts = products;
 
     // EARLY STOCK VALIDATION
     const stockValidation = validateStockAvailabilityWithProducts(
