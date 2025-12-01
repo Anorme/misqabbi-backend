@@ -64,36 +64,46 @@ export const initializeCheckout = async (req, res) => {
       products.map(product => product._id.toString())
     );
 
-    // For variants, also verify their base product is published
+    // For variants, also verify their base product exists and is published
     const variantProducts = products.filter(p => p.isVariant);
     if (variantProducts.length > 0) {
+      // First, ensure all variants have a baseProduct
+      const variantsWithoutBase = variantProducts.filter(v => !v.baseProduct);
+      if (variantsWithoutBase.length > 0) {
+        return res.status(400).json(
+          formatResponse({
+            success: false,
+            error: "Some variant products are missing base product references",
+          })
+        );
+      }
+
+      // Get all unique base product IDs
       const baseProductIds = variantProducts
-        .map(v => v.baseProduct?.toString())
+        .map(v => v.baseProduct.toString())
         .filter(Boolean);
-      if (baseProductIds.length > 0) {
-        const baseProducts = await Product.find({
-          _id: { $in: baseProductIds },
-          isPublished: true,
-        }).select("_id");
-        const publishedBaseProductIds = new Set(
-          baseProducts.map(bp => bp._id.toString())
-        );
 
-        // Check that all variants have published base products
-        const allVariantsHavePublishedBase = variantProducts.every(
-          variant =>
-            !variant.baseProduct ||
-            publishedBaseProductIds.has(variant.baseProduct.toString())
-        );
+      // Verify all base products are published
+      const baseProducts = await Product.find({
+        _id: { $in: baseProductIds },
+        isPublished: true,
+      }).select("_id");
+      const publishedBaseProductIds = new Set(
+        baseProducts.map(bp => bp._id.toString())
+      );
 
-        if (!allVariantsHavePublishedBase) {
-          return res.status(400).json(
-            formatResponse({
-              success: false,
-              error: "Some variant products have unpublished base products",
-            })
-          );
-        }
+      // Check that all variants have published base products
+      const allVariantsHavePublishedBase = variantProducts.every(variant =>
+        publishedBaseProductIds.has(variant.baseProduct.toString())
+      );
+
+      if (!allVariantsHavePublishedBase) {
+        return res.status(400).json(
+          formatResponse({
+            success: false,
+            error: "Some variant products have unpublished base products",
+          })
+        );
       }
     }
 
