@@ -120,6 +120,7 @@ const productSchema = new Schema(
       required: function () {
         return this.isVariant === true;
       },
+      default: undefined,
       _id: false,
     },
   },
