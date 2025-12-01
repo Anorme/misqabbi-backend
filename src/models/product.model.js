@@ -412,6 +412,110 @@ async function decrementProductStock(items, session = null) {
 }
 
 /**
+ * @desc    Get all variant products for a base product
+ * @param   {String} baseProductId - Base product ID
+ * @returns {Promise<Array>} Array of variant products (lean objects)
+ */
+async function getProductVariants(baseProductId) {
+  try {
+    return await Product.find({
+      baseProduct: baseProductId,
+      isVariant: true,
+    }).lean();
+  } catch (error) {
+    logger.error(
+      `[products.model] Error fetching variants for product ${baseProductId}: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+/**
+ * @desc    Add a variant to a base product's variants array
+ * @param   {String} baseProductId - Base product ID
+ * @param   {String} variantProductId - Variant product ID
+ * @returns {Promise<Object>} Updated base product
+ */
+async function addVariantToProduct(baseProductId, variantProductId) {
+  try {
+    return await Product.findByIdAndUpdate(
+      baseProductId,
+      { $addToSet: { variants: variantProductId } },
+      { new: true }
+    );
+  } catch (error) {
+    logger.error(
+      `[products.model] Error adding variant ${variantProductId} to product ${baseProductId}: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+/**
+ * @desc    Remove a variant from a base product's variants array
+ * @param   {String} baseProductId - Base product ID
+ * @param   {String} variantProductId - Variant product ID
+ * @returns {Promise<Object>} Updated base product
+ */
+async function removeVariantFromProduct(baseProductId, variantProductId) {
+  try {
+    return await Product.findByIdAndUpdate(
+      baseProductId,
+      { $pull: { variants: variantProductId } },
+      { new: true }
+    );
+  } catch (error) {
+    logger.error(
+      `[products.model] Error removing variant ${variantProductId} from product ${baseProductId}: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+/**
+ * @desc    Create a variant product and link it to base product
+ * @param   {Object} variantData - Variant product data (must include baseProduct, variantType)
+ * @returns {Promise<Object>} Created variant product
+ */
+async function createVariantProduct(variantData) {
+  try {
+    // Ensure isVariant is set
+    variantData.isVariant = true;
+
+    // Load base product to get slug and validate it exists
+    const baseProduct = await getProductById(variantData.baseProduct);
+    if (!baseProduct) {
+      throw new Error("Base product not found");
+    }
+
+    // Generate unique slug for variant (base slug + variant type + timestamp)
+    const variantSlug = `${baseProduct.slug}-${variantData.variantType}-${Date.now()}`;
+    variantData.slug = slugify(variantSlug, {
+      lower: true,
+      strict: true,
+      trim: true,
+    });
+
+    // Create the variant product
+    const variant = await Product.create(variantData);
+
+    // Add variant to base product's variants array
+    await addVariantToProduct(variantData.baseProduct, variant._id);
+
+    logger.info(
+      `[products.model] Created variant product ${variant._id} for base product ${variantData.baseProduct}`
+    );
+
+    return variant;
+  } catch (error) {
+    logger.error(
+      `[products.model] Error creating variant product: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+/**
  * @desc    Retrieve related products using text search similarity on name within same category,
  *          with fallback to same category products if not enough matches
  * @param   {Object} currentProduct - The current product object (must have _id, name, category)
@@ -527,4 +631,8 @@ export {
   decrementProductStock,
   decrementProductStockWithProducts,
   getRelatedProducts,
+  getProductVariants,
+  addVariantToProduct,
+  removeVariantFromProduct,
+  createVariantProduct,
 };
