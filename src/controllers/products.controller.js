@@ -14,6 +14,7 @@ import {
   removeVariantFromProduct,
 } from "../models/product.model.js";
 import { deleteAssets } from "../config/cloudinary.js";
+import { getOptimisedUrl } from "../middleware/upload.middleware.js";
 import logger from "../config/logger.js";
 import { formatResponse } from "../utils/responseFormatter.js";
 import { isValidSortOption } from "../utils/validators.js";
@@ -219,6 +220,27 @@ export async function updateProductAdmin(req, res) {
       );
     }
     const payload = { ...req.body };
+
+    // Handle swatchImage deletion for variants
+    if (existing.isVariant && payload.swatchImage !== undefined) {
+      const existingSwatchPublicId = existing.swatchImage?.publicId;
+      const incomingSwatchPublicId = payload.swatchImage?.publicId;
+
+      // If swatchImage is being removed or replaced, delete the old one
+      if (
+        existingSwatchPublicId &&
+        existingSwatchPublicId !== incomingSwatchPublicId
+      ) {
+        try {
+          await deleteAssets([existingSwatchPublicId]);
+        } catch (err) {
+          logger.warn(
+            `[products.controller] Failed to delete swatch image on update for product ${id}: ${err.message}`
+          );
+        }
+      }
+    }
+
     // If images are provided, compute diff and delete removed images
     if (Array.isArray(payload.images)) {
       const incoming = payload.images.map(img =>
@@ -289,6 +311,12 @@ export async function deleteProductAdmin(req, res) {
           .map(img => (typeof img === "string" ? null : img?.publicId))
           .filter(Boolean)
       : [];
+
+    // Add swatch image publicId if it exists (for variants)
+    if (existing.swatchImage?.publicId) {
+      publicIds.push(existing.swatchImage.publicId);
+    }
+
     if (publicIds.length > 0) {
       try {
         await deleteAssets(publicIds);
@@ -507,11 +535,22 @@ export async function deleteVariantAdmin(req, res) {
     // Remove variant reference from base product
     await removeVariantFromProduct(baseProductId, variantId);
 
-    // Delete variant images from Cloudinary
-    const publicIds =
+    // Collect all publicIds for deletion (swatchImage + gallery images)
+    const publicIds = [];
+
+    // Add swatch image publicId if it exists
+    if (variant.swatchImage?.publicId) {
+      publicIds.push(variant.swatchImage.publicId);
+    }
+
+    // Add gallery image publicIds
+    const galleryPublicIds =
       variant.images
         ?.map(img => (typeof img === "string" ? null : img?.publicId))
         .filter(Boolean) || [];
+    publicIds.push(...galleryPublicIds);
+
+    // Delete all variant images from Cloudinary
     if (publicIds.length > 0) {
       try {
         await deleteAssets(publicIds);
@@ -534,6 +573,97 @@ export async function deleteVariantAdmin(req, res) {
       formatResponse({
         success: false,
         error: "Failed to delete variant",
+      })
+    );
+  }
+}
+
+/**
+ * Update swatch image for a variant (admin only)
+ * @async
+ * @function updateVariantSwatchImageAdmin
+ * @route PUT /admin/products/:baseProductId/variants/:variantId/swatch-image
+ * @access Admin
+ * @param {Request} req - Express request object with path params and swatchImage file
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} Sends JSON response with updated variant
+ */
+export async function updateVariantSwatchImageAdmin(req, res) {
+  try {
+    const { baseProductId, variantId } = req.params;
+
+    // Fetch variant to verify it exists and belongs to base product
+    const variant = await getProductById(variantId);
+    if (!variant) {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Variant not found",
+        })
+      );
+    }
+
+    // Verify the variant belongs to the base product
+    if (variant.baseProduct?.toString() !== baseProductId) {
+      return res.status(400).json(
+        formatResponse({
+          success: false,
+          error: "Variant does not belong to the specified base product",
+        })
+      );
+    }
+
+    // Verify swatch image was uploaded
+    if (!req.files?.swatchImage || req.files.swatchImage.length === 0) {
+      return res.status(400).json(
+        formatResponse({
+          success: false,
+          error: "Swatch image is required",
+        })
+      );
+    }
+
+    // Get old swatch image publicId for deletion
+    const oldSwatchPublicId = variant.swatchImage?.publicId;
+
+    // Process new swatch image
+    const swatchFile = req.files.swatchImage[0];
+    const newSwatchPublicId = swatchFile.filename;
+    const newSwatchImage = {
+      url: getOptimisedUrl(newSwatchPublicId),
+      publicId: newSwatchPublicId,
+    };
+
+    // Update variant with new swatch image
+    const updatedVariant = await updateProduct(variantId, {
+      swatchImage: newSwatchImage,
+    });
+
+    // Delete old swatch image from Cloudinary
+    if (oldSwatchPublicId) {
+      try {
+        await deleteAssets([oldSwatchPublicId]);
+      } catch (err) {
+        logger.warn(
+          `[products.controller] Failed to delete old swatch image for variant ${variantId}: ${err.message}`
+        );
+      }
+    }
+
+    res.json(
+      formatResponse({
+        message: "Swatch image updated successfully",
+        data: updatedVariant,
+      })
+    );
+  } catch (error) {
+    logger.error(
+      `[products.controller] Error updating swatch image: ${error.message}`
+    );
+    res.status(400).json(
+      formatResponse({
+        success: false,
+        error: "Failed to update swatch image",
       })
     );
   }
