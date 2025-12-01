@@ -18,8 +18,13 @@ export function buildProductQuery(params) {
   // includeUnpublished=true and an optional boolean isPublished filter.
   if (!includeUnpublished) {
     query.isPublished = true;
+    query.isVariant = { $ne: true };
   } else if (isPublished === true) {
     query.isPublished = true;
+    // Admin can optionally include variants, but by default exclude them
+    if (!params.includeVariants) {
+      query.isVariant = { $ne: true };
+    }
   } else if (isPublished === false) {
     query.isPublished = false;
   }
