@@ -238,7 +238,12 @@ async function getPaginatedAllProducts(params, page = 1, limit = 10) {
     const products = await Product.find(query, projection)
       .sort(sort)
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .populate({
+        path: "variants",
+        select:
+          "name price images swatchImage variantType stock isPublished createdAt updatedAt",
+      });
 
     return products;
   } catch (error) {
