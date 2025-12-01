@@ -6,8 +6,8 @@ import {
   validateVariantProduct,
 } from "../middleware/validator.middleware.js";
 import {
-  attachImagesToBody,
   attachVariantImagesToBody,
+  attachProductImagesToBody,
 } from "../middleware/upload.middleware.js";
 import { productUploads } from "../config/cloudinary.js";
 
@@ -33,6 +33,7 @@ import {
   getProductVariantsAdmin,
   createVariantProductAdmin,
   deleteVariantAdmin,
+  updateProductSwatchImageAdmin,
   updateVariantSwatchImageAdmin,
 } from "../controllers/products.controller.js";
 
@@ -485,7 +486,7 @@ router.get(
  *     security:
  *       - bearerAuth: []
  *     requestBody:
- *       description: Product data to create, with image uploads. Use 'multipart/form-data' and send field `images` as up to 5 files.
+ *       description: Product data to create, with image uploads. Use 'multipart/form-data' with separate fields for swatchImage (optional) and gallery images.
  *       required: true
  *       content:
  *         multipart/form-data:
@@ -501,12 +502,16 @@ router.get(
  *               price:
  *                 type: number
  *                 description: The product price.
+ *               swatchImage:
+ *                 type: string
+ *                 format: binary
+ *                 description: Swatch image for color/print picker (optional, single file)
  *               images:
  *                 type: array
  *                 items:
  *                   type: string
  *                   format: binary
- *                 description: Up to 5 product images.
+ *                 description: Gallery images for the product (optional, max 5 files).
  *                 maxItems: 5
  *               category:
  *                 type: string
@@ -548,8 +553,11 @@ router.post(
   "/products",
   authenticateToken,
   checkAdmin,
-  productUploads.array("images", 5),
-  attachImagesToBody,
+  productUploads.fields([
+    { name: "swatchImage", maxCount: 1 },
+    { name: "images", maxCount: 5 },
+  ]),
+  attachProductImagesToBody,
   validateProduct,
   createProductAdmin
 );
@@ -571,9 +579,34 @@ router.post(
  *         schema:
  *           type: string
  *     requestBody:
- *       description: Product data to update
+ *       description: Product data to update. Use 'multipart/form-data' for image uploads, or 'application/json' for text-only updates.
  *       required: true
  *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *               swatchImage:
+ *                 type: string
+ *                 format: binary
+ *                 description: Swatch image for color/print picker (optional, single file)
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: Gallery images (optional, max 5 files)
+ *                 maxItems: 5
+ *               category:
+ *                 type: string
+ *               stock:
+ *                 type: integer
  *         application/json:
  *           schema:
  *             type: object
@@ -584,10 +617,22 @@ router.post(
  *                 type: string
  *               price:
  *                 type: number
+ *               swatchImage:
+ *                 type: object
+ *                 properties:
+ *                   url:
+ *                     type: string
+ *                   publicId:
+ *                     type: string
  *               images:
  *                 type: array
  *                 items:
- *                   type: string
+ *                   type: object
+ *                   properties:
+ *                     url:
+ *                       type: string
+ *                     publicId:
+ *                       type: string
  *                 maxItems: 5
  *               category:
  *                 type: string
@@ -627,8 +672,11 @@ router.put(
   "/products/:id",
   authenticateToken,
   checkAdmin,
-  productUploads.array("images", 5),
-  attachImagesToBody,
+  productUploads.fields([
+    { name: "swatchImage", maxCount: 1 },
+    { name: "images", maxCount: 5 },
+  ]),
+  attachProductImagesToBody,
   validateProduct,
   updateProductAdmin
 );
@@ -898,6 +946,122 @@ router.delete(
  *                   type: boolean
  *                 message:
  *                   type: string
+ *                 data:
+ *                   $ref: "#/components/schemas/Product"
+ *       400:
+ *         description: Bad request (missing swatch image or variant doesn't belong to base)
+ *       404:
+ *         description: Variant not found
+ */
+/**
+ * @swagger
+ * /admin/products/{id}/swatch-image:
+ *   put:
+ *     summary: Update swatch image for a base product (admin only)
+ *     description: Update the swatch image for a base product. The swatch image is used for color/print picker display.
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - swatchImage
+ *             properties:
+ *               swatchImage:
+ *                 type: string
+ *                 format: binary
+ *                 description: Swatch image file (single file)
+ *     responses:
+ *       200:
+ *         description: Swatch image updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Swatch image updated successfully"
+ *                 data:
+ *                   $ref: "#/components/schemas/Product"
+ *       400:
+ *         description: Bad request (missing swatch image or product is a variant)
+ *       404:
+ *         description: Product not found
+ */
+router.put(
+  "/products/:id/swatch-image",
+  authenticateToken,
+  checkAdmin,
+  productUploads.fields([{ name: "swatchImage", maxCount: 1 }]),
+  updateProductSwatchImageAdmin
+);
+
+/**
+ * @swagger
+ * /admin/products/{baseProductId}/variants/{variantId}/swatch-image:
+ *   put:
+ *     summary: Update swatch image for a variant (admin only)
+ *     description: Update the swatch image for a product variant. The swatch image is used for color/print picker display.
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: baseProductId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Base product ID
+ *       - in: path
+ *         name: variantId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Variant product ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - swatchImage
+ *             properties:
+ *               swatchImage:
+ *                 type: string
+ *                 format: binary
+ *                 description: Swatch image file (single file)
+ *     responses:
+ *       200:
+ *         description: Swatch image updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Swatch image updated successfully"
  *                 data:
  *                   $ref: "#/components/schemas/Product"
  *       400:
