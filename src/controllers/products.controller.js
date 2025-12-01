@@ -9,6 +9,9 @@ import {
   getPaginatedAllProducts,
   countAllProducts,
   getRelatedProducts,
+  getProductVariants,
+  createVariantProduct,
+  removeVariantFromProduct,
 } from "../models/product.model.js";
 import { deleteAssets } from "../config/cloudinary.js";
 import logger from "../config/logger.js";
@@ -132,6 +135,12 @@ export const getProductBySlugHandler = async (req, res) => {
 
     // Product is already a plain object from .lean(), so we can directly add properties
     const responseData = { ...product };
+
+    // Always include variants for base products (not variants themselves)
+    if (!product.isVariant) {
+      const variants = await getProductVariants(product._id);
+      responseData.variants = variants;
+    }
 
     // Only include related products if query parameter is explicitly set to "true"
     if (includeRelated) {
@@ -387,6 +396,144 @@ export async function getProductsAdmin(req, res) {
       formatResponse({
         success: false,
         error: "Failed to load products",
+      })
+    );
+  }
+}
+
+/**
+ * Get all variants for a product (admin only)
+ * @async
+ * @function getProductVariantsAdmin
+ * @route GET /admin/products/:id/variants
+ * @access Admin
+ * @param {Request} req - Express request object with path param: id
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} Sends JSON response with variant products array
+ */
+export async function getProductVariantsAdmin(req, res) {
+  const { id } = req.params;
+  try {
+    const variants = await getProductVariants(id);
+    res.json(formatResponse({ data: variants }));
+  } catch (error) {
+    logger.error(
+      `[products.controller] Error fetching variants for product ${id}: ${error.message}`
+    );
+    res.status(500).json(
+      formatResponse({
+        success: false,
+        error: "Failed to fetch variants",
+      })
+    );
+  }
+}
+
+/**
+ * Create a variant product (admin only)
+ * @async
+ * @function createVariantProductAdmin
+ * @route POST /admin/products/:baseProductId/variants
+ * @access Admin
+ * @param {Request} req - Express request object with path param: baseProductId and variant data in body
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} Sends JSON response with created variant product
+ */
+export async function createVariantProductAdmin(req, res) {
+  try {
+    const { baseProductId } = req.params;
+    const data = {
+      ...req.body,
+      baseProduct: baseProductId,
+      createdBy: req.user._id,
+    };
+
+    const variant = await createVariantProduct(data);
+    res.status(201).json(
+      formatResponse({
+        message: "Variant created successfully",
+        data: variant,
+      })
+    );
+  } catch (error) {
+    logger.error(
+      `[products.controller] Error creating variant: ${error.message}`
+    );
+    res.status(400).json(
+      formatResponse({
+        success: false,
+        error: "Variant creation failed",
+        message: error.message,
+      })
+    );
+  }
+}
+
+/**
+ * Delete a variant product (admin only)
+ * @async
+ * @function deleteVariantAdmin
+ * @route DELETE /admin/products/:baseProductId/variants/:variantId
+ * @access Admin
+ * @param {Request} req - Express request object with path params: baseProductId and variantId
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} Sends 204 No Content or error response
+ */
+export async function deleteVariantAdmin(req, res) {
+  try {
+    const { baseProductId, variantId } = req.params;
+
+    // Fetch variant product to verify it exists and get image publicIds
+    const variant = await getProductById(variantId);
+    if (!variant) {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Variant not found",
+        })
+      );
+    }
+
+    // Verify the variant belongs to the base product
+    if (variant.baseProduct?.toString() !== baseProductId) {
+      return res.status(400).json(
+        formatResponse({
+          success: false,
+          error: "Variant does not belong to the specified base product",
+        })
+      );
+    }
+
+    // Remove variant reference from base product
+    await removeVariantFromProduct(baseProductId, variantId);
+
+    // Delete variant images from Cloudinary
+    const publicIds =
+      variant.images
+        ?.map(img => (typeof img === "string" ? null : img?.publicId))
+        .filter(Boolean) || [];
+    if (publicIds.length > 0) {
+      try {
+        await deleteAssets(publicIds);
+      } catch (err) {
+        logger.warn(
+          `[products.controller] Failed to delete some Cloudinary assets for variant ${variantId}: ${err.message}`
+        );
+      }
+    }
+
+    // Delete the variant product
+    await deleteProduct(variantId);
+
+    res.status(204).send();
+  } catch (error) {
+    logger.error(
+      `[products.controller] Error deleting variant: ${error.message}`
+    );
+    res.status(400).json(
+      formatResponse({
+        success: false,
+        error: "Failed to delete variant",
       })
     );
   }
