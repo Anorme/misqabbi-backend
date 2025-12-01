@@ -1,5 +1,6 @@
 import { userValidator } from "../validators/user.validator.js";
 import { productValidator } from "../validators/product.validator.js";
+import { variantProductValidator } from "../validators/variant.validator.js";
 import { orderValidator } from "../validators/order.validator.js";
 import { newsletterValidator } from "../validators/newsletter.validator.js";
 import { contactValidator } from "../validators/contact.validator.js";
@@ -16,6 +17,18 @@ export function validateUser(req, res, next) {
 
 export function validateProduct(req, res, next) {
   const { error } = productValidator.validate(req.body, { abortEarly: false });
+  if (error) {
+    return res.status(400).json({
+      errors: error.details.map(err => err.message),
+    });
+  }
+  next();
+}
+
+export function validateVariantProduct(req, res, next) {
+  const { error } = variantProductValidator.validate(req.body, {
+    abortEarly: false,
+  });
   if (error) {
     return res.status(400).json({
       errors: error.details.map(err => err.message),
