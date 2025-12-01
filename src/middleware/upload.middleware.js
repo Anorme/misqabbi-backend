@@ -37,12 +37,13 @@ export const attachImagesToBody = (req, res, next) => {
 };
 
 /**
- * Middleware to handle variant image uploads with separate fields:
- * - swatchImage: single file field for the color/print picker image
+ * Middleware to handle product image uploads with separate fields:
+ * - swatchImage: single file field for the color/print picker image (optional)
  * - images: array of files for the gallery images (max 5)
+ * Works for both base products and variants
  */
-export const attachVariantImagesToBody = (req, res, next) => {
-  // Handle swatchImage (single file)
+export const attachProductImagesToBody = (req, res, next) => {
+  // Handle swatchImage (single file, optional)
   if (req.files?.swatchImage && req.files.swatchImage.length > 0) {
     const swatchFile = req.files.swatchImage[0];
     const swatchPublicId = swatchFile.filename;
@@ -60,3 +61,11 @@ export const attachVariantImagesToBody = (req, res, next) => {
   );
   next();
 };
+
+/**
+ * Middleware to handle variant image uploads with separate fields:
+ * - swatchImage: single file field for the color/print picker image (required for variants)
+ * - images: array of files for the gallery images (max 5)
+ * Alias for attachProductImagesToBody for backward compatibility
+ */
+export const attachVariantImagesToBody = attachProductImagesToBody;
