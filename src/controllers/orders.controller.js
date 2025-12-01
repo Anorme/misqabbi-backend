@@ -48,22 +48,60 @@ export const initializeCheckout = async (req, res) => {
     }
 
     const itemProductIds = items.map(item => item.product);
-    // Fetch only currently published products that match the requested ids with stock info.
-    // This guards against ordering unpublished/disabled items even if the client includes them.
-    const publishedProducts = await Product.find({
+    // Fetch products that match the requested ids with stock info.
+    // For base products: must be published
+    // For variants: can be unpublished (they're accessible through their published base product)
+    const products = await Product.find({
       _id: { $in: itemProductIds },
-      isPublished: true,
-    }).select("_id name price stock"); // Include stock for validation
+      $or: [
+        { isPublished: true }, // Published base products
+        { isVariant: true }, // Variants (can be unpublished)
+      ],
+    }).select("_id name price stock isVariant baseProduct isPublished"); // Include variant fields for validation
 
     // Convert to a Set for O(1) membership checks when validating the incoming cart items.
-    const publishedProductIds = new Set(
-      publishedProducts.map(product => product._id.toString())
+    const validProductIds = new Set(
+      products.map(product => product._id.toString())
     );
 
-    const allItemsArePublished = items.every(item =>
-      publishedProductIds.has(item.product.toString())
+    // For variants, also verify their base product is published
+    const variantProducts = products.filter(p => p.isVariant);
+    if (variantProducts.length > 0) {
+      const baseProductIds = variantProducts
+        .map(v => v.baseProduct?.toString())
+        .filter(Boolean);
+      if (baseProductIds.length > 0) {
+        const baseProducts = await Product.find({
+          _id: { $in: baseProductIds },
+          isPublished: true,
+        }).select("_id");
+        const publishedBaseProductIds = new Set(
+          baseProducts.map(bp => bp._id.toString())
+        );
+
+        // Check that all variants have published base products
+        const allVariantsHavePublishedBase = variantProducts.every(
+          variant =>
+            !variant.baseProduct ||
+            publishedBaseProductIds.has(variant.baseProduct.toString())
+        );
+
+        if (!allVariantsHavePublishedBase) {
+          return res.status(400).json(
+            formatResponse({
+              success: false,
+              error: "Some variant products have unpublished base products",
+            })
+          );
+        }
+      }
+    }
+
+    // Check that all items are valid (published base products or variants with published base)
+    const allItemsAreValid = items.every(item =>
+      validProductIds.has(item.product.toString())
     );
-    if (!allItemsArePublished) {
+    if (!allItemsAreValid) {
       return res.status(400).json(
         formatResponse({
           success: false,
@@ -71,6 +109,9 @@ export const initializeCheckout = async (req, res) => {
         })
       );
     }
+
+    // Use products for stock validation (renamed from publishedProducts)
+    const publishedProducts = products;
 
     // Check stock before payment
     const stockValidation = validateStockAvailabilityWithProducts(
