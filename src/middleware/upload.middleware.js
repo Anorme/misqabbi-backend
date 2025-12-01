@@ -53,8 +53,10 @@ export const attachProductImagesToBody = (req, res, next) => {
     };
   }
 
-  // Handle gallery images (array of files) - reuse helper function
-  req.body.images = mapFilesToImages(req.files?.images || []);
+  // Handle gallery images (array of files) - only set if files are uploaded
+  if (req.files?.images && req.files.images.length > 0) {
+    req.body.images = mapFilesToImages(req.files.images);
+  }
 
   logger.info(
     `[upload.middleware] Attached swatch image: ${req.body.swatchImage ? "yes" : "no"}, gallery images: ${req.body.images?.length || 0}`
