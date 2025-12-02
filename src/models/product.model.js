@@ -184,6 +184,27 @@ async function updateProduct(id, updates) {
 }
 
 /**
+ * @desc    Remove swatch image from a product using $unset
+ * @param   {String} id - Product ID
+ * @returns {Promise<Object|null>} Updated product document or null if not found
+ */
+async function removeSwatchImage(id) {
+  try {
+    const updated = await Product.findByIdAndUpdate(
+      id,
+      { $unset: { swatchImage: "" } },
+      { new: true, runValidators: false }
+    );
+    return updated;
+  } catch (error) {
+    logger.error(
+      `[products.model] Error removing swatch image from product ${id}: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+/**
  * @desc    Delete a product by its ID
  * @param   {String} id - Product ID
  * @returns {Promise<Object|null>} Deleted document or null if not found
@@ -640,4 +661,5 @@ export {
   addVariantToProduct,
   removeVariantFromProduct,
   createVariantProduct,
+  removeSwatchImage,
 };
