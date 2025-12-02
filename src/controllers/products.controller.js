@@ -13,6 +13,7 @@ import {
   createVariantProduct,
   removeVariantFromProduct,
 } from "../models/product.model.js";
+import Product from "../models/product.mongo.js";
 import { deleteAssets } from "../config/cloudinary.js";
 import { getOptimisedUrl } from "../middleware/upload.middleware.js";
 import logger from "../config/logger.js";
@@ -755,6 +756,350 @@ export async function updateVariantSwatchImageAdmin(req, res) {
       formatResponse({
         success: false,
         error: "Failed to update swatch image",
+      })
+    );
+  }
+}
+
+/**
+ * Delete a single gallery image from a product (admin only)
+ * @async
+ * @function deleteProductImageAdmin
+ * @route DELETE /admin/products/:id/images/:publicId
+ * @access Admin
+ * @param {Request} req - Express request object with path params: id and publicId
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} Sends JSON response with updated product or error
+ */
+export async function deleteProductImageAdmin(req, res) {
+  try {
+    const { id, publicId } = req.params;
+
+    // Fetch product to verify it exists
+    const product = await getProductById(id);
+    if (!product) {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Product not found",
+        })
+      );
+    }
+
+    // Verify it's not a variant (variants use their own endpoint)
+    if (product.isVariant) {
+      return res.status(400).json(
+        formatResponse({
+          success: false,
+          error: "Use the variant image deletion endpoint for variants",
+        })
+      );
+    }
+
+    // Find the image in the product's images array
+    const imageIndex = product.images?.findIndex(
+      img => (typeof img === "string" ? false : img?.publicId) === publicId
+    );
+
+    if (imageIndex === -1 || imageIndex === undefined) {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Image not found",
+        })
+      );
+    }
+
+    // Remove the image from the array
+    const updatedImages = product.images.filter(
+      (_, index) => index !== imageIndex
+    );
+
+    // Update product with new images array
+    const updatedProduct = await updateProduct(id, {
+      images: updatedImages,
+    });
+
+    // Delete image from Cloudinary
+    try {
+      await deleteAssets([publicId]);
+    } catch (err) {
+      logger.warn(
+        `[products.controller] Failed to delete Cloudinary asset ${publicId} for product ${id}: ${err.message}`
+      );
+      // Continue even if Cloudinary deletion fails - image is already removed from DB
+    }
+
+    res.json(
+      formatResponse({
+        message: "Image deleted successfully",
+        data: updatedProduct,
+      })
+    );
+  } catch (error) {
+    logger.error(
+      `[products.controller] Error deleting product image: ${error.message}`
+    );
+    res.status(400).json(
+      formatResponse({
+        success: false,
+        error: "Failed to delete image",
+      })
+    );
+  }
+}
+
+/**
+ * Delete a single gallery image from a variant (admin only)
+ * @async
+ * @function deleteVariantImageAdmin
+ * @route DELETE /admin/products/:baseProductId/variants/:variantId/images/:publicId
+ * @access Admin
+ * @param {Request} req - Express request object with path params: baseProductId, variantId, and publicId
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} Sends JSON response with updated variant or error
+ */
+export async function deleteVariantImageAdmin(req, res) {
+  try {
+    const { baseProductId, variantId, publicId } = req.params;
+
+    // Fetch variant to verify it exists and belongs to base product
+    const variant = await getProductById(variantId);
+    if (!variant) {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Variant not found",
+        })
+      );
+    }
+
+    // Verify the variant belongs to the base product
+    if (variant.baseProduct?.toString() !== baseProductId) {
+      return res.status(400).json(
+        formatResponse({
+          success: false,
+          error: "Variant does not belong to the specified base product",
+        })
+      );
+    }
+
+    // Find the image in the variant's images array
+    const imageIndex = variant.images?.findIndex(
+      img => (typeof img === "string" ? false : img?.publicId) === publicId
+    );
+
+    if (imageIndex === -1 || imageIndex === undefined) {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Image not found",
+        })
+      );
+    }
+
+    // Remove the image from the array
+    const updatedImages = variant.images.filter(
+      (_, index) => index !== imageIndex
+    );
+
+    // Update variant with new images array
+    const updatedVariant = await updateProduct(variantId, {
+      images: updatedImages,
+    });
+
+    // Delete image from Cloudinary
+    try {
+      await deleteAssets([publicId]);
+    } catch (err) {
+      logger.warn(
+        `[products.controller] Failed to delete Cloudinary asset ${publicId} for variant ${variantId}: ${err.message}`
+      );
+      // Continue even if Cloudinary deletion fails - image is already removed from DB
+    }
+
+    res.json(
+      formatResponse({
+        message: "Image deleted successfully",
+        data: updatedVariant,
+      })
+    );
+  } catch (error) {
+    logger.error(
+      `[products.controller] Error deleting variant image: ${error.message}`
+    );
+    res.status(400).json(
+      formatResponse({
+        success: false,
+        error: "Failed to delete image",
+      })
+    );
+  }
+}
+
+/**
+ * Delete swatch image from a base product (admin only)
+ * @async
+ * @function deleteProductSwatchImageAdmin
+ * @route DELETE /admin/products/:id/swatch-image
+ * @access Admin
+ * @param {Request} req - Express request object with path param: id
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} Sends JSON response with updated product or error
+ */
+export async function deleteProductSwatchImageAdmin(req, res) {
+  try {
+    const { id } = req.params;
+
+    // Fetch product to verify it exists
+    const product = await getProductById(id);
+    if (!product) {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Product not found",
+        })
+      );
+    }
+
+    // Verify it's not a variant (variants use their own endpoint)
+    if (product.isVariant) {
+      return res.status(400).json(
+        formatResponse({
+          success: false,
+          error: "Use the variant swatch image deletion endpoint for variants",
+        })
+      );
+    }
+
+    // Check if swatch image exists
+    if (!product.swatchImage?.publicId) {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Swatch image not found",
+        })
+      );
+    }
+
+    const swatchPublicId = product.swatchImage.publicId;
+
+    // Update product to remove swatch image using $unset
+    const updatedProduct = await Product.findByIdAndUpdate(
+      id,
+      { $unset: { swatchImage: "" } },
+      { new: true, runValidators: false }
+    );
+
+    // Delete swatch image from Cloudinary
+    try {
+      await deleteAssets([swatchPublicId]);
+    } catch (err) {
+      logger.warn(
+        `[products.controller] Failed to delete Cloudinary asset ${swatchPublicId} for product ${id}: ${err.message}`
+      );
+      // Continue even if Cloudinary deletion fails - swatch image is already removed from DB
+    }
+
+    res.json(
+      formatResponse({
+        message: "Swatch image deleted successfully",
+        data: updatedProduct,
+      })
+    );
+  } catch (error) {
+    logger.error(
+      `[products.controller] Error deleting product swatch image: ${error.message}`
+    );
+    res.status(400).json(
+      formatResponse({
+        success: false,
+        error: "Failed to delete swatch image",
+      })
+    );
+  }
+}
+
+/**
+ * Delete swatch image from a variant (admin only)
+ * @async
+ * @function deleteVariantSwatchImageAdmin
+ * @route DELETE /admin/products/:baseProductId/variants/:variantId/swatch-image
+ * @access Admin
+ * @param {Request} req - Express request object with path params: baseProductId and variantId
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} Sends JSON response with updated variant or error
+ */
+export async function deleteVariantSwatchImageAdmin(req, res) {
+  try {
+    const { baseProductId, variantId } = req.params;
+
+    // Fetch variant to verify it exists and belongs to base product
+    const variant = await getProductById(variantId);
+    if (!variant) {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Variant not found",
+        })
+      );
+    }
+
+    // Verify the variant belongs to the base product
+    if (variant.baseProduct?.toString() !== baseProductId) {
+      return res.status(400).json(
+        formatResponse({
+          success: false,
+          error: "Variant does not belong to the specified base product",
+        })
+      );
+    }
+
+    // Check if swatch image exists
+    if (!variant.swatchImage?.publicId) {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Swatch image not found",
+        })
+      );
+    }
+
+    const swatchPublicId = variant.swatchImage.publicId;
+
+    // Update variant to remove swatch image using $unset
+    // Note: Variants require swatchImage per schema, but we allow deletion here
+    // The variant will need a new swatch image to be valid again
+    const updatedVariant = await Product.findByIdAndUpdate(
+      variantId,
+      { $unset: { swatchImage: "" } },
+      { new: true, runValidators: false }
+    );
+
+    // Delete swatch image from Cloudinary
+    try {
+      await deleteAssets([swatchPublicId]);
+    } catch (err) {
+      logger.warn(
+        `[products.controller] Failed to delete Cloudinary asset ${swatchPublicId} for variant ${variantId}: ${err.message}`
+      );
+      // Continue even if Cloudinary deletion fails - swatch image is already removed from DB
+    }
+
+    res.json(
+      formatResponse({
+        message: "Swatch image deleted successfully",
+        data: updatedVariant,
+      })
+    );
+  } catch (error) {
+    logger.error(
+      `[products.controller] Error deleting variant swatch image: ${error.message}`
+    );
+    res.status(400).json(
+      formatResponse({
+        success: false,
+        error: "Failed to delete swatch image",
       })
     );
   }
