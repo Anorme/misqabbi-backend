@@ -35,6 +35,10 @@ import {
   deleteVariantAdmin,
   updateProductSwatchImageAdmin,
   updateVariantSwatchImageAdmin,
+  deleteProductImageAdmin,
+  deleteVariantImageAdmin,
+  deleteProductSwatchImageAdmin,
+  deleteVariantSwatchImageAdmin,
 } from "../controllers/products.controller.js";
 
 const router = express.Router();
@@ -1075,6 +1079,210 @@ router.put(
   checkAdmin,
   productUploads.fields([{ name: "swatchImage", maxCount: 1 }]),
   updateVariantSwatchImageAdmin
+);
+
+/**
+ * @swagger
+ * /admin/products/{id}/images/{publicId}:
+ *   delete:
+ *     summary: Delete a single gallery image from a product (admin only)
+ *     description: Delete a specific gallery image from a base product by its publicId. The image will be removed from both the database and Cloudinary.
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *       - in: path
+ *         name: publicId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Cloudinary publicId of the image to delete
+ *     responses:
+ *       200:
+ *         description: Image deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Image deleted successfully"
+ *                 data:
+ *                   $ref: "#/components/schemas/Product"
+ *       400:
+ *         description: Bad request (product is a variant or deletion failed)
+ *       404:
+ *         description: Product or image not found
+ */
+router.delete(
+  "/products/:id/images/:publicId",
+  authenticateToken,
+  checkAdmin,
+  deleteProductImageAdmin
+);
+
+/**
+ * @swagger
+ * /admin/products/{baseProductId}/variants/{variantId}/images/{publicId}:
+ *   delete:
+ *     summary: Delete a single gallery image from a variant (admin only)
+ *     description: Delete a specific gallery image from a variant product by its publicId. The image will be removed from both the database and Cloudinary.
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: baseProductId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Base product ID
+ *       - in: path
+ *         name: variantId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Variant product ID
+ *       - in: path
+ *         name: publicId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Cloudinary publicId of the image to delete
+ *     responses:
+ *       200:
+ *         description: Image deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Image deleted successfully"
+ *                 data:
+ *                   $ref: "#/components/schemas/Product"
+ *       400:
+ *         description: Bad request (variant doesn't belong to base product or deletion failed)
+ *       404:
+ *         description: Variant or image not found
+ */
+router.delete(
+  "/products/:baseProductId/variants/:variantId/images/:publicId",
+  authenticateToken,
+  checkAdmin,
+  deleteVariantImageAdmin
+);
+
+/**
+ * @swagger
+ * /admin/products/{id}/swatch-image:
+ *   delete:
+ *     summary: Delete swatch image from a base product (admin only)
+ *     description: Delete the swatch image from a base product. The image will be removed from both the database and Cloudinary.
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *     responses:
+ *       200:
+ *         description: Swatch image deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Swatch image deleted successfully"
+ *                 data:
+ *                   $ref: "#/components/schemas/Product"
+ *       400:
+ *         description: Bad request (product is a variant or deletion failed)
+ *       404:
+ *         description: Product or swatch image not found
+ */
+router.delete(
+  "/products/:id/swatch-image",
+  authenticateToken,
+  checkAdmin,
+  deleteProductSwatchImageAdmin
+);
+
+/**
+ * @swagger
+ * /admin/products/{baseProductId}/variants/{variantId}/swatch-image:
+ *   delete:
+ *     summary: Delete swatch image from a variant (admin only)
+ *     description: Delete the swatch image from a variant product. The image will be removed from both the database and Cloudinary.
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: baseProductId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Base product ID
+ *       - in: path
+ *         name: variantId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Variant product ID
+ *     responses:
+ *       200:
+ *         description: Swatch image deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Swatch image deleted successfully"
+ *                 data:
+ *                   $ref: "#/components/schemas/Product"
+ *       400:
+ *         description: Bad request (variant doesn't belong to base product or deletion failed)
+ *       404:
+ *         description: Variant or swatch image not found
+ */
+router.delete(
+  "/products/:baseProductId/variants/:variantId/swatch-image",
+  authenticateToken,
+  checkAdmin,
+  deleteVariantSwatchImageAdmin
 );
 
 // Admin: list users
