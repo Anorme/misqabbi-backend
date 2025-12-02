@@ -16,7 +16,20 @@ export function validateUser(req, res, next) {
 }
 
 export function validateProduct(req, res, next) {
-  const { error } = productValidator.validate(req.body, { abortEarly: false });
+  // For updates (PUT/PATCH), make required fields optional to allow partial updates
+  const isUpdate = req.method === "PUT" || req.method === "PATCH";
+
+  const schema = isUpdate
+    ? productValidator.fork(["name", "price", "category", "stock"], schema =>
+        schema.optional()
+      )
+    : productValidator;
+
+  const { error } = schema.validate(req.body, {
+    abortEarly: false,
+    allowUnknown: true, // Allow fields not in schema (like images from middleware)
+  });
+
   if (error) {
     return res.status(400).json({
       errors: error.details.map(err => err.message),
