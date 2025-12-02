@@ -2,7 +2,8 @@ name: Integration
 
 on:
   push:
-    branches: staging
+    branches:
+      - staging
 
 jobs:
   Integration-tests:
@@ -33,7 +34,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install Dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run integration tests
         run: npm run test:integration
