@@ -242,32 +242,37 @@ export async function updateProductAdmin(req, res) {
       }
     }
 
-    // If images are provided, compute diff and delete removed images
+    // Handle image updates: append new uploaded images to existing ones
     if (Array.isArray(payload.images)) {
       const incoming = payload.images.map(img =>
         typeof img === "string" ? { url: img } : img
       );
-      const existingByPublicId = new Map(
-        (existing.images || [])
+
+      // Get existing images
+      const existingImages = existing.images || [];
+      const existingPublicIds = new Set(
+        existingImages
           .filter(img => typeof img !== "string" && img?.publicId)
-          .map(img => [img.publicId, img])
+          .map(img => img.publicId)
       );
-      const incomingPublicIds = new Set(
-        incoming.filter(img => img && img.publicId).map(img => img.publicId)
+
+      // Filter out duplicates (by publicId) and combine
+      const newImages = incoming.filter(
+        img => !img.publicId || !existingPublicIds.has(img.publicId)
       );
-      const removedPublicIds = Array.from(existingByPublicId.keys()).filter(
-        pid => !incomingPublicIds.has(pid)
-      );
-      if (removedPublicIds.length > 0) {
-        try {
-          await deleteAssets(removedPublicIds);
-        } catch (err) {
-          logger.warn(
-            `[products.controller] Failed to delete some Cloudinary assets on update for product ${id}: ${err.message}`
-          );
-        }
+      const combinedImages = [...existingImages, ...newImages];
+
+      // Enforce max 5 images limit
+      if (combinedImages.length > 5) {
+        return res.status(400).json(
+          formatResponse({
+            success: false,
+            error: `Cannot add images. Maximum of 5 images allowed. Current: ${existingImages.length}, Trying to add: ${newImages.length}`,
+          })
+        );
       }
-      payload.images = incoming;
+
+      payload.images = combinedImages;
     }
 
     const product = await updateProduct(id, payload);
