@@ -12,8 +12,8 @@ import {
   getProductVariants,
   createVariantProduct,
   removeVariantFromProduct,
+  removeSwatchImage,
 } from "../models/product.model.js";
-import Product from "../models/product.mongo.js";
 import { deleteAssets } from "../config/cloudinary.js";
 import { getOptimisedUrl } from "../middleware/upload.middleware.js";
 import logger from "../config/logger.js";
@@ -985,11 +985,7 @@ export async function deleteProductSwatchImageAdmin(req, res) {
     const swatchPublicId = product.swatchImage.publicId;
 
     // Update product to remove swatch image using $unset
-    const updatedProduct = await Product.findByIdAndUpdate(
-      id,
-      { $unset: { swatchImage: "" } },
-      { new: true, runValidators: false }
-    );
+    const updatedProduct = await removeSwatchImage(id);
 
     // Delete swatch image from Cloudinary
     try {
@@ -1070,11 +1066,7 @@ export async function deleteVariantSwatchImageAdmin(req, res) {
     // Update variant to remove swatch image using $unset
     // Note: Variants require swatchImage per schema, but we allow deletion here
     // The variant will need a new swatch image to be valid again
-    const updatedVariant = await Product.findByIdAndUpdate(
-      variantId,
-      { $unset: { swatchImage: "" } },
-      { new: true, runValidators: false }
-    );
+    const updatedVariant = await removeSwatchImage(variantId);
 
     // Delete swatch image from Cloudinary
     try {
