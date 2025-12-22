@@ -86,7 +86,4 @@ export async function closeRedisConnection() {
   }
 }
 
-// Initialize Redis on module load
-initializeRedis();
-
 export default getRedisClient;
