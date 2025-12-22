@@ -73,12 +73,6 @@ export async function createAuthenticatedAdmin(userData = {}) {
   // Update user role to admin
   await updateUserRole(user._id || user.id, "admin");
 
-  // Note: The existing token might still have 'user' role
-  // For tests that need admin access, you may need to:
-  // 1. Logout and login again, OR
-  // 2. Create a new token with admin role directly
-  // For now, we'll return the agent - tests can handle re-auth if needed
-
   return {
     request,
     user: { ...user, role: "admin" },
