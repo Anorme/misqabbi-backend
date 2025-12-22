@@ -26,7 +26,8 @@ export async function createAuthenticatedUser(
   userData = {},
   options = { useSignup: true }
 ) {
-  const request = supertest(app);
+  // Use agent() to get a request with cookie jar support
+  const request = supertest.agent(app);
   const randomId = Math.random().toString(36).substring(2, 6);
 
   const defaultUser = {
@@ -42,11 +43,38 @@ export async function createAuthenticatedUser(
       displayName: defaultUser.displayName,
     });
 
-    // Supertest agent automatically maintains cookies for subsequent requests
+    // Production behavior: signup redirects (302) after setting cookies
+    // Follow the redirect to ensure cookies are stored in supertest's cookie jar
     if (
       signupRes.status === 302 &&
       hasAuthCookies(signupRes.headers["set-cookie"])
     ) {
+      // Follow the redirect to /auth/success to ensure cookies are stored
+      if (signupRes.headers.location) {
+        try {
+          const redirectUrl = new URL(signupRes.headers.location);
+          await request.get(redirectUrl.pathname + redirectUrl.search);
+        } catch {
+          // If it's already a relative path, use it directly
+          await request.get(signupRes.headers.location);
+        }
+
+        // Supertest may not automatically store cookies from redirect responses
+        // Manually extract cookies from Set-Cookie header and set them in the jar
+        const setCookieHeader = signupRes.headers["set-cookie"] || [];
+        setCookieHeader.forEach(cookie => {
+          const [nameValue] = cookie.split(";");
+          const [name, value] = nameValue.split("=");
+          if (name && value) {
+            // Use localhost as the domain for test environment
+            request.jar.setCookie(
+              `${name.trim()}=${value.trim()}`,
+              "http://localhost"
+            );
+          }
+        });
+      }
+
       return {
         request,
         user: defaultUser,
@@ -76,6 +104,32 @@ export async function createAuthenticatedUser(
       "Authentication redirect occurred but required cookies (auth_token, refresh_token) were not set"
     );
   }
+
+  // Follow the redirect to /auth/success to ensure cookies are stored in supertest's cookie jar
+  if (loginRes.headers.location) {
+    try {
+      const redirectUrl = new URL(loginRes.headers.location);
+      await request.get(redirectUrl.pathname + redirectUrl.search);
+    } catch {
+      // If it's already a relative path, use it directly
+      await request.get(loginRes.headers.location);
+    }
+  }
+
+  // Supertest may not automatically store cookies from redirect responses
+  // Manually extract cookies from Set-Cookie header and set them in the jar
+  const setCookieHeader = loginRes.headers["set-cookie"] || [];
+  setCookieHeader.forEach(cookie => {
+    const [nameValue] = cookie.split(";");
+    const [name, value] = nameValue.split("=");
+    if (name && value) {
+      // Use localhost as the domain for test environment
+      request.jar.setCookie(
+        `${name.trim()}=${value.trim()}`,
+        "http://localhost"
+      );
+    }
+  });
 
   // Supertest agent automatically maintains cookies for subsequent requests
   return {
@@ -155,7 +209,8 @@ export async function getAuthCookies(userData = {}) {
  * @returns {supertest.SuperTest} Supertest agent with cookies set
  */
 export function createRequestWithCookies(cookies) {
-  const request = supertest(app);
+  // Use agent() to get a request with cookie jar support
+  const request = supertest.agent(app);
 
   cookies.forEach(cookie => {
     const [nameValue] = cookie.split(";");
