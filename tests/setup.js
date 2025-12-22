@@ -7,3 +7,41 @@ import RedisMock from "ioredis-mock";
 jest.mock("ioredis", () => {
   return RedisMock;
 });
+
+// Mock axios at the library level - this runs BEFORE all test files
+// Create a shared mock instance that can be accessed by test helpers
+const axiosMock = {
+  post: jest.fn(),
+  get: jest.fn(),
+  put: jest.fn(),
+  delete: jest.fn(),
+  patch: jest.fn(),
+  head: jest.fn(),
+  options: jest.fn(),
+  request: jest.fn(),
+  create: jest.fn(function () {
+    return this;
+  }),
+  defaults: {
+    headers: {
+      common: {},
+    },
+  },
+  interceptors: {
+    request: { use: jest.fn(), eject: jest.fn() },
+    response: { use: jest.fn(), eject: jest.fn() },
+  },
+};
+
+// Store mock in global so test helpers can access it
+global.axiosMock = axiosMock;
+
+// For ES modules, jest.mock() works but must be hoisted before imports
+// The mock structure must match axios's actual exports
+jest.mock("axios", () => {
+  return {
+    __esModule: true,
+    default: axiosMock,
+    ...axiosMock,
+  };
+});
