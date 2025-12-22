@@ -10,6 +10,7 @@ const { colorize, combine, timestamp, errors, printf } = format;
 
 const isDev = NODE_ENV === "development";
 const isPreview = NODE_ENV === "preview";
+const isTest = NODE_ENV === "test";
 const isProdLike = ["production", "staging"].includes(NODE_ENV);
 
 const logFormat = printf(({ level, message, timestamp, stack }) => {
@@ -18,11 +19,13 @@ const logFormat = printf(({ level, message, timestamp, stack }) => {
 
 const loggerTransports = [];
 
-// Console transport for dev and preview
-if (isDev || isPreview) {
+// Console transport for dev, preview, and test
+// In test mode, set silent: true to suppress output and keep test output clean
+if (isDev || isPreview || isTest) {
   loggerTransports.push(
     new transports.Console({
       format: combine(colorize(), errors({ stack: true }), logFormat),
+      silent: isTest, // Suppress console output in tests
     })
   );
 }
