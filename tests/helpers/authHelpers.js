@@ -14,13 +14,12 @@ export async function createAuthenticatedUser(
   options = { useSignup: true }
 ) {
   const request = supertest(app);
-  const timestamp = Date.now();
-  const randomSuffix = Math.random().toString(36).substring(2, 6);
+  const randomId = Math.random().toString(36).substring(2, 6);
 
   const defaultUser = {
-    email: userData.email || `test_${timestamp}_${randomSuffix}@example.com`,
+    email: userData.email || `test_${randomId}@example.com`,
     password: userData.password || "Test123!@#",
-    displayName: userData.displayName || `Test User ${randomSuffix}`,
+    displayName: userData.displayName || `Test User ${randomId}`,
   };
 
   if (options.useSignup) {
@@ -88,13 +87,12 @@ export async function createAuthenticatedAdmin(userData = {}) {
 export async function getAuthCookies(userData = {}) {
   const request = supertest(app);
 
-  const timestamp = Date.now();
-  const randomSuffix = Math.random().toString(36).substring(2, 6);
+  const randomId = Math.random().toString(36).substring(2, 6);
 
   const defaultUser = {
-    email: userData.email || `test_${timestamp}_${randomSuffix}@example.com`,
+    email: userData.email || `test_${randomId}@example.com`,
     password: userData.password || "Test123!@#",
-    displayName: userData.displayName || `Test User ${randomSuffix}`,
+    displayName: userData.displayName || `Test User ${randomId}`,
   };
 
   const res = await request.post(`${API_PREFIX}/auth/signup`).send(defaultUser);
