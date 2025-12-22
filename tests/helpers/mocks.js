@@ -3,7 +3,8 @@ import crypto from "crypto";
 
 export const USE_REAL_PAYSTACK = process.env.USE_REAL_PAYSTACK === "true";
 
-let axiosMock = null;
+// Use global axiosMock set up in tests/setup.js, or create local one if not available
+let axiosMock = global.axiosMock || null;
 
 /**
  * @param {Object} options - Mock options
