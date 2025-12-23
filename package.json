@@ -88,7 +88,9 @@
   "jest": {
     "testEnvironment": "node",
     "transform": {},
-    "setupFilesAfterEnv": ["<rootDir>/tests/setup.js"]
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/setup.js"
+    ]
   },
   "lint-staged": {
     "*.js": [
