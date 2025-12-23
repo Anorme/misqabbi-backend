@@ -4,6 +4,7 @@ import http from "node:http";
 import app from "./src/app.js";
 
 import { mongoConnect } from "./src/services/mongo.js";
+import { getRedisClient } from "./src/services/redis.js";
 import logger from "./src/config/logger.js";
 
 const PORT = env.PORT || 5000;
@@ -19,6 +20,10 @@ async function startServer() {
   try {
     logger.info("Connecting to MongoDB...");
     await mongoConnect();
+
+    logger.info("Initializing Redis...");
+    getRedisClient();
+
     // TODO: Load initial data if needed
     // await loadInitialData();
 
