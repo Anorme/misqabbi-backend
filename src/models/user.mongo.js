@@ -111,6 +111,36 @@ userSchema.pre("save", async function (next) {
 });
 
 /**
+ * Normalize dates before saving the user.
+ *
+ * This ensures that dates stored as Extended JSON objects (e.g., from Railway MongoDB)
+ * are converted to native JavaScript Date objects before Mongoose validation.
+ *
+ * - Converts { "$date": "ISO-string" } objects to Date objects
+ * - Runs before schema validation to prevent casting errors
+ * - Handles both createdAt and updatedAt timestamp fields
+ */
+userSchema.pre("save", function (next) {
+  // Convert $date objects to Date objects if they exist
+  // This handles the case where dates were stored as Extended JSON objects
+  if (
+    this.createdAt &&
+    typeof this.createdAt === "object" &&
+    this.createdAt.$date
+  ) {
+    this.createdAt = new Date(this.createdAt.$date);
+  }
+  if (
+    this.updatedAt &&
+    typeof this.updatedAt === "object" &&
+    this.updatedAt.$date
+  ) {
+    this.updatedAt = new Date(this.updatedAt.$date);
+  }
+  next();
+});
+
+/**
  * Compare a candidate password with the stored hash.
  *
  * @param {string} candidatePassword - Plain text password to verify
