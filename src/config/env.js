@@ -17,6 +17,7 @@ const baseSchema = {
   PORT: port({ default: 3000 }),
   API_PREFIX: str({ default: "/api/v1" }),
   MONGO_URL: str(),
+  MONGO_DB_NAME: str({ default: "misqabbi_store" }),
   JWT_SECRET: str(),
   JWT_EXPIRES_IN: num(),
   ACCESS_TOKEN_EXPIRES_IN: num({ default: 900 }), // 15 minutes
