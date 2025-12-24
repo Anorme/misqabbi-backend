@@ -244,6 +244,7 @@ export const verifyPayment = async (req, res) => {
       try {
         const verificationResult = await verifyTransaction(reference);
 
+        // Explicitly handle each transaction status from Paystack
         if (
           verificationResult.status &&
           verificationResult.data.status === "success"
@@ -262,13 +263,38 @@ export const verifyPayment = async (req, res) => {
               },
             })
           );
-        } else {
-          // Update to failed if verification shows failure
+        } else if (
+          verificationResult.data &&
+          verificationResult.data.status === "failed"
+        ) {
+          // Explicitly handle failed transactions
           await updateTransactionStatus(reference, "failed");
+
+          const updatedTransaction = await getTransactionByReference(reference);
+          return res.status(200).json(
+            formatResponse({
+              message: "Payment verification failed",
+              data: {
+                transaction: updatedTransaction,
+                order: null,
+              },
+            })
+          );
+        } else {
+          // Transaction still pending or other status - don't update status
+          // This prevents false negatives when frontend polls before payment completion
+          const transactionStatus =
+            verificationResult.data?.status || "pending";
+          logger.info(
+            `[payment.controller] Transaction ${reference} still ${transactionStatus}, not updating status`
+          );
+          // Return current status without modification
         }
       } catch (verifyError) {
+        // Don't update status on API errors - let webhook handle it
+        // This prevents network errors from corrupting transaction status
         logger.warn(
-          `[payment.controller] Error verifying transaction: ${verifyError.message}`
+          `[payment.controller] Error verifying transaction: ${verifyError.message}. Leaving status unchanged, webhook will handle update.`
         );
       }
     }
