@@ -36,8 +36,8 @@ export const handlePaystackWebhook = async (req, res) => {
       );
     }
 
-    // Get raw body as string (from express.raw middleware)
-    // req.body is a Buffer when using express.raw()
+    // Get raw body as Buffer (from express.raw middleware)
+    // Pass Buffer directly to avoid encoding conversion
     const rawBody = req.body;
 
     // Verify webhook signature FIRST using the original raw body
