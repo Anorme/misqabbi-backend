@@ -104,7 +104,7 @@ export function verifyWebhookSignature(signature, body) {
   try {
     const hash = crypto
       .createHmac("sha512", env.PAYSTACK_SECRET_KEY)
-      .update(body, "utf8")
+      .update(body)
       .digest("hex");
 
     return hash === signature;
