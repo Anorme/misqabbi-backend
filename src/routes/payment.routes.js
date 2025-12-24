@@ -3,6 +3,7 @@ import {
   handlePaystackWebhook,
   verifyPayment,
 } from "../controllers/payment.controller.js";
+import { routeLimiters } from "../config/rateLimiter.js";
 
 const router = express.Router();
 
@@ -93,6 +94,6 @@ router.post("/webhook/paystack", handlePaystackWebhook);
  *       500:
  *         description: Server error
  */
-router.get("/verify/:reference", verifyPayment);
+router.get("/verify/:reference", routeLimiters.payment, verifyPayment);
 
 export default router;
