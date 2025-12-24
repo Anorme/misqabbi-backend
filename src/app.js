@@ -25,10 +25,12 @@ import { errorHandler } from "./middleware/index.js";
 
 const app = express();
 
+// This ensures correct IP detection for rate limiting
+app.set("trust proxy", 1);
+
 const API_PREFIX = env.API_PREFIX || "/api/v1";
 
 app.use(helmet());
-app.use(rateLimiters.general); // Global rate limiter
 app.use(morgan("dev"));
 app.use(cookieParser());
 
@@ -50,11 +52,13 @@ app.get("/", (req, res) => {
 });
 
 // Mount versioned routes
+// Rate limiters are applied per-route or per-route-group as needed
 app.use(`${API_PREFIX}/admin`, routeLimiters.admin, adminRoutes);
 app.use(`${API_PREFIX}/auth`, authRoutes);
-app.use(`${API_PREFIX}/favorites`, favoritesRoutes);
+app.use(`${API_PREFIX}/favorites`, rateLimiters.general, favoritesRoutes);
 app.use(`${API_PREFIX}/orders`, routeLimiters.order, orderRoutes);
-app.use(`${API_PREFIX}/payment`, routeLimiters.payment, paymentRoutes);
+
+app.use(`${API_PREFIX}/payment`, paymentRoutes);
 app.use(`${API_PREFIX}/products`, routeLimiters.products, productRoutes);
 app.use(`${API_PREFIX}/newsletter`, routeLimiters.newsletter, newsletterRoutes);
 app.use(`${API_PREFIX}/contact`, routeLimiters.contact, contactRoutes);
