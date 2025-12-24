@@ -31,6 +31,15 @@ app.use(helmet());
 app.use(rateLimiters.general); // Global rate limiter
 app.use(morgan("dev"));
 app.use(cookieParser());
+
+// IMPORTANT: Webhook route needs raw body BEFORE JSON parsing
+// Apply raw body parser specifically for Paystack webhook route
+// This must come before express.json() to preserve the original body bytes
+app.use(
+  `${API_PREFIX}/payment/webhook/paystack`,
+  express.raw({ type: "application/json" })
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsOptions(env.NODE_ENV)));
