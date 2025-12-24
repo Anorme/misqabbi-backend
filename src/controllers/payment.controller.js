@@ -36,10 +36,11 @@ export const handlePaystackWebhook = async (req, res) => {
       );
     }
 
-    // Get raw body for signature verification
-    const rawBody = JSON.stringify(req.body);
+    // Get raw body as string (from express.raw middleware)
+    // req.body is a Buffer when using express.raw()
+    const rawBody = req.body;
 
-    // Verify webhook signature
+    // Verify webhook signature FIRST using the original raw body
     if (!verifyWebhookSignature(signature, rawBody)) {
       logger.warn("[payment.controller] Invalid Paystack webhook signature");
       return res.status(400).json(
@@ -50,7 +51,8 @@ export const handlePaystackWebhook = async (req, res) => {
       );
     }
 
-    const { event, data } = req.body;
+    // Parse the body AFTER signature verification
+    const { event, data } = JSON.parse(rawBody.toString("utf8"));
 
     logger.info(
       `[payment.controller] Received Paystack webhook event: ${event}`
