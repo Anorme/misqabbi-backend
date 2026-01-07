@@ -1,5 +1,6 @@
 import { rateLimit } from "express-rate-limit";
 import { slowDown } from "express-slow-down";
+import env from "./env.js";
 
 // Common configuration shared across all limiters
 const COMMON_CONFIG = {
@@ -16,6 +17,11 @@ const COMMON_CONFIG = {
  * @returns {Function} Express rate limiter middleware
  */
 export const createRateLimiter = (limit, overrides = {}) => {
+  // Skip rate limiting in test environment
+  if (env.NODE_ENV === "test") {
+    return (req, res, next) => next();
+  }
+
   return rateLimit({
     ...COMMON_CONFIG,
     limit,
