@@ -18,6 +18,7 @@ import {
   generateTransactionReference,
   convertToPesewas,
 } from "../services/paystackService.js";
+import { validateDiscountForCheckout } from "../services/discountService.js";
 import logger from "../config/logger.js";
 import { OBJECTID_REGEX } from "../utils/validators.js";
 import { formatResponse } from "../utils/responseFormatter.js";
@@ -31,7 +32,7 @@ function parseBooleanQueryParam(value, defaultValue = false) {
 }
 
 export const initializeCheckout = async (req, res) => {
-  const { items, shippingInfo } = req.body;
+  const { items, shippingInfo, discountCode } = req.body;
   const userId = req.user._id;
 
   // Parse expressService from query parameter (defaults to false)
@@ -185,8 +186,63 @@ export const initializeCheckout = async (req, res) => {
       );
     }
 
-    // Add express fee to total
-    const finalTotal = calculatedTotalPrice + expressFee;
+    // Validate and calculate discount if a code is provided
+    let discountInfo = null;
+    let discountAmount = 0;
+
+    if (discountCode) {
+      // Prepare cart data for discount validation
+      const cartData = {
+        cartTotal: calculatedTotalPrice,
+        itemCount: totalQuantity,
+        items: validatedItems.map(item => {
+          const product = publishedProducts.find(
+            p => p._id.toString() === item.product.toString()
+          );
+          return {
+            product: product,
+            price: item.price,
+            quantity: item.quantity,
+            category: product?.category,
+          };
+        }),
+      };
+
+      const discountResult = await validateDiscountForCheckout(
+        discountCode,
+        userId,
+        cartData
+      );
+
+      if (!discountResult.valid) {
+        return res.status(400).json(
+          formatResponse({
+            success: false,
+            errorCode: discountResult.errorCode,
+            error: discountResult.message,
+          })
+        );
+      }
+
+      discountInfo = {
+        discountId: discountResult.discountId,
+        discountCode: discountResult.discountCode,
+        discountAmount: discountResult.discountAmount,
+        discountType: discountResult.discountType,
+        discountValue: discountResult.discountValue,
+      };
+      discountAmount = discountResult.discountAmount;
+
+      logger.info(
+        `[orders.controller] Discount ${discountCode} applied: GHS ${discountAmount} off`
+      );
+    }
+
+    // Calculate final total: product subtotal + express fee - discount
+    const finalTotal = Math.max(
+      0,
+      calculatedTotalPrice + expressFee - discountAmount
+    );
 
     // Paystack amounts are in the smallest currency unit (pesewas).
     const amountInPesewas = convertToPesewas(finalTotal);
@@ -206,6 +262,10 @@ export const initializeCheckout = async (req, res) => {
         totalPrice: finalTotal,
         expressService,
         expressFee,
+        // Include discount info if applied
+        discountCode: discountInfo?.discountCode || null,
+        discountAmount: discountInfo?.discountAmount || 0,
+        discountId: discountInfo?.discountId || null,
       },
     };
     const transaction = await createTransaction(transactionData);
@@ -233,6 +293,13 @@ export const initializeCheckout = async (req, res) => {
           reference,
           amount: finalTotal,
           currency: "GHS",
+          // Include discount breakdown if applied
+          ...(discountInfo && {
+            discount: {
+              code: discountInfo.discountCode,
+              amount: discountInfo.discountAmount,
+            },
+          }),
         },
       })
     );

@@ -14,7 +14,8 @@ export async function createOrderFromCart(
   totalPrice,
   status,
   expressService = false,
-  expressFee = 0
+  expressFee = 0,
+  discountInfo = null
 ) {
   // Start a MongoDB session for transaction
   const session = await mongoose.startSession();
@@ -121,6 +122,12 @@ export async function createOrderFromCart(
       status,
       expressService,
       expressFee,
+      // Include discount info if provided
+      ...(discountInfo && {
+        discountCode: discountInfo.discountCode,
+        discountAmount: discountInfo.discountAmount,
+        discountId: discountInfo.discountId,
+      }),
     });
     await order.save({ session });
 

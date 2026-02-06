@@ -66,6 +66,23 @@ const OrderSchema = new Schema(
       min: 0,
       default: 0,
     },
+
+    // Discount information
+    discountCode: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    discountAmount: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    discountId: {
+      type: Schema.Types.ObjectId,
+      ref: "Discount",
+      default: null,
+    },
   },
   {
     timestamps: true,
