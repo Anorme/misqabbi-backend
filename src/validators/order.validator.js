@@ -10,6 +10,7 @@ import mongoose from "mongoose";
  *     - quantity: required, number, min 1
  *     - price: required, number, min 0
  * - totalPrice: optional, number, min 0
+ * - discountCode: optional, string - Discount code to apply at checkout
  * - status: optional, string, one of ['accepted', 'processing', 'ready', 'enroute_pickup', 'picked_up', 'in_transit', 'arrived'], defaults to 'accepted'
  */
 
@@ -50,6 +51,7 @@ export const orderValidator = Joi.object({
     deliveryAddress: Joi.string().trim().required(),
     deliveryNotes: Joi.string().trim().allow("").optional(),
   }).required(),
+  discountCode: Joi.string().trim().allow("").optional(),
   status: Joi.string()
     .valid(
       "accepted",
