@@ -16,6 +16,16 @@ import {
   getAdminDashboardHandler,
 } from "../controllers/admin.controller.js";
 import {
+  createDiscountAdmin,
+  getDiscountsAdmin,
+  getDiscountByIdAdmin,
+  updateDiscountAdmin,
+  deleteDiscountAdmin,
+  generateCodeAdmin,
+  getDiscountUsageAdmin,
+  getDiscountStatsAdmin,
+} from "../controllers/discount.controller.js";
+import {
   getAllOrdersAdmin,
   updateOrderStatusAdmin,
   getOrderByIdAdmin,
@@ -1297,6 +1307,340 @@ router.patch(
   authenticateToken,
   checkAdmin,
   updateUserRoleAdmin
+);
+
+// ============================================
+// Discount Management Routes
+// ============================================
+
+/**
+ * @swagger
+ * /admin/discounts/stats:
+ *   get:
+ *     summary: Get discount statistics (admin only)
+ *     description: Retrieve statistics about discount codes for the admin dashboard.
+ *     tags:
+ *       - Admin - Discounts
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Discount statistics retrieved successfully
+ */
+router.get(
+  "/discounts/stats",
+  authenticateToken,
+  checkAdmin,
+  getDiscountStatsAdmin
+);
+
+/**
+ * @swagger
+ * /admin/discounts/generate-code:
+ *   post:
+ *     summary: Generate a random discount code (admin only)
+ *     description: Generate a unique random discount code without creating a discount.
+ *     tags:
+ *       - Admin - Discounts
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               prefix:
+ *                 type: string
+ *                 description: Custom prefix for the code (default MISQ)
+ *               segmentLength:
+ *                 type: integer
+ *                 description: Length of each segment (default 4)
+ *               segmentCount:
+ *                 type: integer
+ *                 description: Number of segments (default 2)
+ *     responses:
+ *       200:
+ *         description: Code generated successfully
+ */
+router.post(
+  "/discounts/generate-code",
+  authenticateToken,
+  checkAdmin,
+  generateCodeAdmin
+);
+
+/**
+ * @swagger
+ * /admin/discounts:
+ *   get:
+ *     summary: Get all discount codes (admin only)
+ *     description: Retrieve a paginated list of all discount codes with optional filters.
+ *     tags:
+ *       - Admin - Discounts
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: isActive
+ *         schema:
+ *           type: boolean
+ *       - in: query
+ *         name: scope
+ *         schema:
+ *           type: string
+ *           enum: [order, products]
+ *       - in: query
+ *         name: usageType
+ *         schema:
+ *           type: string
+ *           enum: [single_use, multi_use, per_user]
+ *       - in: query
+ *         name: expired
+ *         schema:
+ *           type: boolean
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         description: Search query
+ *     responses:
+ *       200:
+ *         description: List of discounts
+ */
+router.get("/discounts", authenticateToken, checkAdmin, getDiscountsAdmin);
+
+/**
+ * @swagger
+ * /admin/discounts:
+ *   post:
+ *     summary: Create a new discount code (admin only)
+ *     description: Create a new discount code with specified configuration.
+ *     tags:
+ *       - Admin - Discounts
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - discountType
+ *               - discountValue
+ *               - expiryDate
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 description: Custom code (auto-generated if not provided)
+ *               description:
+ *                 type: string
+ *               discountType:
+ *                 type: string
+ *                 enum: [percentage, fixed]
+ *               discountValue:
+ *                 type: number
+ *               maxDiscountAmount:
+ *                 type: number
+ *                 description: Cap for percentage discounts
+ *               scope:
+ *                 type: string
+ *                 enum: [order, products]
+ *               applicableProducts:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               applicableCategories:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               usageType:
+ *                 type: string
+ *                 enum: [single_use, multi_use, per_user]
+ *               maxGlobalUses:
+ *                 type: integer
+ *               maxUsesPerUser:
+ *                 type: integer
+ *               minOrderValue:
+ *                 type: number
+ *               minItemCount:
+ *                 type: integer
+ *               firstOrderOnly:
+ *                 type: boolean
+ *               expiryDate:
+ *                 type: string
+ *                 format: date-time
+ *               isActive:
+ *                 type: boolean
+ *     responses:
+ *       201:
+ *         description: Discount created successfully
+ *       400:
+ *         description: Invalid input
+ */
+router.post("/discounts", authenticateToken, checkAdmin, createDiscountAdmin);
+
+/**
+ * @swagger
+ * /admin/discounts/{id}:
+ *   get:
+ *     summary: Get a discount by ID (admin only)
+ *     description: Retrieve a single discount code with usage statistics.
+ *     tags:
+ *       - Admin - Discounts
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Discount details
+ *       404:
+ *         description: Discount not found
+ */
+router.get(
+  "/discounts/:id",
+  authenticateToken,
+  checkAdmin,
+  getDiscountByIdAdmin
+);
+
+/**
+ * @swagger
+ * /admin/discounts/{id}:
+ *   put:
+ *     summary: Update a discount (admin only)
+ *     description: Update an existing discount code. The code itself cannot be changed.
+ *     tags:
+ *       - Admin - Discounts
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               description:
+ *                 type: string
+ *               discountValue:
+ *                 type: number
+ *               maxDiscountAmount:
+ *                 type: number
+ *               maxGlobalUses:
+ *                 type: integer
+ *               minOrderValue:
+ *                 type: number
+ *               minItemCount:
+ *                 type: integer
+ *               firstOrderOnly:
+ *                 type: boolean
+ *               expiryDate:
+ *                 type: string
+ *                 format: date-time
+ *               isActive:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Discount updated successfully
+ *       404:
+ *         description: Discount not found
+ */
+router.put(
+  "/discounts/:id",
+  authenticateToken,
+  checkAdmin,
+  updateDiscountAdmin
+);
+
+/**
+ * @swagger
+ * /admin/discounts/{id}:
+ *   delete:
+ *     summary: Deactivate a discount (admin only)
+ *     description: Soft delete a discount by setting isActive to false.
+ *     tags:
+ *       - Admin - Discounts
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Discount deactivated successfully
+ *       404:
+ *         description: Discount not found
+ */
+router.delete(
+  "/discounts/:id",
+  authenticateToken,
+  checkAdmin,
+  deleteDiscountAdmin
+);
+
+/**
+ * @swagger
+ * /admin/discounts/{id}/usage:
+ *   get:
+ *     summary: Get usage history for a discount (admin only)
+ *     description: Retrieve paginated usage history for a specific discount code.
+ *     tags:
+ *       - Admin - Discounts
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *     responses:
+ *       200:
+ *         description: Usage history
+ *       404:
+ *         description: Discount not found
+ */
+router.get(
+  "/discounts/:id/usage",
+  authenticateToken,
+  checkAdmin,
+  getDiscountUsageAdmin
 );
 
 export default router;
