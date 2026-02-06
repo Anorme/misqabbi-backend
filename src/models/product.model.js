@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Product from "./product.mongo.js";
 import logger from "../config/logger.js";
 import { buildProductQuery } from "../utils/buildProductQuery.js";
@@ -636,6 +637,120 @@ async function getRelatedProducts(currentProduct, limit = 4) {
   }
 }
 
+/**
+ * @desc    Check if a string is a valid MongoDB ObjectId
+ * @param   {String} id - The string to validate
+ * @returns {Boolean} True if valid ObjectId format
+ */
+function isValidObjectId(id) {
+  return mongoose.Types.ObjectId.isValid(id);
+}
+
+/**
+ * @desc    Validate that product IDs exist in the database
+ * @param   {Array<String>} productIds - Array of product ID strings
+ * @returns {Promise<{valid: boolean, invalidIds: Array, missingIds: Array}>}
+ *          - valid: true if all IDs are valid format AND exist in DB
+ *          - invalidIds: IDs that fail ObjectId format validation
+ *          - missingIds: IDs with valid format but not found in DB
+ */
+async function validateProductIds(productIds) {
+  try {
+    if (!Array.isArray(productIds) || productIds.length === 0) {
+      return { valid: true, invalidIds: [], missingIds: [] };
+    }
+
+    // Check format validity
+    const invalidIds = productIds.filter(id => !isValidObjectId(id));
+    if (invalidIds.length > 0) {
+      return { valid: false, invalidIds, missingIds: [] };
+    }
+
+    // Check existence in database
+    const existingProducts = await Product.find({
+      _id: { $in: productIds },
+    }).select("_id");
+
+    const existingIdSet = new Set(existingProducts.map(p => p._id.toString()));
+    const missingIds = productIds.filter(id => !existingIdSet.has(id));
+
+    return {
+      valid: missingIds.length === 0,
+      invalidIds: [],
+      missingIds,
+    };
+  } catch (error) {
+    logger.error(
+      `[products.model] Error validating product IDs: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+/**
+ * @desc    Get all distinct categories from products in the database
+ * @returns {Promise<Array<String>>} Array of category strings (lowercase)
+ */
+async function getAllCategories() {
+  try {
+    const categories = await Product.distinct("category");
+    return categories.map(cat => cat.toLowerCase());
+  } catch (error) {
+    logger.error(
+      `[products.model] Error fetching categories: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+/**
+ * @desc    Validate that categories exist (have at least one product)
+ * @param   {Array<String>} categories - Array of category strings
+ * @returns {Promise<{valid: boolean, invalidCategories: Array, normalizedCategories: Array}>}
+ *          - valid: true if all categories exist
+ *          - invalidCategories: categories not found in database
+ *          - normalizedCategories: lowercase/trimmed versions of valid input categories
+ */
+async function validateCategories(categories) {
+  try {
+    if (!Array.isArray(categories) || categories.length === 0) {
+      return { valid: true, invalidCategories: [], normalizedCategories: [] };
+    }
+
+    // Normalize input categories
+    const normalizedCategories = categories
+      .map(cat => (typeof cat === "string" ? cat.toLowerCase().trim() : ""))
+      .filter(cat => cat.length > 0);
+
+    if (normalizedCategories.length === 0) {
+      return {
+        valid: false,
+        invalidCategories: categories,
+        normalizedCategories: [],
+      };
+    }
+
+    // Get existing categories from DB
+    const existingCategories = await getAllCategories();
+    const existingCategoriesSet = new Set(existingCategories);
+
+    const invalidCategories = normalizedCategories.filter(
+      cat => !existingCategoriesSet.has(cat)
+    );
+
+    return {
+      valid: invalidCategories.length === 0,
+      invalidCategories,
+      normalizedCategories,
+    };
+  } catch (error) {
+    logger.error(
+      `[products.model] Error validating categories: ${error.message}`
+    );
+    throw error;
+  }
+}
+
 export {
   getAllProducts,
   getAllPublishedProducts,
@@ -662,4 +777,8 @@ export {
   removeVariantFromProduct,
   createVariantProduct,
   removeSwatchImage,
+  isValidObjectId,
+  validateProductIds,
+  getAllCategories,
+  validateCategories,
 };
