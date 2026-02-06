@@ -19,6 +19,10 @@ import {
   validateCodeFormat,
   normalizeCode,
 } from "../utils/discountCodeGenerator.js";
+import {
+  validateProductIds,
+  validateCategories,
+} from "../models/product.model.js";
 
 /**
  * Create a new discount code.
@@ -87,6 +91,69 @@ export async function createDiscountAdmin(req, res) {
       });
     }
 
+    // Validate product-scoped discounts
+    let validatedProducts = [];
+    let validatedCategories = [];
+
+    if (scope === "products") {
+      const hasProducts =
+        Array.isArray(applicableProducts) && applicableProducts.length > 0;
+      const hasCategories =
+        Array.isArray(applicableCategories) && applicableCategories.length > 0;
+
+      // Require at least one of products or categories
+      if (!hasProducts && !hasCategories) {
+        return res.status(400).json({
+          success: false,
+          error:
+            "Product-scoped discounts require at least one product ID or category",
+        });
+      }
+
+      // Validate product IDs if provided
+      if (hasProducts) {
+        const productValidation = await validateProductIds(applicableProducts);
+
+        if (productValidation.invalidIds.length > 0) {
+          return res.status(400).json({
+            success: false,
+            error: `Invalid product ID format: ${productValidation.invalidIds.join(", ")}`,
+          });
+        }
+
+        if (productValidation.missingIds.length > 0) {
+          return res.status(400).json({
+            success: false,
+            error: `Products not found: ${productValidation.missingIds.join(", ")}`,
+          });
+        }
+
+        validatedProducts = applicableProducts;
+      }
+
+      // Validate categories if provided
+      if (hasCategories) {
+        const categoryValidation =
+          await validateCategories(applicableCategories);
+
+        if (categoryValidation.normalizedCategories.length === 0) {
+          return res.status(400).json({
+            success: false,
+            error: "Invalid category format",
+          });
+        }
+
+        if (categoryValidation.invalidCategories.length > 0) {
+          return res.status(400).json({
+            success: false,
+            error: `Categories not found: ${categoryValidation.invalidCategories.join(", ")}`,
+          });
+        }
+
+        validatedCategories = categoryValidation.normalizedCategories;
+      }
+    }
+
     // Build discount data
     const discountData = {
       code: finalCode,
@@ -95,8 +162,8 @@ export async function createDiscountAdmin(req, res) {
       discountValue,
       maxDiscountAmount: maxDiscountAmount || null,
       scope: scope || "order",
-      applicableProducts: applicableProducts || [],
-      applicableCategories: applicableCategories || [],
+      applicableProducts: validatedProducts,
+      applicableCategories: validatedCategories,
       usageType: usageType || "multi_use",
       maxGlobalUses: maxGlobalUses || null,
       maxUsesPerUser: maxUsesPerUser || 1,
@@ -248,7 +315,7 @@ export async function getDiscountByIdAdmin(req, res) {
 export async function updateDiscountAdmin(req, res) {
   try {
     const { id } = req.params;
-    const updateData = req.body;
+    const updateData = { ...req.body };
 
     // Check if discount exists
     const existingDiscount = await findDiscountById(id);
@@ -269,6 +336,88 @@ export async function updateDiscountAdmin(req, res) {
         });
       }
       updateData.expiryDate = expiryDateObj;
+    }
+
+    // Determine the effective scope (updated or existing)
+    const effectiveScope = updateData.scope ?? existingDiscount.scope;
+
+    // Validate product-scoped discounts
+    if (effectiveScope === "products") {
+      const updatedProducts = updateData.applicableProducts;
+      const updatedCategories = updateData.applicableCategories;
+
+      // Check if updating products or categories
+      const hasProductsUpdate = updatedProducts !== undefined;
+      const hasCategoriesUpdate = updatedCategories !== undefined;
+
+      // Determine final arrays (updated values or existing)
+      const finalProducts = hasProductsUpdate
+        ? updatedProducts
+        : existingDiscount.applicableProducts;
+      const finalCategories = hasCategoriesUpdate
+        ? updatedCategories
+        : existingDiscount.applicableCategories;
+
+      const hasProducts =
+        Array.isArray(finalProducts) && finalProducts.length > 0;
+      const hasCategories =
+        Array.isArray(finalCategories) && finalCategories.length > 0;
+
+      // If scope is changing to products, require at least one target
+      if (updateData.scope === "products" && !hasProducts && !hasCategories) {
+        return res.status(400).json({
+          success: false,
+          error:
+            "Product-scoped discounts require at least one product ID or category",
+        });
+      }
+
+      // Validate product IDs if being updated
+      if (hasProductsUpdate && hasProducts) {
+        const productValidation = await validateProductIds(finalProducts);
+
+        if (productValidation.invalidIds.length > 0) {
+          return res.status(400).json({
+            success: false,
+            error: `Invalid product ID format: ${productValidation.invalidIds.join(", ")}`,
+          });
+        }
+
+        if (productValidation.missingIds.length > 0) {
+          return res.status(400).json({
+            success: false,
+            error: `Products not found: ${productValidation.missingIds.join(", ")}`,
+          });
+        }
+
+        updateData.applicableProducts = finalProducts;
+      }
+
+      // Validate categories if being updated
+      if (hasCategoriesUpdate && hasCategories) {
+        const categoryValidation = await validateCategories(finalCategories);
+
+        if (categoryValidation.normalizedCategories.length === 0) {
+          return res.status(400).json({
+            success: false,
+            error: "Invalid category format",
+          });
+        }
+
+        if (categoryValidation.invalidCategories.length > 0) {
+          return res.status(400).json({
+            success: false,
+            error: `Categories not found: ${categoryValidation.invalidCategories.join(", ")}`,
+          });
+        }
+
+        updateData.applicableCategories =
+          categoryValidation.normalizedCategories;
+      }
+    } else if (updateData.scope === "order") {
+      // Clear product-specific fields when switching to order scope
+      updateData.applicableProducts = [];
+      updateData.applicableCategories = [];
     }
 
     const discount = await updateDiscount(id, updateData);
