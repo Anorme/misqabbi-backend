@@ -5,6 +5,7 @@ import { countOrdersByUser } from "../models/order.model.js";
 
 /**
  * Error codes for discount validation failures.
+ * Used internally for logging and debugging.
  */
 export const DISCOUNT_ERROR_CODES = {
   INVALID_CODE: "INVALID_CODE",
@@ -19,18 +20,41 @@ export const DISCOUNT_ERROR_CODES = {
 };
 
 /**
- * Error messages for discount validation failures.
+ * Internal error messages for logging purposes.
+ * These provide detailed information for debugging but should not be exposed to users.
  */
-export const DISCOUNT_ERROR_MESSAGES = {
+const INTERNAL_ERROR_MESSAGES = {
   INVALID_CODE: "Discount code not found",
   CODE_EXPIRED: "Discount code has expired",
-  CODE_INACTIVE: "Discount code is no longer active",
-  USAGE_LIMIT_REACHED: "This code has reached its usage limit",
+  CODE_INACTIVE: "Discount code is deactivated",
+  USAGE_LIMIT_REACHED: "Global usage limit reached",
+  ALREADY_USED: "Per-user usage limit reached",
+  MIN_ORDER_NOT_MET: "Minimum order value not met",
+  MIN_ITEMS_NOT_MET: "Minimum item count not met",
+  FIRST_ORDER_ONLY: "First order restriction failed",
+  NO_APPLICABLE_ITEMS: "No applicable items in cart",
+};
+
+/**
+ * Public-facing error messages for users.
+ * Security consideration: Existence-related errors are grouped together to prevent
+ * bad actors from enumerating valid discount codes.
+ *
+ * - INVALID_CODE, CODE_EXPIRED, CODE_INACTIVE → Same generic message (prevents enumeration)
+ * - Other errors remain specific (user needs actionable feedback)
+ */
+export const DISCOUNT_ERROR_MESSAGES = {
+  // Grouped for security - don't reveal if code exists but is expired/inactive
+  INVALID_CODE: "This discount code is not valid",
+  CODE_EXPIRED: "This discount code is not valid",
+  CODE_INACTIVE: "This discount code is not valid",
+  // Specific messages for actionable errors
+  USAGE_LIMIT_REACHED: "This discount code has reached its usage limit",
   ALREADY_USED: "You have already used this discount code",
   MIN_ORDER_NOT_MET: "Minimum order value of GHS {amount} required",
   MIN_ITEMS_NOT_MET: "Minimum of {count} items required",
-  FIRST_ORDER_ONLY: "This code is valid for first orders only",
-  NO_APPLICABLE_ITEMS: "No items in cart match this discount",
+  FIRST_ORDER_ONLY: "This discount code is only valid for your first order",
+  NO_APPLICABLE_ITEMS: "No items in your cart are eligible for this discount",
 };
 
 /**
@@ -46,42 +70,39 @@ export const DISCOUNT_ERROR_MESSAGES = {
  */
 export async function validateDiscountCode(code, userId, cartData) {
   try {
+    // Helper to create validation failure response with internal logging
+    const validationFailed = (errorCode, messageOverride = null) => {
+      // Log detailed error internally for debugging
+      logger.info(
+        `[discountService] Discount validation failed for code "${code}", user ${userId}: ${INTERNAL_ERROR_MESSAGES[errorCode]}`
+      );
+      return {
+        valid: false,
+        errorCode,
+        message: messageOverride || DISCOUNT_ERROR_MESSAGES[errorCode],
+      };
+    };
+
     // 1. Find the discount code
     const discount = await findDiscountByCode(code);
 
     if (!discount) {
-      return {
-        valid: false,
-        errorCode: DISCOUNT_ERROR_CODES.INVALID_CODE,
-        message: DISCOUNT_ERROR_MESSAGES.INVALID_CODE,
-      };
+      return validationFailed(DISCOUNT_ERROR_CODES.INVALID_CODE);
     }
 
     // 2. Check if discount is active
     if (!discount.isActive) {
-      return {
-        valid: false,
-        errorCode: DISCOUNT_ERROR_CODES.CODE_INACTIVE,
-        message: DISCOUNT_ERROR_MESSAGES.CODE_INACTIVE,
-      };
+      return validationFailed(DISCOUNT_ERROR_CODES.CODE_INACTIVE);
     }
 
     // 3. Check if discount has expired
     if (discount.expiryDate < new Date()) {
-      return {
-        valid: false,
-        errorCode: DISCOUNT_ERROR_CODES.CODE_EXPIRED,
-        message: DISCOUNT_ERROR_MESSAGES.CODE_EXPIRED,
-      };
+      return validationFailed(DISCOUNT_ERROR_CODES.CODE_EXPIRED);
     }
 
     // 4. Check global usage limit
     if (discount.hasReachedGlobalLimit()) {
-      return {
-        valid: false,
-        errorCode: DISCOUNT_ERROR_CODES.USAGE_LIMIT_REACHED,
-        message: DISCOUNT_ERROR_MESSAGES.USAGE_LIMIT_REACHED,
-      };
+      return validationFailed(DISCOUNT_ERROR_CODES.USAGE_LIMIT_REACHED);
     }
 
     // 5. Check per-user usage limit
@@ -90,22 +111,14 @@ export async function validateDiscountCode(code, userId, cartData) {
       discount.usageType === "per_user" ? discount.maxUsesPerUser : 1;
 
     if (userUsageCount >= maxPerUser) {
-      return {
-        valid: false,
-        errorCode: DISCOUNT_ERROR_CODES.ALREADY_USED,
-        message: DISCOUNT_ERROR_MESSAGES.ALREADY_USED,
-      };
+      return validationFailed(DISCOUNT_ERROR_CODES.ALREADY_USED);
     }
 
     // 6. Check first order restriction
     if (discount.firstOrderOnly) {
       const orderCount = await countOrdersByUser(userId);
       if (orderCount > 0) {
-        return {
-          valid: false,
-          errorCode: DISCOUNT_ERROR_CODES.FIRST_ORDER_ONLY,
-          message: DISCOUNT_ERROR_MESSAGES.FIRST_ORDER_ONLY,
-        };
+        return validationFailed(DISCOUNT_ERROR_CODES.FIRST_ORDER_ONLY);
       }
     }
 
@@ -114,14 +127,13 @@ export async function validateDiscountCode(code, userId, cartData) {
       discount.minOrderValue !== null &&
       cartData.cartTotal < discount.minOrderValue
     ) {
-      return {
-        valid: false,
-        errorCode: DISCOUNT_ERROR_CODES.MIN_ORDER_NOT_MET,
-        message: DISCOUNT_ERROR_MESSAGES.MIN_ORDER_NOT_MET.replace(
+      return validationFailed(
+        DISCOUNT_ERROR_CODES.MIN_ORDER_NOT_MET,
+        DISCOUNT_ERROR_MESSAGES.MIN_ORDER_NOT_MET.replace(
           "{amount}",
           discount.minOrderValue.toFixed(2)
-        ),
-      };
+        )
+      );
     }
 
     // 8. Check minimum item count
@@ -129,14 +141,13 @@ export async function validateDiscountCode(code, userId, cartData) {
       discount.minItemCount !== null &&
       cartData.itemCount < discount.minItemCount
     ) {
-      return {
-        valid: false,
-        errorCode: DISCOUNT_ERROR_CODES.MIN_ITEMS_NOT_MET,
-        message: DISCOUNT_ERROR_MESSAGES.MIN_ITEMS_NOT_MET.replace(
+      return validationFailed(
+        DISCOUNT_ERROR_CODES.MIN_ITEMS_NOT_MET,
+        DISCOUNT_ERROR_MESSAGES.MIN_ITEMS_NOT_MET.replace(
           "{count}",
           discount.minItemCount
-        ),
-      };
+        )
+      );
     }
 
     // 9. Check product scope and calculate applicable amount
@@ -152,11 +163,7 @@ export async function validateDiscountCode(code, userId, cartData) {
       applicableItems = items;
 
       if (applicableAmount === 0) {
-        return {
-          valid: false,
-          errorCode: DISCOUNT_ERROR_CODES.NO_APPLICABLE_ITEMS,
-          message: DISCOUNT_ERROR_MESSAGES.NO_APPLICABLE_ITEMS,
-        };
+        return validationFailed(DISCOUNT_ERROR_CODES.NO_APPLICABLE_ITEMS);
       }
     }
 
