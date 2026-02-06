@@ -14,6 +14,7 @@ import { rateLimiters, routeLimiters } from "./config/rateLimiter.js";
 
 import adminRoutes from "./routes/admin.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import discountRoutes from "./routes/discount.routes.js";
 import favoritesRoutes from "./routes/favorites.routes.js";
 import orderRoutes from "./routes/orders.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
@@ -55,6 +56,7 @@ app.get("/", (req, res) => {
 // Rate limiters are applied per-route or per-route-group as needed
 app.use(`${API_PREFIX}/admin`, routeLimiters.admin, adminRoutes);
 app.use(`${API_PREFIX}/auth`, authRoutes);
+app.use(`${API_PREFIX}/discounts`, rateLimiters.general, discountRoutes);
 app.use(`${API_PREFIX}/favorites`, rateLimiters.general, favoritesRoutes);
 app.use(`${API_PREFIX}/orders`, routeLimiters.order, orderRoutes);
 
