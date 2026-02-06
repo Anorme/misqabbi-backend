@@ -11,6 +11,8 @@ import {
   sendAdminNewOrderNotification,
   sendCustomerStatusUpdateNotification,
 } from "../services/orderEmailService.js";
+import { incrementDiscountUsage } from "../models/discount.model.js";
+import { recordUsage } from "../models/discountUsage.model.js";
 import logger from "../config/logger.js";
 import { formatResponse } from "../utils/responseFormatter.js";
 
@@ -140,6 +142,15 @@ async function handleSuccessfulPayment(data) {
       return;
     }
 
+    // Prepare discount info if present
+    const discountInfo = transaction.orderData.discountId
+      ? {
+          discountId: transaction.orderData.discountId,
+          discountCode: transaction.orderData.discountCode,
+          discountAmount: transaction.orderData.discountAmount,
+        }
+      : null;
+
     // Create order using stored order data
     const order = await createOrderFromCart(
       transaction.user,
@@ -148,13 +159,39 @@ async function handleSuccessfulPayment(data) {
       transaction.orderData.totalPrice,
       "accepted", // Default status for new orders
       transaction.orderData.expressService || false,
-      transaction.orderData.expressFee || 0
+      transaction.orderData.expressFee || 0,
+      discountInfo
     );
 
     // Update order with payment reference
     order.paymentReference = reference;
     order.paymentStatus = "paid";
     await order.save();
+
+    // Record discount usage if a discount was applied
+    if (discountInfo && discountInfo.discountId) {
+      try {
+        // Record the usage
+        await recordUsage({
+          discountId: discountInfo.discountId,
+          userId: transaction.user,
+          amountSaved: discountInfo.discountAmount,
+          orderId: order._id,
+        });
+
+        // Increment the global usage counter
+        await incrementDiscountUsage(discountInfo.discountId);
+
+        logger.info(
+          `[payment.controller] Discount usage recorded for code: ${discountInfo.discountCode}, Order: ${order._id}`
+        );
+      } catch (discountError) {
+        // Log but don't fail the order creation if discount tracking fails
+        logger.error(
+          `[payment.controller] Error recording discount usage: ${discountError.message}`
+        );
+      }
+    }
 
     // Update transaction status and link order
     await updateTransactionStatus(
