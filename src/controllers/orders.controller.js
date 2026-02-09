@@ -246,6 +246,21 @@ export const initializeCheckout = async (req, res) => {
       calculatedTotalPrice + expressFee - discountAmount
     );
 
+    // Guard against zero-amount transactions (not supported by Transaction schema or Paystack)
+    if (finalTotal <= 0) {
+      logger.warn(
+        `[orders.controller] Attempted checkout with zero total for user ${userId} (discount likely covered full amount).`
+      );
+      return res.status(400).json(
+        formatResponse({
+          success: false,
+          errorCode: "ZERO_AMOUNT_TRANSACTION_NOT_ALLOWED",
+          error:
+            "This discount makes your order total zero. Please adjust your cart or remove the discount.",
+        })
+      );
+    }
+
     // Paystack amounts are in the smallest currency unit (pesewas).
     const amountInPesewas = convertToPesewas(finalTotal);
 
