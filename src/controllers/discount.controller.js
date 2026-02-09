@@ -195,6 +195,12 @@ export async function createDiscountAdmin(req, res) {
 
     // Validate expiry date
     const expiryDateObj = new Date(expiryDate);
+    if (isNaN(expiryDateObj.getTime())) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid expiry date format",
+      });
+    }
     if (expiryDateObj <= new Date()) {
       return res.status(400).json({
         success: false,
