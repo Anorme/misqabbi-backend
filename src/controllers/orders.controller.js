@@ -58,7 +58,9 @@ export const initializeCheckout = async (req, res) => {
         { isPublished: true }, // Published base products
         { isVariant: true }, // Variants (can be unpublished)
       ],
-    }).select("_id name price stock isVariant baseProduct isPublished"); // Include variant fields for validation
+    }).select(
+      "_id name price stock isVariant baseProduct isPublished category"
+    ); // Include variant fields + category for discount validation
 
     // Convert to a Set for O(1) membership checks when validating the incoming cart items.
     const validProductIds = new Set(
