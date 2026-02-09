@@ -1,43 +1,29 @@
-const allowedOrigins = {
-  development: [
-    "http://localhost:3000",
-    "https://www.misqabbigh.com",
-    "https://misqabbigh.com",
-    "https://development--misqabbigh.netlify.app",
-    "https://misqabbigh.netlify.app",
-    "https://checkout.paystack.com",
-    "https://api.paystack.co",
-  ],
-  staging: [
-    "https://misqabbigh.netlify.app",
-    "https://staging--misqabbigh.netlify.app",
-    "https://misqabbigh.com",
-    "https://www.misqabbigh.com",
-    "https://checkout.paystack.com",
-    "https://api.paystack.co",
-  ],
-  production: [
-    "https://shop.misqabbigh.com",
-    "https://www.misqabbigh.com",
-    "https://misqabbigh.com",
-    "https://misqabbigh.netlify.app",
-    "https://checkout.paystack.com",
-    "https://api.paystack.co",
-  ],
-};
+// Allowed origins = CLIENT_URL + CORS_ORIGINS (comma-separated) + Paystack.
+// Config is passed from app.js so this file stays testable and has no env dependency.
+const PAYSTACK_ORIGINS = [
+  "https://checkout.paystack.com",
+  "https://api.paystack.co",
+];
 
-const corsOptions = env => {
-  const whitelist = allowedOrigins[env] || [];
+function parseOrigins(value) {
+  if (!value || typeof value !== "string") return [];
+  return value
+    .split(",")
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+/**
+ * @param {{ CLIENT_URL: string, CORS_ORIGINS?: string }} config - Env config from app.
+ */
+const corsOptions = config => {
+  const extra = parseOrigins(config.CORS_ORIGINS);
+  const whitelist = [
+    ...new Set([config.CLIENT_URL, ...extra, ...PAYSTACK_ORIGINS]),
+  ];
+
   return {
-    /**
-     * CORS origin function to check if the incoming request's origin is
-     * allowed to make requests to the server.
-     *
-     * @param {string} origin - The origin of the incoming request.
-     * @param {Function} callback - Called with either `null` or an `Error`
-     *   object indicating whether the request is allowed or not.
-     */
-    origin: function (origin, callback) {
+    origin(origin, callback) {
       if (!origin || whitelist.includes(origin)) {
         callback(null, true);
       } else {
