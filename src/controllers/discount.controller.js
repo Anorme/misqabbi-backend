@@ -474,8 +474,8 @@ export async function updateDiscountAdmin(req, res) {
       const hasCategories =
         Array.isArray(finalCategories) && finalCategories.length > 0;
 
-      // If scope is changing to products, require at least one target
-      if (updateData.scope === "products" && !hasProducts && !hasCategories) {
+      // If effective scope is products, require at least one target (prevents clearing to empty when scope not in body)
+      if (effectiveScope === "products" && !hasProducts && !hasCategories) {
         return res.status(400).json({
           success: false,
           error:
