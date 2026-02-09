@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
 import User from "./user.mongo.js";
 import Order from "./order.mongo.js";
+import Discount from "./discount.mongo.js";
 import { OrderItemSchema } from "./schemas/orderItem.schema.js";
 import { ShippingInfoSchema } from "./schemas/shippingInfo.schema.js";
 
@@ -47,6 +48,14 @@ const TransactionSchema = new Schema(
       totalPrice: { type: Number, min: 0, required: true },
       expressService: { type: Boolean, default: false },
       expressFee: { type: Number, min: 0, default: 0 },
+      // Discount details (optional) used for order creation and usage tracking
+      discountCode: { type: String, default: null },
+      discountAmount: { type: Number, min: 0, default: 0 },
+      discountId: {
+        type: Schema.Types.ObjectId,
+        ref: Discount,
+        default: null,
+      },
     },
 
     // Store full Paystack response for debugging/audit
