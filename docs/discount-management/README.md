@@ -23,8 +23,7 @@ Only one discount code can be applied per order (no stacking).
 |-------|------|---------|
 | Routes | `src/routes/discount.routes.js` | User: validate discount |
 | Routes | `src/routes/admin.routes.js` | Admin: discount CRUD, stats, usage, generate code |
-| Controllers | `src/controllers/discountUser.controller.js` | User validate handler |
-| Controllers | `src/controllers/discount.controller.js` | Admin discount handlers |
+| Controllers | `src/controllers/discount.controller.js` | User validate handler + admin discount handlers |
 | Controllers | `src/controllers/orders.controller.js` | Checkout: discount validation and final total |
 | Controllers | `src/controllers/payment.controller.js` | Post-payment: record usage, increment counters |
 | Service | `src/services/discountService.js` | Validation and calculation logic |
