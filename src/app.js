@@ -45,7 +45,8 @@ app.use(
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors(corsOptions(env.NODE_ENV)));
+// CORS: CLIENT_URL + CORS_ORIGINS + Paystack (config passed from env).
+app.use(cors(corsOptions(env)));
 app.use(`${API_PREFIX}/api-docs`, serve, setup(swaggerSpec));
 
 app.get("/", (req, res) => {
