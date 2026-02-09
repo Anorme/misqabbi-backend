@@ -1,6 +1,6 @@
 import express from "express";
 import { authenticateToken } from "../middleware/index.js";
-import { validateDiscountHandler } from "../controllers/discountUser.controller.js";
+import { validateDiscountHandler } from "../controllers/discount.controller.js";
 
 const router = express.Router();
 
