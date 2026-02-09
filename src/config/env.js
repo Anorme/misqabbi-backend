@@ -45,6 +45,9 @@ const baseSchema = {
     default: "local",
   }),
 
+  /** Extra CORS origins, comma-separated (e.g. "https://a.com,https://b.com"). */
+  CORS_ORIGINS: str({ default: "" }),
+
   // Redis configuration
   REDIS_URL: str({ default: "" }),
   REDIS_HOST: str({ default: "localhost" }),
