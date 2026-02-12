@@ -4,6 +4,8 @@ import { variantProductValidator } from "../validators/variant.validator.js";
 import { orderValidator } from "../validators/order.validator.js";
 import { newsletterValidator } from "../validators/newsletter.validator.js";
 import { contactValidator } from "../validators/contact.validator.js";
+import { bespokeValidator } from "../validators/bespoke.validator.js";
+import { formatResponse } from "../utils/responseFormatter.js";
 
 export function validateUser(req, res, next) {
   const { error } = userValidator.validate(req.body, { abortEarly: false });
@@ -80,6 +82,18 @@ export function validateContact(req, res, next) {
     return res.status(400).json({
       errors: error.details.map(err => err.message),
     });
+  }
+  next();
+}
+
+export function validateBespoke(req, res, next) {
+  const { error } = bespokeValidator.validate(req.body, {
+    abortEarly: false,
+    allowUnknown: true,
+  });
+  if (error) {
+    const message = error.details[0]?.message ?? "Validation failed";
+    return res.status(400).json(formatResponse({ success: false, message }));
   }
   next();
 }
