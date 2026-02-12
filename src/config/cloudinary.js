@@ -19,6 +19,30 @@ export const productUploads = multer({
   }),
 });
 
+const BESPOKE_REFERENCE_MAX_SIZE = 10 * 1024 * 1024; // 10 MB per file
+const BESPOKE_REFERENCE_MAX_COUNT = 5;
+
+const bespokeReferenceFileFilter = (req, file, cb) => {
+  if (!file.mimetype || !file.mimetype.startsWith("image/")) {
+    cb(new Error("Only image files are allowed for reference photos"), false);
+    return;
+  }
+  cb(null, true);
+};
+
+export const bespokeReferenceUploads = multer({
+  storage: new CloudinaryStorage({
+    cloudinary,
+    params: {
+      folder: "misqabbi/bespoke",
+    },
+  }),
+  limits: {
+    fileSize: BESPOKE_REFERENCE_MAX_SIZE,
+  },
+  fileFilter: bespokeReferenceFileFilter,
+}).array("referencePhotos", BESPOKE_REFERENCE_MAX_COUNT);
+
 export async function deleteAssets(publicIds = []) {
   if (!Array.isArray(publicIds) || publicIds.length === 0) return;
   try {

@@ -71,3 +71,23 @@ export const attachProductImagesToBody = (req, res, next) => {
  * Alias for attachProductImagesToBody for backward compatibility
  */
 export const attachVariantImagesToBody = attachProductImagesToBody;
+
+/**
+ * After bespoke reference photo uploads (multer with referencePhotos field), map
+ * req.files to req.body.referencePhotoUrls (array of Cloudinary URLs) for validator and email template.
+ */
+export const attachBespokeReferencePhotoUrlsToBody = (req, res, next) => {
+  const files = Array.isArray(req.files) ? req.files : [];
+  if (files.length > 0) {
+    req.body.referencePhotoUrls = files.map(file => {
+      const publicId = file.filename;
+      return getOptimisedUrl(publicId);
+    });
+  } else {
+    req.body.referencePhotoUrls = [];
+  }
+  logger.info(
+    `[upload.middleware] Attached ${req.body.referencePhotoUrls?.length ?? 0} reference photo URL(s) to body`
+  );
+  next();
+};
