@@ -169,3 +169,54 @@ We're here for you every step of the way. If you have any questions or need assi
 With love and support,
 Your Girlies at Misqabbi 💕`;
 };
+
+/**
+ * Admin email for a new bespoke form submission (no persistence).
+ * @param {Object} payload - { fullName, email, phone, garmentType, garmentTypeOther, measurements, styleNotes, description, referencePhotoUrls }
+ */
+export const BESPOKE_EMAIL = payload => {
+  const {
+    fullName = "",
+    email = "",
+    phone = "",
+    garmentType = "",
+    garmentTypeOther = "",
+    measurements = "",
+    styleNotes = "",
+    description = "",
+    referencePhotoUrls = [],
+  } = payload;
+
+  const garmentLine =
+    garmentType === "other" && garmentTypeOther
+      ? `Garment type: Other (${garmentTypeOther})`
+      : garmentType
+        ? `Garment type: ${garmentType}`
+        : "";
+
+  const measurementsLine = measurements ? `Measurements:\n${measurements}` : "";
+  const styleNotesLine = styleNotes ? `Style notes:\n${styleNotes}` : "";
+  const photoLines =
+    referencePhotoUrls.length > 0
+      ? referencePhotoUrls
+          .map((url, i) => `Reference photo ${i + 1}: ${url}`)
+          .join("\n")
+      : "";
+
+  return `New Bespoke Submission
+
+You have received a new bespoke form submission:
+
+From: ${fullName}
+Email: ${email}
+${phone ? `Phone: ${phone}` : ""}
+${garmentLine ? `${garmentLine}\n` : ""}
+Description:
+${description}
+${measurementsLine ? `\n${measurementsLine}` : ""}
+${styleNotesLine ? `\n${styleNotesLine}` : ""}
+${photoLines ? `\nReference photos:\n${photoLines}` : ""}
+
+---
+This was sent via the Misqabbi bespoke form.`;
+};
