@@ -22,7 +22,6 @@ const router = express.Router();
  *       - Orders
  *     security:
  *       - bearerAuth: []
- *     description: Supports authenticated users and valid guest sessions.
  *     parameters:
  *       - in: query
  *         name: expressService
