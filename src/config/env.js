@@ -22,6 +22,7 @@ const baseSchema = {
   JWT_EXPIRES_IN: num(),
   ACCESS_TOKEN_EXPIRES_IN: num({ default: 900 }), // 15 minutes
   REFRESH_TOKEN_EXPIRES_IN: num({ default: 604800 }), // 7 days
+  GUEST_TOKEN_EXPIRES_IN: num({ default: 2592000 }), // 30 days
   GOOGLE_CLIENT_ID: str(),
   GOOGLE_CLIENT_SECRET: str(),
   GOOGLE_CALLBACK_URL: url(),

@@ -49,3 +49,15 @@ export function getRefreshTokenCookieOptions() {
       Number(env.REFRESH_TOKEN_EXPIRES_IN) * 1000 || 7 * 24 * 60 * 60 * 1000, // 7 days
   };
 }
+
+export function getGuestTokenCookieOptions() {
+  const opts = resolveOpts();
+  return {
+    httpOnly: true,
+    secure: opts.secure,
+    sameSite: opts.sameSite,
+    domain: opts.domain,
+    maxAge:
+      Number(env.GUEST_TOKEN_EXPIRES_IN) * 1000 || 30 * 24 * 60 * 60 * 1000,
+  };
+}

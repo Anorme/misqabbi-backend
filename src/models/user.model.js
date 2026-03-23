@@ -37,6 +37,24 @@ async function createGoogleUser({ email, googleId, displayName }) {
 }
 
 /**
+ * Create a lightweight guest user for anonymous checkout.
+ *
+ * @returns {Promise<Object>} - Newly created guest user document
+ */
+async function createGuestUser() {
+  try {
+    const user = new User({
+      isGuest: true,
+      guestLastSeenAt: new Date(),
+    });
+    return await user.save();
+  } catch (error) {
+    logger.error(`[users.model] Error creating guest user: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
  * Find a user by their email address.
  *
  * @param {string} email - Email to search for
@@ -78,7 +96,86 @@ async function findUserById(id) {
   }
 }
 
-export { createLocalUser, createGoogleUser, findUserByEmail, findUserById };
+/**
+ * Find an active (unmerged) guest user by ID.
+ *
+ * @param {string|ObjectId} id - Guest user ID
+ * @returns {Promise<Object|null>} - Guest user or null
+ */
+async function findActiveGuestUserById(id) {
+  try {
+    if (typeof id !== "string" && !Types.ObjectId.isValid(id)) {
+      logger.warn(`[users.model] Invalid guest ID format: ${id}`);
+      return null;
+    }
+    return await User.findOne({
+      _id: id,
+      isGuest: true,
+      guestMergedInto: null,
+    });
+  } catch (error) {
+    logger.error(
+      `[users.model] Error finding active guest by id ${id}: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+/**
+ * Touch guest activity timestamp.
+ *
+ * @param {string|ObjectId} guestUserId - Guest user ID
+ * @returns {Promise<Object|null>} - Updated guest document or null
+ */
+async function touchGuestLastSeen(guestUserId) {
+  try {
+    if (!Types.ObjectId.isValid(guestUserId)) return null;
+    return await User.findOneAndUpdate(
+      { _id: guestUserId, isGuest: true, guestMergedInto: null },
+      { guestLastSeenAt: new Date() },
+      { new: true }
+    );
+  } catch (error) {
+    logger.error(
+      `[users.model] Error touching guest last seen ${guestUserId}: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+/**
+ * Deletes stale unmerged guest users inactive before provided cutoff.
+ *
+ * @param {Date} cutoffDate - Guests last seen before this date are deleted
+ * @returns {Promise<number>} - Number of deleted guests
+ */
+async function deleteStaleGuests(cutoffDate) {
+  try {
+    const result = await User.deleteMany({
+      isGuest: true,
+      guestMergedInto: null,
+      $or: [
+        { guestLastSeenAt: { $lt: cutoffDate } },
+        { guestLastSeenAt: null, createdAt: { $lt: cutoffDate } },
+      ],
+    });
+    return result?.deletedCount || 0;
+  } catch (error) {
+    logger.error(`[users.model] Error deleting stale guests: ${error.message}`);
+    throw error;
+  }
+}
+
+export {
+  createLocalUser,
+  createGoogleUser,
+  createGuestUser,
+  findUserByEmail,
+  findUserById,
+  findActiveGuestUserById,
+  touchGuestLastSeen,
+  deleteStaleGuests,
+};
 
 // Admin listing helpers
 export async function getPaginatedUsers(page = 1, limit = 10, params = {}) {
