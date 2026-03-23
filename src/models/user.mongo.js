@@ -37,6 +37,11 @@ const favoriteItemSchema = new Schema(
  */
 const userSchema = new Schema(
   {
+    isGuest: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
     displayName: {
       type: String,
       trim: true,
@@ -44,8 +49,9 @@ const userSchema = new Schema(
     },
     email: {
       type: String,
-      required: true,
-      unique: true,
+      required: function () {
+        return !this.isGuest;
+      },
       lowercase: true,
       trim: true,
       match: EMAIL_REGEX,
@@ -74,6 +80,15 @@ const userSchema = new Schema(
     contact: { type: String },
     location: { type: String },
     profileComplete: { type: Boolean, default: false },
+    guestMergedInto: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    guestLastSeenAt: {
+      type: Date,
+      default: null,
+    },
 
     favorites: [favoriteItemSchema], // Embedded for fast access and frequent updates
     previousOrders: [
@@ -90,6 +105,15 @@ const userSchema = new Schema(
 userSchema.index(
   { displayName: "text", email: "text" },
   { name: "UserTextIndex" }
+);
+// Keep email unique for real users while allowing many guest users without email.
+userSchema.index(
+  { email: 1 },
+  {
+    unique: true,
+    name: "UniqueEmailForAccountUsers",
+    partialFilterExpression: { isGuest: false },
+  }
 );
 
 /**

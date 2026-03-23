@@ -17,11 +17,14 @@ import {
 import { formatResponse } from "../utils/responseFormatter.js";
 import {
   getAccessTokenCookieOptions,
+  getGuestTokenCookieOptions,
   getRefreshTokenCookieOptions,
 } from "../utils/getCookieOptions.js";
 
 import {
   createLocalUser,
+  createGuestUser,
+  findActiveGuestUserById,
   findUserByEmail,
   findUserById,
   getPaginatedUsers,
@@ -29,6 +32,8 @@ import {
   deleteUserById,
   updateUserRole,
 } from "../models/user.model.js";
+import { signGuestToken, verifyGuestToken } from "../services/jwtService.js";
+import { mergeGuestIntoUser } from "../services/guestMergeService.js";
 import ResetToken from "../models/resetToken.mongo.js";
 
 import { PASSWORD_RESET_EMAIL } from "../constants/emailTemplates.js";
@@ -68,6 +73,60 @@ export async function registerUser(req, res) {
       formatResponse({
         success: false,
         message: "Failed to register user",
+      })
+    );
+  }
+}
+
+/**
+ * @route   POST /auth/guest/session
+ * @desc    Creates or refreshes an anonymous guest session
+ * @access  Public
+ */
+export async function createGuestSession(req, res) {
+  try {
+    const guestCookie = req.cookies?.guest_token;
+    const guestCookieOptions = getGuestTokenCookieOptions();
+
+    if (guestCookie) {
+      try {
+        const payload = verifyGuestToken(guestCookie);
+        const existingGuest = await findActiveGuestUserById(payload.id);
+        if (existingGuest) {
+          existingGuest.guestLastSeenAt = new Date();
+          await existingGuest.save();
+          const refreshedToken = signGuestToken({ id: existingGuest._id });
+          res.cookie("guest_token", refreshedToken, guestCookieOptions);
+          return res.status(200).json(
+            formatResponse({
+              message: "Guest session refreshed",
+              data: { guestId: existingGuest._id },
+            })
+          );
+        }
+      } catch (error) {
+        logger.warn(
+          `[createGuestSession] Invalid existing guest token: ${error.message}`
+        );
+      }
+    }
+
+    const guestUser = await createGuestUser();
+    const guestToken = signGuestToken({ id: guestUser._id });
+    res.cookie("guest_token", guestToken, guestCookieOptions);
+
+    return res.status(201).json(
+      formatResponse({
+        message: "Guest session created",
+        data: { guestId: guestUser._id },
+      })
+    );
+  } catch (error) {
+    logger.error(`[createGuestSession] ${error.message}`);
+    return res.status(500).json(
+      formatResponse({
+        success: false,
+        message: "Failed to create guest session",
       })
     );
   }
@@ -198,6 +257,24 @@ export async function getCurrentUser(req, res) {
  */
 async function finalizeAuth(req, res) {
   try {
+    const guestCookie = req.cookies?.guest_token;
+    if (guestCookie) {
+      try {
+        const decodedGuest = verifyGuestToken(guestCookie);
+        const mergeResult = await mergeGuestIntoUser(
+          decodedGuest.id,
+          req.user._id
+        );
+        logger.info(
+          `[finalizeAuth] Guest merge result for user ${req.user._id}: ${JSON.stringify(mergeResult)}`
+        );
+      } catch (error) {
+        logger.warn(`[finalizeAuth] Guest merge skipped: ${error.message}`);
+      } finally {
+        res.clearCookie("guest_token", getGuestTokenCookieOptions());
+      }
+    }
+
     // Generate tokens
     const accessToken = signAccessToken({
       id: req.user._id,
