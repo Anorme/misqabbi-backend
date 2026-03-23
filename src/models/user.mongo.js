@@ -62,7 +62,7 @@ const userSchema = new Schema(
     password: {
       type: String,
       required: function () {
-        return !this.googleId;
+        return !this.isGuest && !this.googleId;
       },
       validate: {
         validator: function (value) {
