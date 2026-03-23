@@ -347,7 +347,7 @@ export const initializeCheckout = async (req, res) => {
 };
 
 export const getOrders = async (req, res) => {
-  const userId = req.user._id;
+  const userId = req.principal?._id;
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
   try {
@@ -370,7 +370,7 @@ export const getOrders = async (req, res) => {
 };
 
 export const getOrderById = async (req, res) => {
-  const userId = req.user._id;
+  const userId = req.principal?._id;
   const orderId = req.params.id;
   try {
     const order = await fetchOrderById(orderId, userId);
