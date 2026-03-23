@@ -1,5 +1,8 @@
 import express from "express";
-import { authenticateToken } from "../middleware/index.js";
+import {
+  authenticateOptionalPrincipal,
+  authenticateToken,
+} from "../middleware/index.js";
 import {
   initializeCheckout,
   getOrders,
@@ -19,6 +22,7 @@ const router = express.Router();
  *       - Orders
  *     security:
  *       - bearerAuth: []
+ *     description: Supports authenticated users and valid guest sessions.
  *     parameters:
  *       - in: query
  *         name: expressService
@@ -98,7 +102,12 @@ const router = express.Router();
  *       500:
  *         description: Server error
  */
-router.post("/checkout", validateOrder, authenticateToken, initializeCheckout);
+router.post(
+  "/checkout",
+  validateOrder,
+  authenticateOptionalPrincipal,
+  initializeCheckout
+);
 
 /**
  * @swagger

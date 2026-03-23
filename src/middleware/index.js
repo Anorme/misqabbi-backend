@@ -1,4 +1,13 @@
-import { authenticateToken, checkAdmin } from "./auth.middleware.js";
+import {
+  authenticateToken,
+  authenticateOptionalPrincipal,
+  checkAdmin,
+} from "./auth.middleware.js";
 import errorHandler from "./error.middleware.js";
 
-export { authenticateToken, checkAdmin, errorHandler };
+export {
+  authenticateToken,
+  authenticateOptionalPrincipal,
+  checkAdmin,
+  errorHandler,
+};
