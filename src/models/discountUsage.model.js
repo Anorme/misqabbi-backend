@@ -123,6 +123,25 @@ export async function getUsageByUser(userId, page = 1, limit = 20) {
   }
 }
 
+export async function reassignDiscountUsageToUser(
+  fromUserId,
+  toUserId,
+  session = null
+) {
+  try {
+    const query = { user: fromUserId };
+    const update = { user: toUserId };
+    const options = session ? { session } : {};
+    const result = await DiscountUsage.updateMany(query, update, options);
+    return result?.modifiedCount || 0;
+  } catch (error) {
+    logger.error(
+      `[discountUsage.model] Error reassigning usage from ${fromUserId} to ${toUserId}: ${error.message}`
+    );
+    throw error;
+  }
+}
+
 /**
  * Link an order to an existing usage record.
  * Used after payment is confirmed.
