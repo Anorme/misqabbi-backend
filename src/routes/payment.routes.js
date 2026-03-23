@@ -4,6 +4,7 @@ import {
   verifyPayment,
 } from "../controllers/payment.controller.js";
 import { routeLimiters } from "../config/rateLimiter.js";
+import { authenticateOptionalPrincipal } from "../middleware/index.js";
 
 const router = express.Router();
 
@@ -54,7 +55,7 @@ router.post("/webhook/paystack", handlePaystackWebhook);
  * /payment/verify/{reference}:
  *   get:
  *     summary: Verify payment status
- *     description: Manually verify payment status for a given transaction reference. Useful for frontend payment confirmation.
+ *     description: Manually verify payment status for a given transaction reference. Access is restricted to the owning authenticated user or guest session.
  *     tags:
  *       - Payment
  *     security:
@@ -94,6 +95,11 @@ router.post("/webhook/paystack", handlePaystackWebhook);
  *       500:
  *         description: Server error
  */
-router.get("/verify/:reference", routeLimiters.payment, verifyPayment);
+router.get(
+  "/verify/:reference",
+  routeLimiters.payment,
+  authenticateOptionalPrincipal,
+  verifyPayment
+);
 
 export default router;
