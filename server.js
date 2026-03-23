@@ -4,6 +4,7 @@ import http from "node:http";
 import app from "./src/app.js";
 
 import { mongoConnect } from "./src/services/mongo.js";
+import { scheduleGuestCleanup } from "./src/services/guestCleanupService.js";
 import logger from "./src/config/logger.js";
 
 const PORT = env.PORT || 5000;
@@ -25,6 +26,7 @@ async function startServer() {
     const server = http.createServer(app);
     server.listen(PORT, () => {
       console.log(`Server running at http://localhost:${PORT}`);
+      scheduleGuestCleanup();
     });
   } catch (error) {
     logger.error("Server startup failed:", {
