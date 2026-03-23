@@ -18,10 +18,9 @@ export async function mergeGuestIntoUser(guestUserId, realUserId) {
   session.startTransaction();
 
   try {
-    const [guestUser, realUser] = await Promise.all([
-      User.findById(guestUserId).session(session),
-      User.findById(realUserId).session(session),
-    ]);
+    // Sequential reads: MongoDB sessions must not run concurrent ops in a transaction.
+    const guestUser = await User.findById(guestUserId).session(session);
+    const realUser = await User.findById(realUserId).session(session);
 
     if (!realUser) {
       await session.abortTransaction();
@@ -38,12 +37,22 @@ export async function mergeGuestIntoUser(guestUserId, realUserId) {
       return { merged: false, reason: "already_merged" };
     }
 
-    const [ordersMoved, transactionsMoved, discountUsageMoved] =
-      await Promise.all([
-        reassignOrdersToUser(guestUser._id, realUser._id, session),
-        reassignTransactionsToUser(guestUser._id, realUser._id, session),
-        reassignDiscountUsageToUser(guestUser._id, realUser._id, session),
-      ]);
+    // Sequential writes: same session cannot be used in parallel inside a transaction.
+    const ordersMoved = await reassignOrdersToUser(
+      guestUser._id,
+      realUser._id,
+      session
+    );
+    const transactionsMoved = await reassignTransactionsToUser(
+      guestUser._id,
+      realUser._id,
+      session
+    );
+    const discountUsageMoved = await reassignDiscountUsageToUser(
+      guestUser._id,
+      realUser._id,
+      session
+    );
 
     guestUser.guestMergedInto = realUser._id;
     guestUser.guestLastSeenAt = new Date();
