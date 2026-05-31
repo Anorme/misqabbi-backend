@@ -1,6 +1,14 @@
 import { verifyToken } from "../services/jwtService.js";
-import { findUserById } from "../models/user.model.js";
-import { getAccessTokenCookieOptions } from "../utils/getCookieOptions.js";
+import { verifyGuestToken } from "../services/jwtService.js";
+import {
+  findUserById,
+  findActiveGuestUserById,
+  touchGuestLastSeen,
+} from "../models/user.model.js";
+import {
+  getAccessTokenCookieOptions,
+  getGuestTokenCookieOptions,
+} from "../utils/getCookieOptions.js";
 import logger from "../config/logger.js";
 
 /**
@@ -45,6 +53,56 @@ async function authenticateToken(req, res, next) {
 }
 
 /**
+ * Resolves request principal as either authenticated user or guest user.
+ * - Prefers authenticated user token when present and valid.
+ * - Falls back to guest token for anonymous checkout-capable flows.
+ */
+async function authenticateOptionalPrincipal(req, res, next) {
+  const authToken = req.cookies?.auth_token;
+  const guestToken = req.cookies?.guest_token;
+
+  if (authToken) {
+    try {
+      const decoded = verifyToken(authToken);
+      const user = await findUserById(decoded.id);
+      if (user) {
+        req.user = user;
+        req.principal = { type: "user", _id: user._id, user };
+        return next();
+      }
+      res.clearCookie("auth_token", getAccessTokenCookieOptions());
+    } catch (error) {
+      logger.warn(
+        `[auth.middleware] Optional principal auth token invalid: ${error.message}`
+      );
+      res.clearCookie("auth_token", getAccessTokenCookieOptions());
+    }
+  }
+
+  if (guestToken) {
+    try {
+      const decodedGuest = verifyGuestToken(guestToken);
+      const guest = await findActiveGuestUserById(decodedGuest.id);
+      if (guest) {
+        await touchGuestLastSeen(guest._id);
+        req.principal = { type: "guest", _id: guest._id, user: guest };
+        return next();
+      }
+      res.clearCookie("guest_token", getGuestTokenCookieOptions());
+    } catch (error) {
+      logger.warn(
+        `[auth.middleware] Optional principal guest token invalid: ${error.message}`
+      );
+      res.clearCookie("guest_token", getGuestTokenCookieOptions());
+    }
+  }
+
+  return res
+    .status(401)
+    .json({ message: "Authentication or guest session required" });
+}
+
+/**
  * Middleware to restrict access to admin-only routes.
  *
  * Assumes req.user is populated by authentication middleware
@@ -57,4 +115,4 @@ function checkAdmin(req, res, next) {
   next();
 }
 
-export { authenticateToken, checkAdmin };
+export { authenticateToken, authenticateOptionalPrincipal, checkAdmin };

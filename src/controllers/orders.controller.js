@@ -33,7 +33,8 @@ function parseBooleanQueryParam(value, defaultValue = false) {
 
 export const initializeCheckout = async (req, res) => {
   const { items, shippingInfo, discountCode } = req.body;
-  const userId = req.user._id;
+  const principal = req.principal;
+  const userId = principal?._id;
 
   // Parse expressService from query parameter (defaults to false)
   const expressService = parseBooleanQueryParam(
@@ -288,8 +289,20 @@ export const initializeCheckout = async (req, res) => {
     const transaction = await createTransaction(transactionData);
 
     // Initialize the Paystack transaction
+    const payerEmail =
+      principal?.type === "user" ? req.user?.email : shippingInfo?.email;
+
+    if (!payerEmail) {
+      return res.status(400).json(
+        formatResponse({
+          success: false,
+          error: "A valid email is required to initialize payment",
+        })
+      );
+    }
+
     const paystackResponse = await initializeTransaction(
-      req.user.email,
+      payerEmail,
       amountInPesewas,
       {
         userId: userId.toString(),
@@ -334,7 +347,7 @@ export const initializeCheckout = async (req, res) => {
 };
 
 export const getOrders = async (req, res) => {
-  const userId = req.user._id;
+  const userId = req.principal?._id;
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
   try {
@@ -357,7 +370,7 @@ export const getOrders = async (req, res) => {
 };
 
 export const getOrderById = async (req, res) => {
-  const userId = req.user._id;
+  const userId = req.principal?._id;
   const orderId = req.params.id;
   try {
     const order = await fetchOrderById(orderId, userId);

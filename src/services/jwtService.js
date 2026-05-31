@@ -17,4 +17,20 @@ function verifyToken(token) {
   return jwt.verify(token, env.JWT_SECRET);
 }
 
-export { signToken, signAccessToken, verifyToken };
+function signGuestToken(payload) {
+  return jwt.sign(payload, env.JWT_SECRET, {
+    expiresIn: Number(env.GUEST_TOKEN_EXPIRES_IN) || 30 * 24 * 60 * 60,
+  });
+}
+
+function verifyGuestToken(token) {
+  return jwt.verify(token, env.JWT_SECRET);
+}
+
+export {
+  signToken,
+  signAccessToken,
+  verifyToken,
+  signGuestToken,
+  verifyGuestToken,
+};

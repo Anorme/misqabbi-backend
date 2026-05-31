@@ -16,6 +16,15 @@ import { recordUsage } from "../models/discountUsage.model.js";
 import logger from "../config/logger.js";
 import { formatResponse } from "../utils/responseFormatter.js";
 
+function isTransactionOwnedByPrincipal(transaction, principalId) {
+  if (!transaction || !principalId) return false;
+  const txUserId =
+    typeof transaction.user === "object" && transaction.user?._id
+      ? transaction.user._id.toString()
+      : transaction.user?.toString();
+  return txUserId === principalId.toString();
+}
+
 /**
  * Handle Paystack webhook events
  * @param {Object} req - Express request object
@@ -254,6 +263,7 @@ async function handleFailedPayment(data) {
 export const verifyPayment = async (req, res) => {
   try {
     const { reference } = req.params;
+    const principalId = req.principal?._id;
 
     if (!reference) {
       return res.status(400).json(
@@ -276,6 +286,15 @@ export const verifyPayment = async (req, res) => {
       );
     }
 
+    if (!isTransactionOwnedByPrincipal(transaction, principalId)) {
+      return res.status(403).json(
+        formatResponse({
+          success: false,
+          error: "Access denied for this transaction",
+        })
+      );
+    }
+
     // If transaction is still pending, verify with Paystack
     if (transaction.status === "pending") {
       try {
@@ -291,6 +310,14 @@ export const verifyPayment = async (req, res) => {
 
           // Refetch transaction to get updated data
           const updatedTransaction = await getTransactionByReference(reference);
+          if (!isTransactionOwnedByPrincipal(updatedTransaction, principalId)) {
+            return res.status(403).json(
+              formatResponse({
+                success: false,
+                error: "Access denied for this transaction",
+              })
+            );
+          }
           return res.status(200).json(
             formatResponse({
               message: "Payment verified successfully",

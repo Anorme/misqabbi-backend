@@ -1,5 +1,5 @@
 import express from "express";
-import { authenticateToken } from "../middleware/index.js";
+import { authenticateOptionalPrincipal } from "../middleware/index.js";
 import {
   initializeCheckout,
   getOrders,
@@ -98,7 +98,12 @@ const router = express.Router();
  *       500:
  *         description: Server error
  */
-router.post("/checkout", validateOrder, authenticateToken, initializeCheckout);
+router.post(
+  "/checkout",
+  validateOrder,
+  authenticateOptionalPrincipal,
+  initializeCheckout
+);
 
 /**
  * @swagger
@@ -152,7 +157,7 @@ router.post("/checkout", validateOrder, authenticateToken, initializeCheckout);
  *               totalPages: 0
  *               currentPage: 1
  */
-router.get("/", authenticateToken, getOrders);
+router.get("/", authenticateOptionalPrincipal, getOrders);
 
 /**
  * @swagger
@@ -195,6 +200,6 @@ router.get("/", authenticateToken, getOrders);
  *                     quantity: 1
  *                     price: 100
  */
-router.get("/:id", authenticateToken, getOrderById);
+router.get("/:id", authenticateOptionalPrincipal, getOrderById);
 
 export default router;

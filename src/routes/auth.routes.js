@@ -3,6 +3,7 @@ import passport from "passport";
 
 import {
   forgotPassword,
+  createGuestSession,
   getCurrentUser,
   handleGoogleCallback,
   handleAuthSuccess,
@@ -105,6 +106,21 @@ const hydrateLimiter = createRateLimiter(200, {
  *                   description: Error message
  */
 router.post("/signup", routeLimiters.auth, validateUser, registerUser);
+/**
+ * @swagger
+ * /auth/guest/session:
+ *   post:
+ *     summary: Create or refresh anonymous guest session
+ *     description: Creates a guest identity for anonymous checkout or refreshes an existing guest session cookie.
+ *     tags:
+ *       - Users
+ *     responses:
+ *       200:
+ *         description: Guest session refreshed
+ *       201:
+ *         description: Guest session created
+ */
+router.post("/guest/session", routeLimiters.guestSession, createGuestSession);
 
 /**
  * @swagger

@@ -63,6 +63,7 @@ export const rateLimiters = {
 // Route-specific limiters (can be customized further if needed)
 export const routeLimiters = {
   auth: rateLimiters.strict, // 10 requests
+  guestSession: rateLimiters.veryStrict, // 5 requests
   newsletter: rateLimiters.veryStrict, // 5 requests
   order: rateLimiters.strict, // 10 requests
   payment: rateLimiters.strict, // 10 requests

@@ -164,6 +164,25 @@ export async function getOrdersByUser(userId) {
   }
 }
 
+export async function reassignOrdersToUser(
+  fromUserId,
+  toUserId,
+  session = null
+) {
+  try {
+    const query = { user: fromUserId };
+    const update = { user: toUserId };
+    const options = session ? { session } : {};
+    const result = await Order.updateMany(query, update, options);
+    return result?.modifiedCount || 0;
+  } catch (error) {
+    logger.error(
+      `[order.model] Error reassigning orders from ${fromUserId} to ${toUserId}: ${error.message}`
+    );
+    throw error;
+  }
+}
+
 export async function getPaginatedOrdersByUser(userId, page, limit) {
   try {
     const skip = (page - 1) * limit;

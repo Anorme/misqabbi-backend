@@ -96,6 +96,25 @@ export async function countTransactionsByUser(userId) {
   }
 }
 
+export async function reassignTransactionsToUser(
+  fromUserId,
+  toUserId,
+  session = null
+) {
+  try {
+    const query = { user: fromUserId };
+    const update = { user: toUserId };
+    const options = session ? { session } : {};
+    const result = await Transaction.updateMany(query, update, options);
+    return result?.modifiedCount || 0;
+  } catch (error) {
+    logger.error(
+      `[transaction.model] Error reassigning transactions from ${fromUserId} to ${toUserId}: ${error.message}`
+    );
+    throw error;
+  }
+}
+
 export async function getTransactionById(transactionId, userId) {
   try {
     const transaction = await Transaction.findOne({
