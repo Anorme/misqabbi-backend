@@ -18,7 +18,7 @@ import {
   assertNoDuplicateRegistration,
   resolveRegistrationEmail,
 } from "./eventRegistrationService.js";
-import { validateFormResponses } from "./formValidationService.js";
+import { validateFormSubmission } from "./formValidationService.js";
 import {
   assertEventTicketCheckoutAllowed,
   buildEventPurchaseData,
@@ -52,17 +52,22 @@ export async function initializeEventTicketCheckout({
   );
   assertNoDuplicateRegistration(existingRegistration);
 
-  let normalizedResponses = { builtinFields: {}, customAnswers: {} };
+  let normalizedGuestInfo = {};
+  let normalizedResponses = { customAnswers: {} };
   if (event.registrationFormId) {
-    const validation = validateFormResponses(
-      event.registrationFormId,
-      formResponses
-    );
+    const validation = validateFormSubmission(event.registrationFormId, {
+      identity: guestInfo,
+      customAnswers: formResponses?.customAnswers ?? {},
+      resolvedEmail: registrationEmail,
+    });
     if (!validation.valid) {
       throw new Error(validation.errors.join("; "));
     }
 
-    normalizedResponses = validation.normalizedResponses;
+    normalizedGuestInfo = validation.normalizedIdentity;
+    normalizedResponses = {
+      customAnswers: validation.normalizedCustomAnswers,
+    };
   }
 
   const ticketType = event.ticketTypes.id(ticketTypeId);
@@ -89,6 +94,7 @@ export async function initializeEventTicketCheckout({
     user: principal?._id ?? null,
     guestInfo: {
       ...guestInfo,
+      ...normalizedGuestInfo,
       email: registrationEmail,
     },
     formResponses: normalizedResponses,

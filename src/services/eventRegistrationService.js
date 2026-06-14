@@ -4,7 +4,7 @@ import {
 } from "../models/eventRegistration.model.js";
 import { getEventById } from "../models/event.model.js";
 import { hasCapacity } from "./eventCapacityService.js";
-import { validateFormResponses } from "./formValidationService.js";
+import { validateFormSubmission } from "./formValidationService.js";
 import { assertEventIsPublic } from "./eventPublicService.js";
 import {
   assertFreeEventRegistration,
@@ -20,7 +20,6 @@ export {
 } from "./eventRegistrationLogic.js";
 
 const EMPTY_FORM_RESPONSES = {
-  builtinFields: {},
   customAnswers: {},
 };
 
@@ -41,17 +40,22 @@ export async function registerForFreeEvent({
   );
   assertNoDuplicateRegistration(existingRegistration);
 
+  let normalizedGuestInfo = {};
   let normalizedResponses = EMPTY_FORM_RESPONSES;
   if (event.registrationFormId) {
-    const validation = validateFormResponses(
-      event.registrationFormId,
-      formResponses
-    );
+    const validation = validateFormSubmission(event.registrationFormId, {
+      identity: guestInfo,
+      customAnswers: formResponses?.customAnswers ?? {},
+      resolvedEmail: registrationEmail,
+    });
     if (!validation.valid) {
       throw new Error(validation.errors.join("; "));
     }
 
-    normalizedResponses = validation.normalizedResponses;
+    normalizedGuestInfo = validation.normalizedIdentity;
+    normalizedResponses = {
+      customAnswers: validation.normalizedCustomAnswers,
+    };
   }
 
   const hasRemainingCapacity = await hasCapacity(event, 1);
@@ -64,6 +68,7 @@ export async function registerForFreeEvent({
     user: principal?._id ?? null,
     guestInfo: {
       ...guestInfo,
+      ...normalizedGuestInfo,
       email: registrationEmail,
     },
     formResponses: normalizedResponses,
