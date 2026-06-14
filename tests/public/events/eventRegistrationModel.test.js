@@ -12,10 +12,6 @@ describe("EventRegistration model", () => {
         phone: "0240000000",
       },
       formResponses: {
-        builtinFields: {
-          name: "Ama",
-          email: "ama@example.com",
-        },
         customAnswers: {
           dietary: "vegetarian",
         },
@@ -27,6 +23,7 @@ describe("EventRegistration model", () => {
     expect(validationError).toBeUndefined();
     expect(registration.status).toBe("confirmed");
     expect(registration.guestInfo.email).toBe("ama@example.com");
+    expect(registration.formResponses.builtinFields).toBeUndefined();
     expect(registration.formResponses.customAnswers).toEqual({
       dietary: "vegetarian",
     });

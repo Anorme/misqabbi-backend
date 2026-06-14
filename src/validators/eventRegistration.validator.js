@@ -7,7 +7,9 @@ export const eventRegistrationValidator = Joi.object({
     phone: Joi.string().trim().allow("").optional(),
   }).default({}),
   formResponses: Joi.object({
-    builtinFields: Joi.object().unknown(true).default({}),
+    builtinFields: Joi.forbidden().messages({
+      "any.unknown": "formResponses.builtinFields is no longer supported",
+    }),
     customAnswers: Joi.object().unknown(true).default({}),
-  }).default({ builtinFields: {}, customAnswers: {} }),
+  }).default({ customAnswers: {} }),
 });
