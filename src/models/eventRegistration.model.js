@@ -103,3 +103,45 @@ export async function getEventRegistrationById(eventId, registrationId) {
     throw error;
   }
 }
+
+export async function getEventRegistrationByIdOnly(registrationId) {
+  try {
+    if (!Types.ObjectId.isValid(registrationId)) {
+      return null;
+    }
+
+    return await EventRegistration.findById(registrationId)
+      .populate({ path: "user", select: "displayName email contact" })
+      .populate({ path: "transaction", select: "reference amount status" });
+  } catch (error) {
+    logger.error(
+      `[eventRegistration.model] Error finding registration ${registrationId}: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+export async function updateEventRegistrationPayment(
+  registrationId,
+  { status, transactionId }
+) {
+  try {
+    if (!Types.ObjectId.isValid(registrationId)) {
+      return null;
+    }
+
+    const updates = {};
+    if (status) updates.status = status;
+    if (transactionId) updates.transaction = transactionId;
+
+    return await EventRegistration.findByIdAndUpdate(registrationId, updates, {
+      new: true,
+      runValidators: true,
+    });
+  } catch (error) {
+    logger.error(
+      `[eventRegistration.model] Error updating registration payment ${registrationId}: ${error.message}`
+    );
+    throw error;
+  }
+}
