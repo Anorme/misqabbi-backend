@@ -8,6 +8,10 @@ import {
   verifyWebhookSignature,
 } from "../services/paystackService.js";
 import {
+  cancelEventTicketRegistration,
+  confirmEventTicketPayment,
+} from "../services/eventCheckoutService.js";
+import {
   sendAdminNewOrderNotification,
   sendCustomerStatusUpdateNotification,
 } from "../services/orderEmailService.js";
@@ -120,10 +124,13 @@ async function handleSuccessfulPayment(data) {
       return;
     }
 
-    // Idempotent check: if order already exists, return early to prevent duplicates
-    if (transaction.status === "success" && transaction.order) {
+    // Idempotent check: if fulfillment already exists, return early to prevent duplicates
+    if (
+      transaction.status === "success" &&
+      (transaction.order || transaction.eventRegistration)
+    ) {
       logger.info(
-        `[payment.controller] Order already exists for transaction: ${reference}, Order: ${transaction.order}`
+        `[payment.controller] Payment already fulfilled for transaction: ${reference}`
       );
       return;
     }
@@ -148,6 +155,22 @@ async function handleSuccessfulPayment(data) {
         `[payment.controller] Paystack verification failed for reference: ${reference}`
       );
       await updateTransactionStatus(reference, "failed");
+      return;
+    }
+
+    if (transaction.purpose === "event_ticket") {
+      const registration = await confirmEventTicketPayment(transaction);
+      await updateTransactionStatus(
+        reference,
+        "success",
+        null,
+        verificationResult,
+        registration._id
+      );
+
+      logger.info(
+        `[payment.controller] Event ticket registration confirmed for transaction: ${reference}, Registration: ${registration._id}`
+      );
       return;
     }
 
@@ -242,6 +265,11 @@ async function handleFailedPayment(data) {
     const { reference } = data;
 
     // Update transaction status to failed
+    const transaction = await getTransactionByReference(reference);
+    if (transaction?.purpose === "event_ticket") {
+      await cancelEventTicketRegistration(transaction);
+    }
+
     await updateTransactionStatus(reference, "failed");
 
     logger.info(
@@ -324,6 +352,7 @@ export const verifyPayment = async (req, res) => {
               data: {
                 transaction: updatedTransaction,
                 order: updatedTransaction.order,
+                eventRegistration: updatedTransaction.eventRegistration,
               },
             })
           );
@@ -341,6 +370,7 @@ export const verifyPayment = async (req, res) => {
               data: {
                 transaction: updatedTransaction,
                 order: null,
+                eventRegistration: null,
               },
             })
           );
@@ -370,6 +400,7 @@ export const verifyPayment = async (req, res) => {
         data: {
           transaction,
           order: transaction.order,
+          eventRegistration: transaction.eventRegistration,
         },
       })
     );
