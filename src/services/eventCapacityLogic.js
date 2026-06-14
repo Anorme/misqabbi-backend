@@ -6,6 +6,10 @@ export function assertEventAcceptsRegistrations(event) {
   if (event.status === "cancelled") {
     throw new Error("Cancelled events do not accept registrations");
   }
+
+  if (event.status !== "published") {
+    throw new Error("Only published events accept registrations");
+  }
 }
 
 export function hasEventCapacity(
