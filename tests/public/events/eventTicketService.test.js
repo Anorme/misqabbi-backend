@@ -8,9 +8,10 @@ import {
   canDeleteTicketType,
   computeDefaultExpiry,
   isTicketPurchasable,
-} from "../../../src/services/eventTicketService.js";
+  recomputeAutoTicketExpiries,
+} from "../../../src/services/eventTicketLogic.js";
 
-describe("eventTicketService", () => {
+describe("eventTicketLogic", () => {
   const eventDate = "2026-08-01T18:00:00.000Z";
   const paidPublishedEvent = {
     type: "paid",
@@ -59,6 +60,33 @@ describe("eventTicketService", () => {
 
     expect(payload.expirySource).toBe("manual");
     expect(payload.expiresAt.toISOString()).toBe("2026-07-15T18:00:00.000Z");
+  });
+
+  it("recomputes only auto ticket expiries when the event date changes", () => {
+    const tickets = recomputeAutoTicketExpiries(
+      [
+        {
+          _id: "auto-ticket",
+          name: "Early Bird",
+          expiresAt: new Date("2026-08-02T18:00:00.000Z"),
+          expirySource: "auto",
+        },
+        {
+          _id: "manual-ticket",
+          name: "VIP",
+          expiresAt: new Date("2026-07-15T18:00:00.000Z"),
+          expirySource: "manual",
+        },
+      ],
+      "2026-09-01T18:00:00.000Z"
+    );
+
+    expect(tickets[0].expiresAt.toISOString()).toBe(
+      "2026-09-02T18:00:00.000Z"
+    );
+    expect(tickets[1].expiresAt.toISOString()).toBe(
+      "2026-07-15T18:00:00.000Z"
+    );
   });
 
   it("only allows deleting ticket types without sold tickets", () => {
