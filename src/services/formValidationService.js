@@ -1,1 +1,5 @@
-export { validateFormResponses } from "./formValidationLogic.js";
+export {
+  validateFormResponses,
+  validateFormSubmission,
+  validateIdentityInfo,
+} from "./formValidationLogic.js";

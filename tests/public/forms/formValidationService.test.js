@@ -1,5 +1,8 @@
 /*eslint-disable no-undef */
-import { validateFormResponses } from "../../../src/services/formValidationLogic.js";
+import {
+  validateFormResponses,
+  validateFormSubmission,
+} from "../../../src/services/formValidationLogic.js";
 
 describe("formValidationLogic", () => {
   const formSchema = {
@@ -31,9 +34,9 @@ describe("formValidationLogic", () => {
     ],
   };
 
-  it("validates and normalizes configured builtin fields and custom answers", () => {
-    const result = validateFormResponses(formSchema, {
-      builtinFields: {
+  it("validates and normalizes configured identity fields and custom answers", () => {
+    const result = validateFormSubmission(formSchema, {
+      identity: {
         name: "  Ama  ",
         email: "ama@example.com",
         phone: "  0240000000  ",
@@ -48,24 +51,22 @@ describe("formValidationLogic", () => {
     expect(result).toEqual({
       valid: true,
       errors: [],
-      normalizedResponses: {
-        builtinFields: {
-          name: "Ama",
-          email: "ama@example.com",
-          phone: "0240000000",
-        },
-        customAnswers: {
-          dietary: "vegetarian",
-          notes: "Seat near the front",
-          consent: false,
-        },
+      normalizedIdentity: {
+        name: "Ama",
+        email: "ama@example.com",
+        phone: "0240000000",
+      },
+      normalizedCustomAnswers: {
+        dietary: "vegetarian",
+        notes: "Seat near the front",
+        consent: false,
       },
     });
   });
 
-  it("reports missing required builtin fields and custom questions", () => {
-    const result = validateFormResponses(formSchema, {
-      builtinFields: {
+  it("reports missing required identity fields and custom questions", () => {
+    const result = validateFormSubmission(formSchema, {
+      identity: {
         phone: "0240000000",
       },
       customAnswers: {},
@@ -82,9 +83,9 @@ describe("formValidationLogic", () => {
     );
   });
 
-  it("rejects unknown builtin fields and custom answers", () => {
-    const result = validateFormResponses(formSchema, {
-      builtinFields: {
+  it("rejects unknown custom answers", () => {
+    const result = validateFormSubmission(formSchema, {
+      identity: {
         name: "Ama",
         email: "ama@example.com",
         age: 34,
@@ -98,16 +99,14 @@ describe("formValidationLogic", () => {
 
     expect(result.valid).toBe(false);
     expect(result.errors).toEqual(
-      expect.arrayContaining([
-        "Unknown builtin field submitted: age",
-        "Unknown custom question submitted: shirtSize",
-      ])
+      expect.arrayContaining(["Unknown custom question submitted: shirtSize"])
     );
+    expect(result.errors).not.toContain("Unknown builtin field submitted: age");
   });
 
   it("rejects select answers outside the configured options", () => {
-    const result = validateFormResponses(formSchema, {
-      builtinFields: {
+    const result = validateFormSubmission(formSchema, {
+      identity: {
         name: "Ama",
         email: "ama@example.com",
       },
@@ -123,9 +122,9 @@ describe("formValidationLogic", () => {
     );
   });
 
-  it("rejects invalid builtin field values", () => {
-    const result = validateFormResponses(formSchema, {
-      builtinFields: {
+  it("rejects invalid configured identity field values", () => {
+    const result = validateFormSubmission(formSchema, {
+      identity: {
         name: "Ama",
         email: "not-an-email",
       },
@@ -137,6 +136,43 @@ describe("formValidationLogic", () => {
 
     expect(result.valid).toBe(false);
     expect(result.errors).toContain("email is invalid");
+  });
+
+  it("uses a resolved email when validating logged-in registrations", () => {
+    const result = validateFormSubmission(formSchema, {
+      identity: {
+        name: "Ama",
+      },
+      resolvedEmail: "account@example.com",
+      customAnswers: {
+        dietary: "none",
+        consent: true,
+      },
+    });
+
+    expect(result.valid).toBe(true);
+    expect(result.normalizedIdentity).toEqual({
+      name: "Ama",
+      email: "account@example.com",
+    });
+  });
+
+  it("rejects legacy builtin field response submissions", () => {
+    const result = validateFormResponses(formSchema, {
+      builtinFields: {
+        name: "Ama",
+        email: "ama@example.com",
+      },
+      customAnswers: {
+        dietary: "none",
+        consent: true,
+      },
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain(
+      "formResponses.builtinFields is no longer supported"
+    );
   });
 
   it("validates the same registration form schema for free and paid event responses", () => {
@@ -155,8 +191,8 @@ describe("formValidationLogic", () => {
       ],
     };
 
-    const freeEventResponse = validateFormResponses(registrationForm, {
-      builtinFields: {
+    const freeEventResponse = validateFormSubmission(registrationForm, {
+      identity: {
         name: "Ama",
         email: "ama@example.com",
       },
@@ -164,8 +200,8 @@ describe("formValidationLogic", () => {
         attendanceReason: "To learn",
       },
     });
-    const paidEventResponse = validateFormResponses(registrationForm, {
-      builtinFields: {
+    const paidEventResponse = validateFormSubmission(registrationForm, {
+      identity: {
         name: "Kojo",
         email: "kojo@example.com",
       },
