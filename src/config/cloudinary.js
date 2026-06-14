@@ -19,6 +19,15 @@ export const productUploads = multer({
   }),
 });
 
+export const eventBannerUploads = multer({
+  storage: new CloudinaryStorage({
+    cloudinary,
+    params: {
+      folder: "misqabbi/events",
+    },
+  }),
+});
+
 const BESPOKE_REFERENCE_MAX_SIZE = 10 * 1024 * 1024; // 10 MB per file
 const BESPOKE_REFERENCE_MAX_COUNT = 5;
 

@@ -72,6 +72,23 @@ export const attachProductImagesToBody = (req, res, next) => {
  */
 export const attachVariantImagesToBody = attachProductImagesToBody;
 
+export const attachEventBannerToBody = (req, res, next) => {
+  const bannerFile = req.files?.banner?.[0] || req.file;
+
+  if (bannerFile) {
+    const publicId = bannerFile.filename;
+    req.body.banner = {
+      url: getOptimisedUrl(publicId),
+      publicId,
+    };
+  }
+
+  logger.info(
+    `[upload.middleware] Attached event banner: ${req.body.banner ? "yes" : "no"}`
+  );
+  next();
+};
+
 /**
  * After bespoke reference photo uploads (multer with referencePhotos field), map
  * req.files to req.body.referencePhotoUrls (array of Cloudinary URLs) for validator and email template.
