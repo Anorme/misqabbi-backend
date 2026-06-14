@@ -2,9 +2,9 @@
 import {
   assertVolunteerApplicationStatusTransition,
   canTransitionVolunteerApplicationStatus,
-} from "../../../src/services/volunteerApplicationService.js";
+} from "../../../src/services/volunteerApplicationLogic.js";
 
-describe("volunteerApplicationService", () => {
+describe("volunteerApplicationLogic", () => {
   it("allows pending applications to be accepted or rejected", () => {
     expect(canTransitionVolunteerApplicationStatus("pending", "accepted")).toBe(
       true
