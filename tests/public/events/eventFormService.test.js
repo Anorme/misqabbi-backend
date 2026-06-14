@@ -32,11 +32,23 @@ describe("eventFormService", () => {
     expect(
       getLinkedFormId({ registrationFormId: "64a000000000000000000002" })
     ).toBe("64a000000000000000000002");
+    expect(
+      getLinkedFormId(
+        { volunteerFormId: "64a000000000000000000003" },
+        "volunteerFormId"
+      )
+    ).toBe("64a000000000000000000003");
   });
 
   it("reports whether an event already has a linked form", () => {
     expect(
       hasLinkedForm({ registrationFormId: "64a000000000000000000002" })
+    ).toBe(true);
+    expect(
+      hasLinkedForm(
+        { volunteerFormId: "64a000000000000000000003" },
+        "volunteerFormId"
+      )
     ).toBe(true);
     expect(hasLinkedForm({ registrationFormId: null })).toBe(false);
   });
