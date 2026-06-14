@@ -138,4 +138,43 @@ describe("formValidationService", () => {
     expect(result.valid).toBe(false);
     expect(result.errors).toContain("email is invalid");
   });
+
+  it("validates the same registration form schema for free and paid event responses", () => {
+    const registrationForm = {
+      builtinFields: [
+        { field: "name", required: true },
+        { field: "email", required: true },
+      ],
+      customQuestions: [
+        {
+          id: "attendanceReason",
+          label: "Why are you attending?",
+          type: "text",
+          required: true,
+        },
+      ],
+    };
+
+    const freeEventResponse = validateFormResponses(registrationForm, {
+      builtinFields: {
+        name: "Ama",
+        email: "ama@example.com",
+      },
+      customAnswers: {
+        attendanceReason: "To learn",
+      },
+    });
+    const paidEventResponse = validateFormResponses(registrationForm, {
+      builtinFields: {
+        name: "Kojo",
+        email: "kojo@example.com",
+      },
+      customAnswers: {
+        attendanceReason: "Networking",
+      },
+    });
+
+    expect(freeEventResponse.valid).toBe(true);
+    expect(paidEventResponse.valid).toBe(true);
+  });
 });
