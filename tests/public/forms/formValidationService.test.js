@@ -1,7 +1,7 @@
 /*eslint-disable no-undef */
-import { validateFormResponses } from "../../../src/services/formValidationService.js";
+import { validateFormResponses } from "../../../src/services/formValidationLogic.js";
 
-describe("formValidationService", () => {
+describe("formValidationLogic", () => {
   const formSchema = {
     builtinFields: [
       { field: "name", required: true },
