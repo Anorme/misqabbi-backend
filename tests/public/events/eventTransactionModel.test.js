@@ -46,4 +46,26 @@ describe("Transaction event ticket fields", () => {
 
     expect(transaction.purpose).toBe("order");
   });
+
+  it("allows pending event ticket transactions to be abandoned", () => {
+    const transaction = new Transaction({
+      reference: "MISQ_EVENT_ABANDONED",
+      user: new Types.ObjectId(),
+      amount: 10000,
+      currency: "GHS",
+      status: "abandoned",
+      purpose: "event_ticket",
+      eventPurchaseData: {
+        eventId: new Types.ObjectId(),
+        ticketTypeId: new Types.ObjectId(),
+        quantity: 2,
+        ticketName: "Early Bird",
+        pricePerTicket: 5000,
+        totalPrice: 10000,
+      },
+      eventRegistration: new Types.ObjectId(),
+    });
+
+    expect(transaction.validateSync()).toBeUndefined();
+  });
 });

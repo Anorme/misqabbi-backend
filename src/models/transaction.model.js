@@ -124,6 +124,44 @@ export async function reassignTransactionsToUser(
   }
 }
 
+export async function abandonPendingEventTicketTransactions(eventId) {
+  try {
+    const result = await Transaction.updateMany(
+      {
+        purpose: "event_ticket",
+        status: "pending",
+        "eventPurchaseData.eventId": eventId,
+      },
+      { status: "abandoned" }
+    );
+
+    return result?.modifiedCount || 0;
+  } catch (error) {
+    logger.error(
+      `[transaction.model] Error abandoning pending event ticket transactions for event ${eventId}: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+export async function getPendingEventTicketRegistrationIds(eventId) {
+  try {
+    const transactions = await Transaction.find({
+      purpose: "event_ticket",
+      status: "pending",
+      "eventPurchaseData.eventId": eventId,
+      eventRegistration: { $ne: null },
+    }).select("eventRegistration");
+
+    return transactions.map(transaction => transaction.eventRegistration);
+  } catch (error) {
+    logger.error(
+      `[transaction.model] Error fetching pending event ticket registrations for event ${eventId}: ${error.message}`
+    );
+    throw error;
+  }
+}
+
 export async function getTransactionById(transactionId, userId) {
   try {
     const transaction = await Transaction.findOne({
