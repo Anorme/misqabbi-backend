@@ -4,6 +4,7 @@ import { authenticateToken, checkAdmin } from "../middleware/index.js";
 import {
   validateEvent,
   validateEventStatus,
+  validateEventTicketType,
   validateProduct,
   validateVariantProduct,
 } from "../middleware/validator.middleware.js";
@@ -30,9 +31,12 @@ import {
 } from "../controllers/discount.controller.js";
 import {
   createEventAdmin,
+  addEventTicketTypeAdmin,
+  deleteEventTicketTypeAdmin,
   getEventByIdAdmin,
   getEventsAdmin,
   updateEventAdmin,
+  updateEventTicketTypeAdmin,
   updateEventStatusAdmin,
 } from "../controllers/events.admin.controller.js";
 import {
@@ -168,6 +172,29 @@ router.patch(
   checkAdmin,
   validateEventStatus,
   updateEventStatusAdmin
+);
+
+router.post(
+  "/events/:id/ticket-types",
+  authenticateToken,
+  checkAdmin,
+  validateEventTicketType,
+  addEventTicketTypeAdmin
+);
+
+router.patch(
+  "/events/:id/ticket-types/:ticketTypeId",
+  authenticateToken,
+  checkAdmin,
+  validateEventTicketType,
+  updateEventTicketTypeAdmin
+);
+
+router.delete(
+  "/events/:id/ticket-types/:ticketTypeId",
+  authenticateToken,
+  checkAdmin,
+  deleteEventTicketTypeAdmin
 );
 
 /**
