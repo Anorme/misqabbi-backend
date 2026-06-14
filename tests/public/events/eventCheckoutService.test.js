@@ -4,9 +4,9 @@ import {
   buildEventPurchaseData,
   calculateTicketPurchaseAmount,
   getPayerEmail,
-} from "../../../src/services/eventCheckoutService.js";
+} from "../../../src/services/eventCheckoutLogic.js";
 
-describe("eventCheckoutService", () => {
+describe("eventCheckoutLogic", () => {
   const event = {
     _id: "64a000000000000000000010",
     type: "paid",
