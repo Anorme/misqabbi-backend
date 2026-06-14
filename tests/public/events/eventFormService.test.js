@@ -3,9 +3,9 @@ import {
   assertEventSupportsRegistrationForm,
   getLinkedFormId,
   hasLinkedForm,
-} from "../../../src/services/eventFormService.js";
+} from "../../../src/services/eventFormLogic.js";
 
-describe("eventFormService", () => {
+describe("eventFormLogic", () => {
   it("allows registration forms for free and paid events", () => {
     expect(() =>
       assertEventSupportsRegistrationForm({ type: "free" })
