@@ -16,10 +16,13 @@ export async function createTransaction(transactionData) {
 
 export async function getTransactionByReference(reference) {
   try {
-    const transaction = await Transaction.findOne({ reference }).populate({
-      path: "user",
-      select: "name email",
-    });
+    const transaction = await Transaction.findOne({ reference })
+      .populate({
+        path: "user",
+        select: "name email displayName isGuest",
+      })
+      .populate({ path: "order" })
+      .populate({ path: "eventRegistration" });
     return transaction;
   } catch (error) {
     logger.warn(
@@ -33,13 +36,18 @@ export async function updateTransactionStatus(
   reference,
   status,
   orderId = null,
-  paystackResponse = null
+  paystackResponse = null,
+  eventRegistrationId = null
 ) {
   try {
     const updateData = { status };
 
     if (orderId) {
       updateData.order = orderId;
+    }
+
+    if (eventRegistrationId) {
+      updateData.eventRegistration = eventRegistrationId;
     }
 
     if (paystackResponse) {
@@ -54,8 +62,9 @@ export async function updateTransactionStatus(
         runValidators: true,
       }
     )
-      .populate({ path: "user", select: "name email" })
-      .populate({ path: "order" });
+      .populate({ path: "user", select: "name email displayName isGuest" })
+      .populate({ path: "order" })
+      .populate({ path: "eventRegistration" });
 
     return updatedTransaction;
   } catch (error) {
