@@ -5,6 +5,10 @@ import { orderValidator } from "../validators/order.validator.js";
 import { newsletterValidator } from "../validators/newsletter.validator.js";
 import { contactValidator } from "../validators/contact.validator.js";
 import { bespokeValidator } from "../validators/bespoke.validator.js";
+import {
+  eventStatusValidator,
+  eventValidator,
+} from "../validators/event.validator.js";
 import { formatResponse } from "../utils/responseFormatter.js";
 
 export function validateUser(req, res, next) {
@@ -95,5 +99,48 @@ export function validateBespoke(req, res, next) {
     const message = error.details[0]?.message ?? "Validation failed";
     return res.status(400).json(formatResponse({ success: false, message }));
   }
+  next();
+}
+
+export function validateEvent(req, res, next) {
+  const isUpdate = req.method === "PATCH" || req.method === "PUT";
+  const schema = isUpdate
+    ? eventValidator.fork(
+        ["name", "description", "eventDate", "type", "maxAttendees"],
+        fieldSchema => fieldSchema.optional()
+      )
+    : eventValidator;
+
+  const { error } = schema.validate(req.body, {
+    abortEarly: false,
+    allowUnknown: true,
+  });
+
+  if (error) {
+    return res.status(400).json(
+      formatResponse({
+        success: false,
+        errors: error.details.map(err => err.message),
+      })
+    );
+  }
+
+  next();
+}
+
+export function validateEventStatus(req, res, next) {
+  const { error } = eventStatusValidator.validate(req.body, {
+    abortEarly: false,
+  });
+
+  if (error) {
+    return res.status(400).json(
+      formatResponse({
+        success: false,
+        errors: error.details.map(err => err.message),
+      })
+    );
+  }
+
   next();
 }
