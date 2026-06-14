@@ -2,14 +2,17 @@ import express from "express";
 
 import { authenticateToken, checkAdmin } from "../middleware/index.js";
 import {
+  validateEvent,
+  validateEventStatus,
   validateProduct,
   validateVariantProduct,
 } from "../middleware/validator.middleware.js";
 import {
+  attachEventBannerToBody,
   attachVariantImagesToBody,
   attachProductImagesToBody,
 } from "../middleware/upload.middleware.js";
-import { productUploads } from "../config/cloudinary.js";
+import { eventBannerUploads, productUploads } from "../config/cloudinary.js";
 
 import {
   getUserAnalyticsHandler,
@@ -25,6 +28,13 @@ import {
   getDiscountUsageAdmin,
   getDiscountStatsAdmin,
 } from "../controllers/discount.controller.js";
+import {
+  createEventAdmin,
+  getEventByIdAdmin,
+  getEventsAdmin,
+  updateEventAdmin,
+  updateEventStatusAdmin,
+} from "../controllers/events.admin.controller.js";
 import {
   getAllOrdersAdmin,
   updateOrderStatusAdmin,
@@ -126,6 +136,38 @@ router.get(
   authenticateToken,
   checkAdmin,
   getAdminDashboardHandler
+);
+
+router.post(
+  "/events",
+  authenticateToken,
+  checkAdmin,
+  eventBannerUploads.fields([{ name: "banner", maxCount: 1 }]),
+  attachEventBannerToBody,
+  validateEvent,
+  createEventAdmin
+);
+
+router.get("/events", authenticateToken, checkAdmin, getEventsAdmin);
+
+router.get("/events/:id", authenticateToken, checkAdmin, getEventByIdAdmin);
+
+router.patch(
+  "/events/:id",
+  authenticateToken,
+  checkAdmin,
+  eventBannerUploads.fields([{ name: "banner", maxCount: 1 }]),
+  attachEventBannerToBody,
+  validateEvent,
+  updateEventAdmin
+);
+
+router.patch(
+  "/events/:id/status",
+  authenticateToken,
+  checkAdmin,
+  validateEventStatus,
+  updateEventStatusAdmin
 );
 
 /**
