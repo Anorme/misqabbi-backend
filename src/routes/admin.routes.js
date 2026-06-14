@@ -35,6 +35,8 @@ import {
   createEventAdmin,
   addEventTicketTypeAdmin,
   deleteEventTicketTypeAdmin,
+  getEventAttendeeByIdAdmin,
+  getEventAttendeesAdmin,
   getEventByIdAdmin,
   getEventRegistrationFormAdmin,
   getEventVolunteerFormAdmin,
@@ -233,6 +235,20 @@ router.patch(
   checkAdmin,
   validateVolunteerApplicationStatus,
   updateVolunteerApplicationStatusAdmin
+);
+
+router.get(
+  "/events/:id/attendees",
+  authenticateToken,
+  checkAdmin,
+  getEventAttendeesAdmin
+);
+
+router.get(
+  "/events/:id/attendees/:registrationId",
+  authenticateToken,
+  checkAdmin,
+  getEventAttendeeByIdAdmin
 );
 
 router.post(
