@@ -1,14 +1,24 @@
 import {
+  addTicketTypeToEvent,
   countEvents,
   createEvent,
+  deleteEventTicketType,
   getEventById,
   getPaginatedEvents,
   updateEvent,
+  updateEventTicketType,
   updateEventStatus,
 } from "../models/event.model.js";
 import { deleteAssets } from "../config/cloudinary.js";
 import logger from "../config/logger.js";
 import { assertEventStatusTransition } from "../services/eventStatusService.js";
+import {
+  assertCanDeleteTicketType,
+  assertCanUpdateTicketType,
+  assertPaidEventCanPublish,
+  assertPaidEventSupportsTickets,
+  buildTicketTypePayload,
+} from "../services/eventTicketService.js";
 import { formatResponse } from "../utils/responseFormatter.js";
 
 export async function createEventAdmin(req, res) {
@@ -168,6 +178,9 @@ export async function updateEventStatusAdmin(req, res) {
     }
 
     assertEventStatusTransition(existing.status, req.body.status);
+    if (req.body.status === "published") {
+      assertPaidEventCanPublish(existing);
+    }
 
     const event = await updateEventStatus(req.params.id, req.body.status);
 
@@ -182,6 +195,107 @@ export async function updateEventStatusAdmin(req, res) {
       `[events.admin.controller] Error updating event status ${req.params.id}: ${error.message}`
     );
     res.status(400).json(
+      formatResponse({
+        success: false,
+        error: error.message,
+      })
+    );
+  }
+}
+
+export async function addEventTicketTypeAdmin(req, res) {
+  try {
+    const event = await getEventById(req.params.id);
+    assertPaidEventSupportsTickets(event);
+
+    const ticketTypePayload = buildTicketTypePayload(req.body, event);
+    const updatedEvent = await addTicketTypeToEvent(
+      req.params.id,
+      ticketTypePayload
+    );
+
+    res.status(201).json(
+      formatResponse({
+        message: "Ticket type added successfully",
+        data: updatedEvent,
+      })
+    );
+  } catch (error) {
+    logger.error(
+      `[events.admin.controller] Error adding ticket type to event ${req.params.id}: ${error.message}`
+    );
+    res.status(error.message === "Event not found" ? 404 : 400).json(
+      formatResponse({
+        success: false,
+        error: error.message,
+      })
+    );
+  }
+}
+
+export async function updateEventTicketTypeAdmin(req, res) {
+  try {
+    const event = await getEventById(req.params.id);
+    assertPaidEventSupportsTickets(event);
+
+    const ticketType = event.ticketTypes.id(req.params.ticketTypeId);
+    assertCanUpdateTicketType(ticketType, req.body);
+
+    const updates = { ...req.body };
+    if (updates.expiresAt) {
+      updates.expiresAt = new Date(updates.expiresAt);
+      updates.expirySource = "manual";
+    }
+
+    const result = await updateEventTicketType(
+      req.params.id,
+      req.params.ticketTypeId,
+      updates
+    );
+
+    res.status(200).json(
+      formatResponse({
+        message: "Ticket type updated successfully",
+        data: result.event,
+      })
+    );
+  } catch (error) {
+    logger.error(
+      `[events.admin.controller] Error updating ticket type ${req.params.ticketTypeId}: ${error.message}`
+    );
+    res.status(error.message === "Event not found" ? 404 : 400).json(
+      formatResponse({
+        success: false,
+        error: error.message,
+      })
+    );
+  }
+}
+
+export async function deleteEventTicketTypeAdmin(req, res) {
+  try {
+    const event = await getEventById(req.params.id);
+    assertPaidEventSupportsTickets(event);
+
+    const ticketType = event.ticketTypes.id(req.params.ticketTypeId);
+    assertCanDeleteTicketType(ticketType);
+
+    const result = await deleteEventTicketType(
+      req.params.id,
+      req.params.ticketTypeId
+    );
+
+    res.status(200).json(
+      formatResponse({
+        message: "Ticket type deleted successfully",
+        data: result.event,
+      })
+    );
+  } catch (error) {
+    logger.error(
+      `[events.admin.controller] Error deleting ticket type ${req.params.ticketTypeId}: ${error.message}`
+    );
+    res.status(error.message === "Event not found" ? 404 : 400).json(
       formatResponse({
         success: false,
         error: error.message,
