@@ -41,11 +41,18 @@ const TransactionSchema = new Schema(
       default: "pending",
     },
 
+    purpose: {
+      type: String,
+      enum: ["order", "event_ticket"],
+      default: "order",
+      index: true,
+    },
+
     // Store order data for creating order after successful payment
     orderData: {
       items: [OrderItemSchema],
       shippingInfo: ShippingInfoSchema,
-      totalPrice: { type: Number, min: 0, required: true },
+      totalPrice: { type: Number, min: 0 },
       expressService: { type: Boolean, default: false },
       expressFee: { type: Number, min: 0, default: 0 },
       // Discount details (optional) used for order creation and usage tracking
@@ -54,6 +61,38 @@ const TransactionSchema = new Schema(
       discountId: {
         type: Schema.Types.ObjectId,
         ref: Discount,
+        default: null,
+      },
+    },
+
+    eventPurchaseData: {
+      eventId: {
+        type: Schema.Types.ObjectId,
+        ref: "Event",
+        default: null,
+      },
+      ticketTypeId: {
+        type: Schema.Types.ObjectId,
+        default: null,
+      },
+      quantity: {
+        type: Number,
+        min: 1,
+        default: null,
+      },
+      ticketName: {
+        type: String,
+        trim: true,
+        default: null,
+      },
+      pricePerTicket: {
+        type: Number,
+        min: 1,
+        default: null,
+      },
+      totalPrice: {
+        type: Number,
+        min: 1,
         default: null,
       },
     },
@@ -67,6 +106,12 @@ const TransactionSchema = new Schema(
     order: {
       type: Schema.Types.ObjectId,
       ref: Order,
+      default: null,
+    },
+
+    eventRegistration: {
+      type: Schema.Types.ObjectId,
+      ref: "EventRegistration",
       default: null,
     },
   },
