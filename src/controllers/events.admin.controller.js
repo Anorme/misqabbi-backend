@@ -156,9 +156,12 @@ export async function updateEventAdmin(req, res) {
 
     const payload = { ...req.body };
 
-    if (payload.banner && existing.banner?.publicId) {
+    if (payload.banner !== undefined && existing.banner?.publicId) {
+      const incomingPublicId = payload.banner?.publicId ?? null;
       try {
-        await deleteAssets([existing.banner.publicId]);
+        if (existing.banner.publicId !== incomingPublicId) {
+          await deleteAssets([existing.banner.publicId]);
+        }
       } catch (error) {
         logger.warn(
           `[events.admin.controller] Failed to delete replaced event banner ${existing._id}: ${error.message}`
