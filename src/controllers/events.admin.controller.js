@@ -34,6 +34,7 @@ import {
   getLinkedFormId,
 } from "../services/eventFormService.js";
 import { assertEventStatusTransition } from "../services/eventStatusService.js";
+import { initializeEventTicketCheckout } from "../services/eventCheckoutService.js";
 import {
   assertCanDeleteTicketType,
   assertCanUpdateTicketType,
@@ -695,6 +696,41 @@ export async function getEventAttendeeByIdAdmin(req, res) {
       formatResponse({
         success: false,
         error: "Failed to load attendee",
+      })
+    );
+  }
+}
+
+export async function initializeEventTicketCheckoutAdmin(req, res) {
+  try {
+    const principal = {
+      type: "user",
+      _id: req.user._id,
+      user: req.user,
+    };
+    const checkout = await initializeEventTicketCheckout({
+      eventId: req.params.id,
+      principal,
+      ticketTypeId: req.body.ticketTypeId,
+      quantity: req.body.quantity,
+      guestInfo: req.body.guestInfo,
+      formResponses: req.body.formResponses,
+    });
+
+    res.status(200).json(
+      formatResponse({
+        message: "Event ticket payment initialized successfully",
+        data: checkout,
+      })
+    );
+  } catch (error) {
+    logger.error(
+      `[events.admin.controller] Error initializing event ticket checkout for event ${req.params.id}: ${error.message}`
+    );
+    res.status(error.message === "Event not found" ? 404 : 400).json(
+      formatResponse({
+        success: false,
+        error: error.message,
       })
     );
   }

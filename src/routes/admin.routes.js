@@ -4,6 +4,7 @@ import { authenticateToken, checkAdmin } from "../middleware/index.js";
 import {
   validateEvent,
   validateEventStatus,
+  validateEventTicketCheckout,
   validateEventTicketType,
   validateFormSchema,
   validateProduct,
@@ -43,6 +44,7 @@ import {
   getEventsAdmin,
   getVolunteerApplicationByIdAdmin,
   getVolunteerApplicationsAdmin,
+  initializeEventTicketCheckoutAdmin,
   updateEventAdmin,
   updateEventTicketTypeAdmin,
   updateEventStatusAdmin,
@@ -249,6 +251,14 @@ router.get(
   authenticateToken,
   checkAdmin,
   getEventAttendeeByIdAdmin
+);
+
+router.post(
+  "/events/:id/checkout",
+  authenticateToken,
+  checkAdmin,
+  validateEventTicketCheckout,
+  initializeEventTicketCheckoutAdmin
 );
 
 router.post(
