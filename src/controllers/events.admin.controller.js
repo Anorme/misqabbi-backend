@@ -5,12 +5,22 @@ import {
   deleteEventTicketType,
   getEventById,
   getPaginatedEvents,
+  setEventRegistrationForm,
   updateEvent,
   updateEventTicketType,
   updateEventStatus,
 } from "../models/event.model.js";
+import {
+  createFormSchema,
+  getFormSchemaById,
+  updateFormSchema,
+} from "../models/formSchema.model.js";
 import { deleteAssets } from "../config/cloudinary.js";
 import logger from "../config/logger.js";
+import {
+  assertEventSupportsRegistrationForm,
+  getLinkedFormId,
+} from "../services/eventFormService.js";
 import { assertEventStatusTransition } from "../services/eventStatusService.js";
 import {
   assertCanDeleteTicketType,
@@ -294,6 +304,85 @@ export async function deleteEventTicketTypeAdmin(req, res) {
   } catch (error) {
     logger.error(
       `[events.admin.controller] Error deleting ticket type ${req.params.ticketTypeId}: ${error.message}`
+    );
+    res.status(error.message === "Event not found" ? 404 : 400).json(
+      formatResponse({
+        success: false,
+        error: error.message,
+      })
+    );
+  }
+}
+
+export async function upsertEventRegistrationFormAdmin(req, res) {
+  try {
+    const event = await getEventById(req.params.id);
+    assertEventSupportsRegistrationForm(event);
+
+    const existingFormId = getLinkedFormId(event);
+    const registrationForm = existingFormId
+      ? await updateFormSchema(existingFormId, { ...req.body })
+      : await createFormSchema(req.body, req.user._id);
+
+    const updatedEvent = existingFormId
+      ? event
+      : await setEventRegistrationForm(req.params.id, registrationForm._id);
+
+    res.status(existingFormId ? 200 : 201).json(
+      formatResponse({
+        message: "Registration form configured successfully",
+        data: {
+          event: updatedEvent,
+          registrationForm,
+        },
+      })
+    );
+  } catch (error) {
+    logger.error(
+      `[events.admin.controller] Error configuring registration form for event ${req.params.id}: ${error.message}`
+    );
+    res.status(error.message === "Event not found" ? 404 : 400).json(
+      formatResponse({
+        success: false,
+        error: error.message,
+      })
+    );
+  }
+}
+
+export async function getEventRegistrationFormAdmin(req, res) {
+  try {
+    const event = await getEventById(req.params.id);
+    assertEventSupportsRegistrationForm(event);
+
+    const registrationFormId = getLinkedFormId(event);
+    if (!registrationFormId) {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Registration form not configured",
+        })
+      );
+    }
+
+    const registrationForm = await getFormSchemaById(registrationFormId);
+    if (!registrationForm) {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Registration form not found",
+        })
+      );
+    }
+
+    res.status(200).json(
+      formatResponse({
+        data: registrationForm,
+      })
+    );
+  } catch (error) {
+    logger.error(
+      `[events.admin.controller] Error loading registration form for event ${req.params.id}: ${error.message}`
     );
     res.status(error.message === "Event not found" ? 404 : 400).json(
       formatResponse({
