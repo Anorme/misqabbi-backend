@@ -2,6 +2,16 @@ import { Types } from "mongoose";
 import logger from "../config/logger.js";
 import EventRegistration from "./eventRegistration.mongo.js";
 
+const ACTIVE_REGISTRATION_STATUSES = ["pending", "confirmed"];
+
+function normalizeEmail(email) {
+  return typeof email === "string" ? email.trim().toLowerCase() : "";
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export async function createEventRegistration(registrationData) {
   try {
     return await EventRegistration.create(registrationData);
@@ -79,6 +89,33 @@ export async function countConfirmedRegistrations(eventId, params = {}) {
     ...params,
     status: "confirmed",
   });
+}
+
+export async function findActiveRegistrationByEventAndEmail(eventId, email) {
+  try {
+    if (!Types.ObjectId.isValid(eventId)) {
+      return null;
+    }
+
+    const normalizedEmail = normalizeEmail(email);
+    if (!normalizedEmail) {
+      return null;
+    }
+
+    return await EventRegistration.findOne({
+      event: eventId,
+      status: { $in: ACTIVE_REGISTRATION_STATUSES },
+      "guestInfo.email": {
+        $regex: `^${escapeRegExp(normalizedEmail)}$`,
+        $options: "i",
+      },
+    });
+  } catch (error) {
+    logger.error(
+      `[eventRegistration.model] Error finding active registration for event ${eventId} and email ${email}: ${error.message}`
+    );
+    throw error;
+  }
 }
 
 export async function getEventRegistrationById(eventId, registrationId) {

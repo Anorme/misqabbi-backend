@@ -65,4 +65,15 @@ describe("eventCapacityLogic", () => {
       checkCapacity(cancelledEvent, 1, { confirmedCount: 0 })
     ).toThrow("Cancelled events do not accept registrations");
   });
+
+  it("blocks draft events from accepting registrations", () => {
+    const draftEvent = { ...event, status: "draft" };
+
+    expect(() => assertEventAcceptsRegistrations(draftEvent)).toThrow(
+      "Only published events accept registrations"
+    );
+    expect(() => checkCapacity(draftEvent, 1, { confirmedCount: 0 })).toThrow(
+      "Only published events accept registrations"
+    );
+  });
 });
