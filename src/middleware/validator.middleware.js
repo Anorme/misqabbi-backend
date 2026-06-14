@@ -11,6 +11,7 @@ import {
   eventTicketTypeValidator,
   eventValidator,
 } from "../validators/event.validator.js";
+import { eventTicketCheckoutValidator } from "../validators/eventCheckout.validator.js";
 import { volunteerApplicationStatusValidator } from "../validators/volunteerApplication.validator.js";
 import { formatResponse } from "../utils/responseFormatter.js";
 
@@ -204,5 +205,23 @@ export function validateVolunteerApplicationStatus(req, res, next) {
     );
   }
 
+  next();
+}
+
+export function validateEventTicketCheckout(req, res, next) {
+  const { error, value } = eventTicketCheckoutValidator.validate(req.body, {
+    abortEarly: false,
+  });
+
+  if (error) {
+    return res.status(400).json(
+      formatResponse({
+        success: false,
+        errors: error.details.map(err => err.message),
+      })
+    );
+  }
+
+  req.body = value;
   next();
 }
