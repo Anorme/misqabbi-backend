@@ -2,9 +2,9 @@
 import {
   assertEventStatusTransition,
   canTransitionEventStatus,
-} from "../../../src/services/eventStatusService.js";
+} from "../../../src/services/eventStatusLogic.js";
 
-describe("eventStatusService", () => {
+describe("eventStatusLogic", () => {
   it("allows draft events to be published or cancelled", () => {
     expect(canTransitionEventStatus("draft", "published")).toBe(true);
     expect(canTransitionEventStatus("draft", "cancelled")).toBe(true);
