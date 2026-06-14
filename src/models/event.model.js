@@ -6,6 +6,8 @@ export async function createEvent(eventData, adminId) {
   try {
     const payload = { ...eventData };
     delete payload.ticketTypes;
+    delete payload.registrationFormId;
+    delete payload.volunteerFormId;
 
     return await Event.create({
       ...payload,
@@ -25,7 +27,9 @@ export async function getEventById(id) {
       return null;
     }
 
-    return await Event.findById(id).populate("registrationFormId");
+    return await Event.findById(id)
+      .populate("registrationFormId")
+      .populate("volunteerFormId");
   } catch (error) {
     logger.error(`[event.model] Error finding event ${id}: ${error.message}`);
     throw error;
@@ -94,6 +98,8 @@ export async function updateEvent(id, updates) {
     delete updates.createdBy;
     delete updates.status;
     delete updates.ticketTypes;
+    delete updates.registrationFormId;
+    delete updates.volunteerFormId;
 
     return await Event.findByIdAndUpdate(id, updates, {
       new: true,
@@ -138,6 +144,25 @@ export async function setEventRegistrationForm(id, formSchemaId) {
   } catch (error) {
     logger.error(
       `[event.model] Error setting registration form for event ${id}: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+export async function setEventVolunteerForm(id, formSchemaId) {
+  try {
+    if (!Types.ObjectId.isValid(id) || !Types.ObjectId.isValid(formSchemaId)) {
+      return null;
+    }
+
+    return await Event.findByIdAndUpdate(
+      id,
+      { volunteerFormId: formSchemaId },
+      { new: true, runValidators: true }
+    ).populate("volunteerFormId");
+  } catch (error) {
+    logger.error(
+      `[event.model] Error setting volunteer form for event ${id}: ${error.message}`
     );
     throw error;
   }

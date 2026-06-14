@@ -131,6 +131,11 @@ const eventSchema = new Schema(
       ref: "FormSchema",
       default: null,
     },
+    volunteerFormId: {
+      type: Schema.Types.ObjectId,
+      ref: "FormSchema",
+      default: null,
+    },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
