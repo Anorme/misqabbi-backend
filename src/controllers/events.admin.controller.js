@@ -6,6 +6,7 @@ import {
   getEventById,
   getPaginatedEvents,
   setEventRegistrationForm,
+  setEventVolunteerForm,
   updateEvent,
   updateEventTicketType,
   updateEventStatus,
@@ -15,6 +16,12 @@ import {
   getFormSchemaById,
   updateFormSchema,
 } from "../models/formSchema.model.js";
+import {
+  countVolunteerApplications,
+  getPaginatedVolunteerApplications,
+  getVolunteerApplicationById,
+  updateVolunteerApplicationStatus,
+} from "../models/volunteerApplication.model.js";
 import { deleteAssets } from "../config/cloudinary.js";
 import logger from "../config/logger.js";
 import {
@@ -29,6 +36,7 @@ import {
   assertPaidEventSupportsTickets,
   buildTicketTypePayload,
 } from "../services/eventTicketService.js";
+import { assertVolunteerApplicationStatusTransition } from "../services/volunteerApplicationService.js";
 import { formatResponse } from "../utils/responseFormatter.js";
 
 export async function createEventAdmin(req, res) {
@@ -385,6 +393,212 @@ export async function getEventRegistrationFormAdmin(req, res) {
       `[events.admin.controller] Error loading registration form for event ${req.params.id}: ${error.message}`
     );
     res.status(error.message === "Event not found" ? 404 : 400).json(
+      formatResponse({
+        success: false,
+        error: error.message,
+      })
+    );
+  }
+}
+
+export async function upsertEventVolunteerFormAdmin(req, res) {
+  try {
+    const event = await getEventById(req.params.id);
+    assertEventSupportsRegistrationForm(event);
+
+    const existingFormId = getLinkedFormId(event, "volunteerFormId");
+    const volunteerForm = existingFormId
+      ? await updateFormSchema(existingFormId, { ...req.body })
+      : await createFormSchema(req.body, req.user._id);
+
+    const updatedEvent = existingFormId
+      ? event
+      : await setEventVolunteerForm(req.params.id, volunteerForm._id);
+
+    res.status(existingFormId ? 200 : 201).json(
+      formatResponse({
+        message: "Volunteer form configured successfully",
+        data: {
+          event: updatedEvent,
+          volunteerForm,
+        },
+      })
+    );
+  } catch (error) {
+    logger.error(
+      `[events.admin.controller] Error configuring volunteer form for event ${req.params.id}: ${error.message}`
+    );
+    res.status(error.message === "Event not found" ? 404 : 400).json(
+      formatResponse({
+        success: false,
+        error: error.message,
+      })
+    );
+  }
+}
+
+export async function getEventVolunteerFormAdmin(req, res) {
+  try {
+    const event = await getEventById(req.params.id);
+    assertEventSupportsRegistrationForm(event);
+
+    const volunteerFormId = getLinkedFormId(event, "volunteerFormId");
+    if (!volunteerFormId) {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Volunteer form not configured",
+        })
+      );
+    }
+
+    const volunteerForm = await getFormSchemaById(volunteerFormId);
+    if (!volunteerForm) {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Volunteer form not found",
+        })
+      );
+    }
+
+    res.status(200).json(formatResponse({ data: volunteerForm }));
+  } catch (error) {
+    logger.error(
+      `[events.admin.controller] Error loading volunteer form for event ${req.params.id}: ${error.message}`
+    );
+    res.status(error.message === "Event not found" ? 404 : 400).json(
+      formatResponse({
+        success: false,
+        error: error.message,
+      })
+    );
+  }
+}
+
+export async function getVolunteerApplicationsAdmin(req, res) {
+  try {
+    const event = await getEventById(req.params.id);
+    if (!event) {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Event not found",
+        })
+      );
+    }
+
+    const { page, limit, status } = req.query;
+    const pageNum = Math.max(parseInt(page) || 1, 1);
+    const limitNum = Math.max(parseInt(limit) || 10, 1);
+    const filters = { status: status?.trim() || undefined };
+    const total = await countVolunteerApplications(req.params.id, filters);
+
+    if (pageNum > Math.ceil(total / limitNum) && total > 0) {
+      return res.status(400).json(
+        formatResponse({
+          success: false,
+          error: "Requested page exceeds available volunteer application pages",
+        })
+      );
+    }
+
+    const applications = await getPaginatedVolunteerApplications(
+      req.params.id,
+      pageNum,
+      limitNum,
+      filters
+    );
+
+    res.status(200).json(
+      formatResponse({
+        data: applications,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+        currentPage: pageNum,
+      })
+    );
+  } catch (error) {
+    logger.error(
+      `[events.admin.controller] Error listing volunteer applications for event ${req.params.id}: ${error.message}`
+    );
+    res.status(500).json(
+      formatResponse({
+        success: false,
+        error: "Failed to load volunteer applications",
+      })
+    );
+  }
+}
+
+export async function getVolunteerApplicationByIdAdmin(req, res) {
+  try {
+    const application = await getVolunteerApplicationById(
+      req.params.id,
+      req.params.applicationId
+    );
+
+    if (!application) {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Volunteer application not found",
+        })
+      );
+    }
+
+    res.status(200).json(formatResponse({ data: application }));
+  } catch (error) {
+    logger.error(
+      `[events.admin.controller] Error loading volunteer application ${req.params.applicationId}: ${error.message}`
+    );
+    res.status(500).json(
+      formatResponse({
+        success: false,
+        error: "Failed to load volunteer application",
+      })
+    );
+  }
+}
+
+export async function updateVolunteerApplicationStatusAdmin(req, res) {
+  try {
+    const application = await getVolunteerApplicationById(
+      req.params.id,
+      req.params.applicationId
+    );
+
+    if (!application) {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Volunteer application not found",
+        })
+      );
+    }
+
+    assertVolunteerApplicationStatusTransition(
+      application.status,
+      req.body.status
+    );
+
+    const updatedApplication = await updateVolunteerApplicationStatus(
+      req.params.id,
+      req.params.applicationId,
+      req.body.status
+    );
+
+    res.status(200).json(
+      formatResponse({
+        message: "Volunteer application status updated successfully",
+        data: updatedApplication,
+      })
+    );
+  } catch (error) {
+    logger.error(
+      `[events.admin.controller] Error updating volunteer application ${req.params.applicationId}: ${error.message}`
+    );
+    res.status(400).json(
       formatResponse({
         success: false,
         error: error.message,
