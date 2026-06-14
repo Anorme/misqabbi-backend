@@ -25,7 +25,7 @@ export async function getEventById(id) {
       return null;
     }
 
-    return await Event.findById(id);
+    return await Event.findById(id).populate("registrationFormId");
   } catch (error) {
     logger.error(`[event.model] Error finding event ${id}: ${error.message}`);
     throw error;
@@ -119,6 +119,25 @@ export async function updateEventStatus(id, status) {
   } catch (error) {
     logger.error(
       `[event.model] Error updating event ${id} status: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+export async function setEventRegistrationForm(id, formSchemaId) {
+  try {
+    if (!Types.ObjectId.isValid(id) || !Types.ObjectId.isValid(formSchemaId)) {
+      return null;
+    }
+
+    return await Event.findByIdAndUpdate(
+      id,
+      { registrationFormId: formSchemaId },
+      { new: true, runValidators: true }
+    ).populate("registrationFormId");
+  } catch (error) {
+    logger.error(
+      `[event.model] Error setting registration form for event ${id}: ${error.message}`
     );
     throw error;
   }
