@@ -2,6 +2,16 @@ import { Types } from "mongoose";
 import logger from "../config/logger.js";
 import VolunteerApplication from "./volunteerApplication.mongo.js";
 
+const ACTIVE_VOLUNTEER_APPLICATION_STATUSES = ["pending", "accepted"];
+
+function normalizeEmail(email) {
+  return typeof email === "string" ? email.trim().toLowerCase() : "";
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export async function createVolunteerApplication(applicationData) {
   try {
     return await VolunteerApplication.create(applicationData);
@@ -59,6 +69,36 @@ export async function countVolunteerApplications(eventId, params = {}) {
   } catch (error) {
     logger.error(
       `[volunteerApplication.model] Error counting volunteer applications for event ${eventId}: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+export async function findActiveVolunteerApplicationByEventAndEmail(
+  eventId,
+  email
+) {
+  try {
+    if (!Types.ObjectId.isValid(eventId)) {
+      return null;
+    }
+
+    const normalizedEmail = normalizeEmail(email);
+    if (!normalizedEmail) {
+      return null;
+    }
+
+    return await VolunteerApplication.findOne({
+      event: eventId,
+      status: { $in: ACTIVE_VOLUNTEER_APPLICATION_STATUSES },
+      "applicantInfo.email": {
+        $regex: `^${escapeRegExp(normalizedEmail)}$`,
+        $options: "i",
+      },
+    });
+  } catch (error) {
+    logger.error(
+      `[volunteerApplication.model] Error finding active volunteer application for event ${eventId} and email ${email}: ${error.message}`
     );
     throw error;
   }

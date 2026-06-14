@@ -12,6 +12,7 @@ import {
 } from "../services/eventPublicService.js";
 import { initializeEventTicketCheckout } from "../services/eventCheckoutService.js";
 import { registerForFreeEvent } from "../services/eventRegistrationService.js";
+import { submitVolunteerApplication } from "../services/volunteerApplicationService.js";
 import { formatResponse } from "../utils/responseFormatter.js";
 
 const PUBLISHED_EVENT_FILTER = "published";
@@ -161,6 +162,42 @@ export async function initializeEventTicketCheckoutPublic(req, res) {
 
     logger.error(
       `[events.public.controller] Error initializing checkout for event ${req.params.id}: ${error.message}`
+    );
+    res.status(400).json(
+      formatResponse({
+        success: false,
+        error: error.message,
+      })
+    );
+  }
+}
+
+export async function submitVolunteerApplicationPublic(req, res) {
+  try {
+    const application = await submitVolunteerApplication({
+      eventId: req.params.id,
+      applicantInfo: req.body.applicantInfo,
+      formResponses: req.body.formResponses,
+    });
+
+    res.status(201).json(
+      formatResponse({
+        message: "Volunteer application submitted successfully",
+        data: application,
+      })
+    );
+  } catch (error) {
+    if (error.message === "Event not found") {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Event not found",
+        })
+      );
+    }
+
+    logger.error(
+      `[events.public.controller] Error submitting volunteer application for event ${req.params.id}: ${error.message}`
     );
     res.status(400).json(
       formatResponse({
