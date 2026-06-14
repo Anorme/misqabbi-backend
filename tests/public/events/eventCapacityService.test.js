@@ -1,13 +1,13 @@
 /*eslint-disable no-undef */
 import {
   assertEventAcceptsRegistrations,
+  checkCapacity,
   getTicketTypeById,
-  hasCapacity,
   hasEventCapacity,
   hasTicketCapacity,
-} from "../../../src/services/eventCapacityService.js";
+} from "../../../src/services/eventCapacityLogic.js";
 
-describe("eventCapacityService", () => {
+describe("eventCapacityLogic", () => {
   const ticketTypeId = "64a000000000000000000001";
   const event = {
     _id: "64a000000000000000000010",
@@ -39,30 +39,30 @@ describe("eventCapacityService", () => {
     expect(getTicketTypeById(event, "64a000000000000000000002")).toBeNull();
   });
 
-  it("combines event-level and ticket-level capacity checks", async () => {
-    await expect(
-      hasCapacity(event, 2, {
+  it("combines event-level and ticket-level capacity checks", () => {
+    expect(
+      checkCapacity(event, 2, {
         confirmedCount: 8,
         ticketTypeId,
       })
-    ).resolves.toBe(true);
+    ).toBe(true);
 
-    await expect(
-      hasCapacity(event, 3, {
+    expect(
+      checkCapacity(event, 3, {
         confirmedCount: 7,
         ticketTypeId,
       })
-    ).resolves.toBe(false);
+    ).toBe(false);
   });
 
-  it("blocks cancelled events from accepting registrations", async () => {
+  it("blocks cancelled events from accepting registrations", () => {
     const cancelledEvent = { ...event, status: "cancelled" };
 
     expect(() => assertEventAcceptsRegistrations(cancelledEvent)).toThrow(
       "Cancelled events do not accept registrations"
     );
-    await expect(hasCapacity(cancelledEvent, 1, { confirmedCount: 0 })).rejects.toThrow(
-      "Cancelled events do not accept registrations"
-    );
+    expect(() =>
+      checkCapacity(cancelledEvent, 1, { confirmedCount: 0 })
+    ).toThrow("Cancelled events do not accept registrations");
   });
 });
