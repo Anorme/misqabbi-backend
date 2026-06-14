@@ -145,3 +145,27 @@ export async function updateEventRegistrationPayment(
     throw error;
   }
 }
+
+export async function cancelEventRegistrationsByIds(registrationIds = []) {
+  try {
+    const validIds = registrationIds.filter(id => Types.ObjectId.isValid(id));
+    if (validIds.length === 0) {
+      return 0;
+    }
+
+    const result = await EventRegistration.updateMany(
+      {
+        _id: { $in: validIds },
+        status: "pending",
+      },
+      { status: "cancelled" }
+    );
+
+    return result?.modifiedCount || 0;
+  } catch (error) {
+    logger.error(
+      `[eventRegistration.model] Error cancelling pending event registrations: ${error.message}`
+    );
+    throw error;
+  }
+}
