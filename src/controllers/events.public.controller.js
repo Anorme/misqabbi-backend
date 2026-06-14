@@ -10,6 +10,7 @@ import {
   toPublicEventDetail,
   toPublicEventListItem,
 } from "../services/eventPublicService.js";
+import { registerForFreeEvent } from "../services/eventRegistrationService.js";
 import { formatResponse } from "../utils/responseFormatter.js";
 
 const PUBLISHED_EVENT_FILTER = "published";
@@ -88,6 +89,43 @@ export async function getPublishedEventById(req, res) {
       formatResponse({
         success: false,
         error: "Failed to load event",
+      })
+    );
+  }
+}
+
+export async function registerForFreeEventPublic(req, res) {
+  try {
+    const registration = await registerForFreeEvent({
+      eventId: req.params.id,
+      principal: req.principal,
+      guestInfo: req.body.guestInfo,
+      formResponses: req.body.formResponses,
+    });
+
+    res.status(201).json(
+      formatResponse({
+        message: "Event registration confirmed successfully",
+        data: registration,
+      })
+    );
+  } catch (error) {
+    if (error.message === "Event not found") {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Event not found",
+        })
+      );
+    }
+
+    logger.error(
+      `[events.public.controller] Error registering for event ${req.params.id}: ${error.message}`
+    );
+    res.status(400).json(
+      formatResponse({
+        success: false,
+        error: error.message,
       })
     );
   }
