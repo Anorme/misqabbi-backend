@@ -1,5 +1,5 @@
 import { hasEventCapacity } from "./eventCapacityLogic.js";
-import { isTicketPurchasable } from "./eventTicketService.js";
+import { isTicketPurchasable } from "./eventTicketLogic.js";
 
 export function calculateTicketPurchaseAmount(ticketType, quantity) {
   return Number(ticketType.pricePesewas) * Number(quantity);
