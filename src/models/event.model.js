@@ -226,3 +226,26 @@ export async function deleteEventTicketType(id, ticketTypeId) {
     throw error;
   }
 }
+
+export async function incrementEventTicketSoldCount(
+  id,
+  ticketTypeId,
+  quantity
+) {
+  try {
+    if (!Types.ObjectId.isValid(id) || !Types.ObjectId.isValid(ticketTypeId)) {
+      return null;
+    }
+
+    return await Event.findOneAndUpdate(
+      { _id: id, "ticketTypes._id": ticketTypeId },
+      { $inc: { "ticketTypes.$.soldCount": quantity } },
+      { new: true, runValidators: true }
+    );
+  } catch (error) {
+    logger.error(
+      `[event.model] Error incrementing sold count for ticket type ${ticketTypeId} on event ${id}: ${error.message}`
+    );
+    throw error;
+  }
+}
