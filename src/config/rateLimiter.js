@@ -70,5 +70,6 @@ export const routeLimiters = {
   contact: rateLimiters.strict, // 10 requests
   bespoke: rateLimiters.strict, // 10 requests
   admin: rateLimiters.lenient, // 200 requests
+  events: rateLimiters.general, // 100 requests
   products: rateLimiters.productSlowDown,
 };
