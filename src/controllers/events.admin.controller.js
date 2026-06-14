@@ -17,10 +17,15 @@ import {
   updateFormSchema,
 } from "../models/formSchema.model.js";
 import {
+  cancelEventRegistrationsByIds,
   countEventRegistrations,
   getEventRegistrationById,
   getPaginatedEventRegistrations,
 } from "../models/eventRegistration.model.js";
+import {
+  abandonPendingEventTicketTransactions,
+  getPendingEventTicketRegistrationIds,
+} from "../models/transaction.model.js";
 import {
   countVolunteerApplications,
   getPaginatedVolunteerApplications,
@@ -209,12 +214,30 @@ export async function updateEventStatusAdmin(req, res) {
       assertPaidEventCanPublish(existing);
     }
 
+    let abandonedTransactions = 0;
+    let cancelledRegistrations = 0;
+    if (req.body.status === "cancelled") {
+      const pendingRegistrationIds = await getPendingEventTicketRegistrationIds(
+        existing._id
+      );
+      abandonedTransactions = await abandonPendingEventTicketTransactions(
+        existing._id
+      );
+      cancelledRegistrations = await cancelEventRegistrationsByIds(
+        pendingRegistrationIds
+      );
+    }
+
     const event = await updateEventStatus(req.params.id, req.body.status);
 
     res.status(200).json(
       formatResponse({
         message: "Event status updated successfully",
         data: event,
+        ...(req.body.status === "cancelled" && {
+          abandonedTransactions,
+          cancelledRegistrations,
+        }),
       })
     );
   } catch (error) {
