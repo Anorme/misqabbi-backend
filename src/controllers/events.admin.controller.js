@@ -17,6 +17,11 @@ import {
   updateFormSchema,
 } from "../models/formSchema.model.js";
 import {
+  countEventRegistrations,
+  getEventRegistrationById,
+  getPaginatedEventRegistrations,
+} from "../models/eventRegistration.model.js";
+import {
   countVolunteerApplications,
   getPaginatedVolunteerApplications,
   getVolunteerApplicationById,
@@ -602,6 +607,94 @@ export async function updateVolunteerApplicationStatusAdmin(req, res) {
       formatResponse({
         success: false,
         error: error.message,
+      })
+    );
+  }
+}
+
+export async function getEventAttendeesAdmin(req, res) {
+  try {
+    const event = await getEventById(req.params.id);
+    if (!event) {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Event not found",
+        })
+      );
+    }
+
+    const { page, limit, status, ticketTypeId } = req.query;
+    const pageNum = Math.max(parseInt(page) || 1, 1);
+    const limitNum = Math.max(parseInt(limit) || 10, 1);
+    const filters = {
+      status: status?.trim() || undefined,
+      ticketTypeId: ticketTypeId?.trim() || undefined,
+    };
+    const total = await countEventRegistrations(req.params.id, filters);
+
+    if (pageNum > Math.ceil(total / limitNum) && total > 0) {
+      return res.status(400).json(
+        formatResponse({
+          success: false,
+          error: "Requested page exceeds available attendee pages",
+        })
+      );
+    }
+
+    const attendees = await getPaginatedEventRegistrations(
+      req.params.id,
+      pageNum,
+      limitNum,
+      filters
+    );
+
+    res.status(200).json(
+      formatResponse({
+        data: attendees,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+        currentPage: pageNum,
+      })
+    );
+  } catch (error) {
+    logger.error(
+      `[events.admin.controller] Error listing attendees for event ${req.params.id}: ${error.message}`
+    );
+    res.status(500).json(
+      formatResponse({
+        success: false,
+        error: "Failed to load attendees",
+      })
+    );
+  }
+}
+
+export async function getEventAttendeeByIdAdmin(req, res) {
+  try {
+    const attendee = await getEventRegistrationById(
+      req.params.id,
+      req.params.registrationId
+    );
+
+    if (!attendee) {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Attendee not found",
+        })
+      );
+    }
+
+    res.status(200).json(formatResponse({ data: attendee }));
+  } catch (error) {
+    logger.error(
+      `[events.admin.controller] Error loading attendee ${req.params.registrationId}: ${error.message}`
+    );
+    res.status(500).json(
+      formatResponse({
+        success: false,
+        error: "Failed to load attendee",
       })
     );
   }
