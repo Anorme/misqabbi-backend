@@ -25,20 +25,21 @@ function normalizeString(value) {
   return typeof value === "string" ? value.trim() : value;
 }
 
-function validateBuiltinFields(schemaFields, responses, errors) {
-  const configuredFields = new Set(schemaFields.map(({ field }) => field));
-  const submittedFields = Object.keys(responses);
-  const normalized = {};
+function normalizeIdentity(identity = {}, overrides = {}) {
+  return {
+    ...identity,
+    ...Object.fromEntries(
+      Object.entries(overrides).filter(([, value]) => !isMissing(value))
+    ),
+  };
+}
 
-  for (const field of submittedFields) {
-    if (!configuredFields.has(field)) {
-      errors.push(`Unknown builtin field submitted: ${field}`);
-    }
-  }
+function validateBuiltinFields(schemaFields, identity, errors) {
+  const normalized = {};
 
   for (const fieldConfig of schemaFields) {
     const { field, required } = fieldConfig;
-    const value = responses[field];
+    const value = identity[field];
 
     if (required && isMissing(value)) {
       errors.push(`${field} is required`);
@@ -138,15 +139,10 @@ function validateCustomQuestions(questions, answers, errors) {
 export function validateFormResponses(formSchema, responses = {}) {
   const schema = toPlainFormSchema(formSchema);
   const errors = [];
-  const builtinResponses = responses.builtinFields ?? {};
   const customAnswers = responses.customAnswers ?? {};
 
-  if (
-    typeof builtinResponses !== "object" ||
-    Array.isArray(builtinResponses) ||
-    builtinResponses === null
-  ) {
-    errors.push("builtinFields responses must be an object");
+  if (responses.builtinFields !== undefined) {
+    errors.push("formResponses.builtinFields is no longer supported");
   }
 
   if (
@@ -157,11 +153,6 @@ export function validateFormResponses(formSchema, responses = {}) {
     errors.push("customAnswers responses must be an object");
   }
 
-  const safeBuiltinResponses = errors.includes(
-    "builtinFields responses must be an object"
-  )
-    ? {}
-    : builtinResponses;
   const safeCustomAnswers = errors.includes(
     "customAnswers responses must be an object"
   )
@@ -169,11 +160,6 @@ export function validateFormResponses(formSchema, responses = {}) {
     : customAnswers;
 
   const normalizedResponses = {
-    builtinFields: validateBuiltinFields(
-      schema.builtinFields ?? [],
-      safeBuiltinResponses,
-      errors
-    ),
     customAnswers: validateCustomQuestions(
       schema.customQuestions ?? [],
       safeCustomAnswers,
@@ -185,5 +171,74 @@ export function validateFormResponses(formSchema, responses = {}) {
     valid: errors.length === 0,
     errors,
     normalizedResponses,
+  };
+}
+
+export function validateIdentityInfo(
+  schemaBuiltinFields = [],
+  identity = {},
+  { resolvedEmail } = {}
+) {
+  const errors = [];
+  const identityInput = normalizeIdentity(identity, { email: resolvedEmail });
+
+  if (
+    typeof identityInput !== "object" ||
+    Array.isArray(identityInput) ||
+    identityInput === null
+  ) {
+    errors.push("identity info must be an object");
+  }
+
+  const normalizedIdentity = errors.includes("identity info must be an object")
+    ? {}
+    : validateBuiltinFields(schemaBuiltinFields, identityInput, errors);
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    normalizedIdentity,
+  };
+}
+
+export function validateFormSubmission(
+  formSchema,
+  { identity = {}, customAnswers = {}, resolvedEmail } = {}
+) {
+  const schema = toPlainFormSchema(formSchema);
+  const errors = [];
+
+  if (
+    typeof customAnswers !== "object" ||
+    Array.isArray(customAnswers) ||
+    customAnswers === null
+  ) {
+    errors.push("customAnswers responses must be an object");
+  }
+
+  const identityValidation = validateIdentityInfo(
+    schema.builtinFields ?? [],
+    identity,
+    { resolvedEmail }
+  );
+  errors.push(...identityValidation.errors);
+
+  const safeCustomAnswers = errors.includes(
+    "customAnswers responses must be an object"
+  )
+    ? {}
+    : customAnswers;
+
+  const normalizedCustomAnswers = validateCustomQuestions(
+    schema.customQuestions ?? [],
+    safeCustomAnswers,
+    errors
+  );
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    normalizedIdentity: identityValidation.normalizedIdentity,
+    normalizedCustomAnswers,
   };
 }
