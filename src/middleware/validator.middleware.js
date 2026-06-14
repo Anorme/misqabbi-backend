@@ -7,6 +7,7 @@ import { contactValidator } from "../validators/contact.validator.js";
 import { bespokeValidator } from "../validators/bespoke.validator.js";
 import {
   eventStatusValidator,
+  eventTicketTypeValidator,
   eventValidator,
 } from "../validators/event.validator.js";
 import { formatResponse } from "../utils/responseFormatter.js";
@@ -130,6 +131,31 @@ export function validateEvent(req, res, next) {
 
 export function validateEventStatus(req, res, next) {
   const { error } = eventStatusValidator.validate(req.body, {
+    abortEarly: false,
+  });
+
+  if (error) {
+    return res.status(400).json(
+      formatResponse({
+        success: false,
+        errors: error.details.map(err => err.message),
+      })
+    );
+  }
+
+  next();
+}
+
+export function validateEventTicketType(req, res, next) {
+  const isUpdate = req.method === "PATCH" || req.method === "PUT";
+  const schema = isUpdate
+    ? eventTicketTypeValidator.fork(
+        ["name", "pricePesewas", "maxQuantity"],
+        fieldSchema => fieldSchema.optional()
+      )
+    : eventTicketTypeValidator;
+
+  const { error } = schema.validate(req.body, {
     abortEarly: false,
   });
 
