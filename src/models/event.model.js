@@ -4,8 +4,11 @@ import logger from "../config/logger.js";
 
 export async function createEvent(eventData, adminId) {
   try {
+    const payload = { ...eventData };
+    delete payload.ticketTypes;
+
     return await Event.create({
-      ...eventData,
+      ...payload,
       status: "draft",
       createdBy: adminId,
     });
@@ -90,6 +93,7 @@ export async function updateEvent(id, updates) {
 
     delete updates.createdBy;
     delete updates.status;
+    delete updates.ticketTypes;
 
     return await Event.findByIdAndUpdate(id, updates, {
       new: true,
@@ -115,6 +119,65 @@ export async function updateEventStatus(id, status) {
   } catch (error) {
     logger.error(
       `[event.model] Error updating event ${id} status: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+export async function addTicketTypeToEvent(id, ticketTypeData) {
+  try {
+    const event = await getEventById(id);
+    if (!event) return null;
+
+    event.ticketTypes.push(ticketTypeData);
+    return await event.save();
+  } catch (error) {
+    logger.error(
+      `[event.model] Error adding ticket type to event ${id}: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+export async function updateEventTicketType(id, ticketTypeId, updates) {
+  try {
+    const event = await getEventById(id);
+    if (!event) return null;
+
+    const ticketType = event.ticketTypes.id(ticketTypeId);
+    if (!ticketType) {
+      return { event, ticketType: null };
+    }
+
+    ticketType.set(updates);
+    await event.save();
+
+    return { event, ticketType };
+  } catch (error) {
+    logger.error(
+      `[event.model] Error updating ticket type ${ticketTypeId} on event ${id}: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+export async function deleteEventTicketType(id, ticketTypeId) {
+  try {
+    const event = await getEventById(id);
+    if (!event) return null;
+
+    const ticketType = event.ticketTypes.id(ticketTypeId);
+    if (!ticketType) {
+      return { event, ticketType: null };
+    }
+
+    ticketType.deleteOne();
+    await event.save();
+
+    return { event, ticketType };
+  } catch (error) {
+    logger.error(
+      `[event.model] Error deleting ticket type ${ticketTypeId} from event ${id}: ${error.message}`
     );
     throw error;
   }

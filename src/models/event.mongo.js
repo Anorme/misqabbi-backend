@@ -40,6 +40,45 @@ const eventVenueSchema = new Schema(
   { _id: false }
 );
 
+const ticketTypeSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    pricePesewas: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    maxQuantity: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    soldCount: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    expiresAt: {
+      type: Date,
+      required: true,
+    },
+    expirySource: {
+      type: String,
+      enum: ["auto", "manual"],
+      default: "auto",
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  { timestamps: true }
+);
+
 const eventSchema = new Schema(
   {
     name: {
@@ -82,6 +121,10 @@ const eventSchema = new Schema(
     banner: {
       type: eventAssetSchema,
       default: undefined,
+    },
+    ticketTypes: {
+      type: [ticketTypeSchema],
+      default: [],
     },
     createdBy: {
       type: Schema.Types.ObjectId,
