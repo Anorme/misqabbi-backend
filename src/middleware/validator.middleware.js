@@ -5,6 +5,7 @@ import { orderValidator } from "../validators/order.validator.js";
 import { newsletterValidator } from "../validators/newsletter.validator.js";
 import { contactValidator } from "../validators/contact.validator.js";
 import { bespokeValidator } from "../validators/bespoke.validator.js";
+import { formSchemaValidator } from "../validators/formSchema.validator.js";
 import {
   eventStatusValidator,
   eventTicketTypeValidator,
@@ -156,6 +157,23 @@ export function validateEventTicketType(req, res, next) {
     : eventTicketTypeValidator;
 
   const { error } = schema.validate(req.body, {
+    abortEarly: false,
+  });
+
+  if (error) {
+    return res.status(400).json(
+      formatResponse({
+        success: false,
+        errors: error.details.map(err => err.message),
+      })
+    );
+  }
+
+  next();
+}
+
+export function validateFormSchema(req, res, next) {
+  const { error } = formSchemaValidator.validate(req.body, {
     abortEarly: false,
   });
 
