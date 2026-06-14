@@ -2,6 +2,12 @@ import { Schema, model } from "mongoose";
 
 export const BUILTIN_FORM_FIELDS = ["name", "email", "phone"];
 export const FORM_QUESTION_TYPES = ["text", "textarea", "select", "checkbox"];
+export const DEFAULT_BUILTIN_FORM_FIELDS = [
+  { field: "name", required: true },
+  { field: "email", required: true },
+];
+const createDefaultBuiltinFormFields = () =>
+  DEFAULT_BUILTIN_FORM_FIELDS.map(fieldConfig => ({ ...fieldConfig }));
 
 const builtinFieldSchema = new Schema(
   {
@@ -56,7 +62,7 @@ const formSchema = new Schema(
   {
     builtinFields: {
       type: [builtinFieldSchema],
-      default: [],
+      default: createDefaultBuiltinFormFields,
     },
     customQuestions: {
       type: [customQuestionSchema],

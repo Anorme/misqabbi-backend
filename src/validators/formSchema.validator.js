@@ -2,8 +2,12 @@ import Joi from "joi";
 import mongoose from "mongoose";
 import {
   BUILTIN_FORM_FIELDS,
+  DEFAULT_BUILTIN_FORM_FIELDS,
   FORM_QUESTION_TYPES,
 } from "../models/formSchema.mongo.js";
+
+const createDefaultBuiltinFormFields = () =>
+  DEFAULT_BUILTIN_FORM_FIELDS.map(fieldConfig => ({ ...fieldConfig }));
 
 const uniqueBy = key => (value, helpers) => {
   if (!Array.isArray(value)) return value;
@@ -45,7 +49,7 @@ export const formSchemaValidator = Joi.object({
   builtinFields: Joi.array()
     .items(builtinFieldValidator)
     .custom(uniqueBy("field"), "Unique builtin field validation")
-    .default([]),
+    .default(createDefaultBuiltinFormFields),
   customQuestions: Joi.array()
     .items(customQuestionValidator)
     .custom(uniqueBy("id"), "Unique custom question validation")

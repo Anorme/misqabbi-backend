@@ -177,7 +177,7 @@ export function validateEventTicketType(req, res, next) {
 }
 
 export function validateFormSchema(req, res, next) {
-  const { error } = formSchemaValidator.validate(req.body, {
+  const { error, value } = formSchemaValidator.validate(req.body, {
     abortEarly: false,
   });
 
@@ -190,6 +190,7 @@ export function validateFormSchema(req, res, next) {
     );
   }
 
+  req.body = value;
   next();
 }
 
