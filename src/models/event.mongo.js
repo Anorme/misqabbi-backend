@@ -126,6 +126,11 @@ const eventSchema = new Schema(
       type: [ticketTypeSchema],
       default: [],
     },
+    registrationFormId: {
+      type: Schema.Types.ObjectId,
+      ref: "FormSchema",
+      default: null,
+    },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
