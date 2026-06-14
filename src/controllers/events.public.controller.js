@@ -10,6 +10,7 @@ import {
   toPublicEventDetail,
   toPublicEventListItem,
 } from "../services/eventPublicService.js";
+import { initializeEventTicketCheckout } from "../services/eventCheckoutService.js";
 import { registerForFreeEvent } from "../services/eventRegistrationService.js";
 import { formatResponse } from "../utils/responseFormatter.js";
 
@@ -121,6 +122,45 @@ export async function registerForFreeEventPublic(req, res) {
 
     logger.error(
       `[events.public.controller] Error registering for event ${req.params.id}: ${error.message}`
+    );
+    res.status(400).json(
+      formatResponse({
+        success: false,
+        error: error.message,
+      })
+    );
+  }
+}
+
+export async function initializeEventTicketCheckoutPublic(req, res) {
+  try {
+    const checkout = await initializeEventTicketCheckout({
+      eventId: req.params.id,
+      principal: req.principal,
+      ticketTypeId: req.body.ticketTypeId,
+      quantity: req.body.quantity,
+      guestInfo: req.body.guestInfo,
+      formResponses: req.body.formResponses,
+    });
+
+    res.status(200).json(
+      formatResponse({
+        message: "Event ticket payment initialized successfully",
+        data: checkout,
+      })
+    );
+  } catch (error) {
+    if (error.message === "Event not found") {
+      return res.status(404).json(
+        formatResponse({
+          success: false,
+          error: "Event not found",
+        })
+      );
+    }
+
+    logger.error(
+      `[events.public.controller] Error initializing checkout for event ${req.params.id}: ${error.message}`
     );
     res.status(400).json(
       formatResponse({

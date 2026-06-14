@@ -1,6 +1,7 @@
 import { createTransaction } from "../models/transaction.model.js";
 import {
   createEventRegistration,
+  findActiveRegistrationByEventAndEmail,
   updateEventRegistrationPayment,
 } from "../models/eventRegistration.model.js";
 import {
@@ -12,6 +13,12 @@ import {
   initializeTransaction,
 } from "./paystackService.js";
 import { getConfirmedCount } from "./eventCapacityService.js";
+import { assertEventIsPublic } from "./eventPublicService.js";
+import {
+  assertNoDuplicateRegistration,
+  resolveRegistrationEmail,
+} from "./eventRegistrationService.js";
+import { validateFormResponses } from "./formValidationService.js";
 import {
   assertEventTicketCheckoutAllowed,
   buildEventPurchaseData,
@@ -36,8 +43,26 @@ export async function initializeEventTicketCheckout({
   confirmedCount,
 }) {
   const event = await getEventById(eventId);
-  if (!event) {
-    throw new Error("Event not found");
+  assertEventIsPublic(event);
+
+  const registrationEmail = resolveRegistrationEmail(principal, guestInfo);
+  const existingRegistration = await findActiveRegistrationByEventAndEmail(
+    event._id,
+    registrationEmail
+  );
+  assertNoDuplicateRegistration(existingRegistration);
+
+  let normalizedResponses = { builtinFields: {}, customAnswers: {} };
+  if (event.registrationFormId) {
+    const validation = validateFormResponses(
+      event.registrationFormId,
+      formResponses
+    );
+    if (!validation.valid) {
+      throw new Error(validation.errors.join("; "));
+    }
+
+    normalizedResponses = validation.normalizedResponses;
   }
 
   const ticketType = event.ticketTypes.id(ticketTypeId);
@@ -50,7 +75,10 @@ export async function initializeEventTicketCheckout({
     effectiveConfirmedCount
   );
 
-  const payerEmail = getPayerEmail(principal, guestInfo);
+  const payerEmail = getPayerEmail(principal, {
+    ...guestInfo,
+    email: registrationEmail,
+  });
   if (!payerEmail) {
     throw new Error("A valid email is required to initialize payment");
   }
@@ -59,8 +87,11 @@ export async function initializeEventTicketCheckout({
   const registration = await createEventRegistration({
     event: event._id,
     user: principal?._id ?? null,
-    guestInfo,
-    formResponses,
+    guestInfo: {
+      ...guestInfo,
+      email: registrationEmail,
+    },
+    formResponses: normalizedResponses,
     ticketTypeId: ticketType._id,
     status: "pending",
   });
