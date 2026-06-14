@@ -1,7 +1,4 @@
 import { Schema, model } from "mongoose";
-import User from "./user.mongo.js";
-import Order from "./order.mongo.js";
-import Discount from "./discount.mongo.js";
 import { OrderItemSchema } from "./schemas/orderItem.schema.js";
 import { ShippingInfoSchema } from "./schemas/shippingInfo.schema.js";
 
@@ -17,7 +14,7 @@ const TransactionSchema = new Schema(
 
     user: {
       type: Schema.Types.ObjectId,
-      ref: User,
+      ref: "User",
       required: true,
     },
 
@@ -60,7 +57,7 @@ const TransactionSchema = new Schema(
       discountAmount: { type: Number, min: 0, default: 0 },
       discountId: {
         type: Schema.Types.ObjectId,
-        ref: Discount,
+        ref: "Discount",
         default: null,
       },
     },
@@ -105,7 +102,7 @@ const TransactionSchema = new Schema(
 
     order: {
       type: Schema.Types.ObjectId,
-      ref: Order,
+      ref: "Order",
       default: null,
     },
 
