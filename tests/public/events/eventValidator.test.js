@@ -61,6 +61,16 @@ describe("eventValidator", () => {
     );
   });
 
+  it("accepts banner removal payloads for event updates", () => {
+    const updateSchema = eventValidator.fork(
+      ["name", "description", "eventDate", "type", "maxAttendees"],
+      fieldSchema => fieldSchema.optional()
+    );
+    const { error } = updateSchema.validate({ banner: null });
+
+    expect(error).toBeUndefined();
+  });
+
   it("validates status update payloads", () => {
     expect(eventStatusValidator.validate({ status: "published" }).error).toBe(
       undefined
