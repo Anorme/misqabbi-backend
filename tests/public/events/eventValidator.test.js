@@ -1,6 +1,7 @@
 /*eslint-disable no-undef */
 import {
   eventStatusValidator,
+  eventTicketTypeValidator,
   eventValidator,
 } from "../../../src/validators/event.validator.js";
 
@@ -67,5 +68,34 @@ describe("eventValidator", () => {
     expect(
       eventStatusValidator.validate({ status: "archived" }).error
     ).toBeDefined();
+  });
+
+  it("validates ticket type creation payloads", () => {
+    const { error } = eventTicketTypeValidator.validate({
+      name: "Early Bird",
+      pricePesewas: 5000,
+      maxQuantity: 20,
+      expiresAt: "2026-08-02T18:00:00.000Z",
+    });
+
+    expect(error).toBeUndefined();
+  });
+
+  it("rejects invalid ticket type prices and quantities", () => {
+    const { error } = eventTicketTypeValidator.validate(
+      {
+        name: "Early Bird",
+        pricePesewas: 0,
+        maxQuantity: 0,
+      },
+      { abortEarly: false }
+    );
+
+    expect(error.details.map(detail => detail.message)).toEqual(
+      expect.arrayContaining([
+        "Ticket price must be at least 1 pesewa",
+        "Ticket max quantity must be at least 1",
+      ])
+    );
   });
 });

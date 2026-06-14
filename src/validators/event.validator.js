@@ -43,3 +43,20 @@ export const eventStatusValidator = Joi.object({
     .valid(...EVENT_STATUSES)
     .required(),
 });
+
+export const eventTicketTypeValidator = Joi.object({
+  name: Joi.string().trim().min(1).required().messages({
+    "string.empty": "Ticket name is required",
+    "any.required": "Ticket name is required",
+  }),
+  pricePesewas: Joi.number().integer().min(1).required().messages({
+    "number.min": "Ticket price must be at least 1 pesewa",
+    "any.required": "Ticket price is required",
+  }),
+  maxQuantity: Joi.number().integer().min(1).required().messages({
+    "number.min": "Ticket max quantity must be at least 1",
+    "any.required": "Ticket max quantity is required",
+  }),
+  expiresAt: Joi.date().iso().optional(),
+  isActive: Joi.boolean().optional(),
+});
