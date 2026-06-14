@@ -7,6 +7,7 @@ import {
   validateEventTicketType,
   validateFormSchema,
   validateProduct,
+  validateVolunteerApplicationStatus,
   validateVariantProduct,
 } from "../middleware/validator.middleware.js";
 import {
@@ -36,11 +37,16 @@ import {
   deleteEventTicketTypeAdmin,
   getEventByIdAdmin,
   getEventRegistrationFormAdmin,
+  getEventVolunteerFormAdmin,
   getEventsAdmin,
+  getVolunteerApplicationByIdAdmin,
+  getVolunteerApplicationsAdmin,
   updateEventAdmin,
   updateEventTicketTypeAdmin,
   updateEventStatusAdmin,
+  updateVolunteerApplicationStatusAdmin,
   upsertEventRegistrationFormAdmin,
+  upsertEventVolunteerFormAdmin,
 } from "../controllers/events.admin.controller.js";
 import {
   getAllOrdersAdmin,
@@ -190,6 +196,43 @@ router.get(
   authenticateToken,
   checkAdmin,
   getEventRegistrationFormAdmin
+);
+
+router.put(
+  "/events/:id/volunteer-form",
+  authenticateToken,
+  checkAdmin,
+  validateFormSchema,
+  upsertEventVolunteerFormAdmin
+);
+
+router.get(
+  "/events/:id/volunteer-form",
+  authenticateToken,
+  checkAdmin,
+  getEventVolunteerFormAdmin
+);
+
+router.get(
+  "/events/:id/volunteer-applications",
+  authenticateToken,
+  checkAdmin,
+  getVolunteerApplicationsAdmin
+);
+
+router.get(
+  "/events/:id/volunteer-applications/:applicationId",
+  authenticateToken,
+  checkAdmin,
+  getVolunteerApplicationByIdAdmin
+);
+
+router.patch(
+  "/events/:id/volunteer-applications/:applicationId",
+  authenticateToken,
+  checkAdmin,
+  validateVolunteerApplicationStatus,
+  updateVolunteerApplicationStatusAdmin
 );
 
 router.post(
