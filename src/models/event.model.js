@@ -1,6 +1,7 @@
 import { Types } from "mongoose";
 import Event from "./event.mongo.js";
 import logger from "../config/logger.js";
+import { recomputeAutoTicketExpiries } from "../services/eventTicketLogic.js";
 
 export async function createEvent(eventData, adminId) {
   try {
@@ -95,13 +96,25 @@ export async function updateEvent(id, updates) {
       return null;
     }
 
-    delete updates.createdBy;
-    delete updates.status;
-    delete updates.ticketTypes;
-    delete updates.registrationFormId;
-    delete updates.volunteerFormId;
+    const payload = { ...updates };
 
-    return await Event.findByIdAndUpdate(id, updates, {
+    delete payload.createdBy;
+    delete payload.status;
+    delete payload.ticketTypes;
+    delete payload.registrationFormId;
+    delete payload.volunteerFormId;
+
+    if (payload.eventDate !== undefined) {
+      const existingEvent = await Event.findById(id);
+      if (!existingEvent) return null;
+
+      payload.ticketTypes = recomputeAutoTicketExpiries(
+        existingEvent.ticketTypes,
+        payload.eventDate
+      );
+    }
+
+    return await Event.findByIdAndUpdate(id, payload, {
       new: true,
       runValidators: true,
     });
