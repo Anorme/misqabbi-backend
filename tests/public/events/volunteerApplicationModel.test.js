@@ -12,10 +12,6 @@ describe("VolunteerApplication model", () => {
         phone: "0240000000",
       },
       formResponses: {
-        builtinFields: {
-          name: "Ama",
-          email: "ama@example.com",
-        },
         customAnswers: {
           availability: "Weekends",
           hasExperience: true,
@@ -28,10 +24,7 @@ describe("VolunteerApplication model", () => {
     expect(validationError).toBeUndefined();
     expect(application.status).toBe("pending");
     expect(application.applicantInfo.email).toBe("ama@example.com");
-    expect(application.formResponses.builtinFields).toEqual({
-      name: "Ama",
-      email: "ama@example.com",
-    });
+    expect(application.formResponses.builtinFields).toBeUndefined();
     expect(application.formResponses.customAnswers).toEqual({
       availability: "Weekends",
       hasExperience: true,

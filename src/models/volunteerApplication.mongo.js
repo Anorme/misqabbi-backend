@@ -41,10 +41,6 @@ const volunteerApplicationSchema = new Schema(
       default: () => ({}),
     },
     formResponses: {
-      builtinFields: {
-        type: Schema.Types.Mixed,
-        default: {},
-      },
       customAnswers: {
         type: Schema.Types.Mixed,
         default: {},

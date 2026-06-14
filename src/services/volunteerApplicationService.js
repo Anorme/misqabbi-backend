@@ -3,7 +3,7 @@ import {
   createVolunteerApplication,
   findActiveVolunteerApplicationByEventAndEmail,
 } from "../models/volunteerApplication.model.js";
-import { validateFormResponses } from "./formValidationService.js";
+import { validateFormSubmission } from "./formValidationService.js";
 import {
   assertNoDuplicateVolunteerApplication,
   assertVolunteerApplicationAllowed,
@@ -24,7 +24,6 @@ export {
 } from "./volunteerApplicationSubmitLogic.js";
 
 const EMPTY_FORM_RESPONSES = {
-  builtinFields: {},
   customAnswers: {},
 };
 
@@ -44,10 +43,10 @@ export async function submitVolunteerApplication({
     );
   assertNoDuplicateVolunteerApplication(existingApplication);
 
-  const validation = validateFormResponses(
-    event.volunteerFormId,
-    formResponses
-  );
+  const validation = validateFormSubmission(event.volunteerFormId, {
+    identity: applicantInfo,
+    customAnswers: formResponses?.customAnswers ?? {},
+  });
   if (!validation.valid) {
     throw new Error(validation.errors.join("; "));
   }
@@ -56,9 +55,12 @@ export async function submitVolunteerApplication({
     event: event._id,
     applicantInfo: {
       ...applicantInfo,
+      ...validation.normalizedIdentity,
       email: applicantEmail,
     },
-    formResponses: validation.normalizedResponses,
+    formResponses: {
+      customAnswers: validation.normalizedCustomAnswers,
+    },
     status: "pending",
   });
 }
