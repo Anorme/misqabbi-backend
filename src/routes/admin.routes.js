@@ -5,6 +5,7 @@ import {
   validateEvent,
   validateEventStatus,
   validateEventTicketType,
+  validateFormSchema,
   validateProduct,
   validateVariantProduct,
 } from "../middleware/validator.middleware.js";
@@ -34,10 +35,12 @@ import {
   addEventTicketTypeAdmin,
   deleteEventTicketTypeAdmin,
   getEventByIdAdmin,
+  getEventRegistrationFormAdmin,
   getEventsAdmin,
   updateEventAdmin,
   updateEventTicketTypeAdmin,
   updateEventStatusAdmin,
+  upsertEventRegistrationFormAdmin,
 } from "../controllers/events.admin.controller.js";
 import {
   getAllOrdersAdmin,
@@ -172,6 +175,21 @@ router.patch(
   checkAdmin,
   validateEventStatus,
   updateEventStatusAdmin
+);
+
+router.put(
+  "/events/:id/registration-form",
+  authenticateToken,
+  checkAdmin,
+  validateFormSchema,
+  upsertEventRegistrationFormAdmin
+);
+
+router.get(
+  "/events/:id/registration-form",
+  authenticateToken,
+  checkAdmin,
+  getEventRegistrationFormAdmin
 );
 
 router.post(
