@@ -49,6 +49,7 @@ import {
 } from "../services/eventTicketService.js";
 import { assertVolunteerApplicationStatusTransition } from "../services/volunteerApplicationService.js";
 import { formatResponse } from "../utils/responseFormatter.js";
+import { cleanupUploadedEventBanner } from "../middleware/upload.middleware.js";
 
 export async function createEventAdmin(req, res) {
   try {
@@ -61,6 +62,7 @@ export async function createEventAdmin(req, res) {
       })
     );
   } catch (error) {
+    await cleanupUploadedEventBanner(req);
     logger.error(
       `[events.admin.controller] Error creating event: ${error.message}`
     );
@@ -183,6 +185,7 @@ export async function updateEventAdmin(req, res) {
       })
     );
   } catch (error) {
+    await cleanupUploadedEventBanner(req);
     logger.error(
       `[events.admin.controller] Error updating event ${req.params.id}: ${error.message}`
     );

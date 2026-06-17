@@ -15,6 +15,7 @@ import {
   attachEventBannerToBody,
   attachVariantImagesToBody,
   attachProductImagesToBody,
+  normalizeEventMultipartBody,
 } from "../middleware/upload.middleware.js";
 import { eventBannerUploads, productUploads } from "../config/cloudinary.js";
 
@@ -161,6 +162,7 @@ router.post(
   checkAdmin,
   eventBannerUploads.fields([{ name: "banner", maxCount: 1 }]),
   attachEventBannerToBody,
+  normalizeEventMultipartBody,
   validateEvent,
   createEventAdmin
 );
@@ -175,6 +177,7 @@ router.patch(
   checkAdmin,
   eventBannerUploads.fields([{ name: "banner", maxCount: 1 }]),
   attachEventBannerToBody,
+  normalizeEventMultipartBody,
   validateEvent,
   updateEventAdmin
 );
