@@ -1,5 +1,5 @@
 import logger from "../config/logger.js";
-import cloudinary from "../config/cloudinary.js";
+import cloudinary, { deleteAssets } from "../config/cloudinary.js";
 
 export const getOptimisedUrl = (publicId, options = {}) => {
   return cloudinary.url(publicId, {
@@ -77,6 +77,7 @@ export const attachEventBannerToBody = (req, res, next) => {
 
   if (bannerFile) {
     const publicId = bannerFile.filename;
+    req.eventUploadedBannerPublicId = publicId;
     req.body.banner = {
       url: getOptimisedUrl(publicId),
       publicId,
@@ -88,6 +89,34 @@ export const attachEventBannerToBody = (req, res, next) => {
   );
   next();
 };
+
+export const normalizeEventMultipartBody = (req, res, next) => {
+  if (req.body.banner === "" || req.body.banner === "null") {
+    delete req.body.banner;
+  }
+
+  if (req.body.venue === "") {
+    delete req.body.venue;
+  }
+
+  next();
+};
+
+export async function cleanupUploadedEventBanner(req) {
+  const publicId = req.eventUploadedBannerPublicId;
+
+  if (!publicId) return;
+
+  try {
+    await deleteAssets([publicId]);
+  } catch (error) {
+    logger.warn(
+      `[upload.middleware] Failed to cleanup uploaded event banner ${publicId}: ${error.message}`
+    );
+  } finally {
+    delete req.eventUploadedBannerPublicId;
+  }
+}
 
 /**
  * After bespoke reference photo uploads (multer with referencePhotos field), map
