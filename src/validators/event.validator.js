@@ -5,12 +5,15 @@ const venueValidator = Joi.object({
   name: Joi.string().trim().allow("").optional(),
   address: Joi.string().trim().allow("").optional(),
   url: Joi.string().trim().uri().allow("").optional(),
-}).optional();
+})
+  .empty("")
+  .optional();
 
 const bannerValidator = Joi.object({
   url: Joi.string().uri().required(),
   publicId: Joi.string().trim().required(),
 })
+  .empty("")
   .allow(null)
   .optional();
 

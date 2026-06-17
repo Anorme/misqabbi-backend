@@ -61,6 +61,37 @@ describe("eventValidator", () => {
     );
   });
 
+  it("treats empty banner fields as absent for multipart create payloads", () => {
+    const { error, value } = eventValidator.validate(
+      { ...validEvent, banner: "" },
+      { abortEarly: false }
+    );
+
+    expect(error).toBeUndefined();
+    expect(value.banner).toBeUndefined();
+  });
+
+  it("coerces numeric string attendee counts for multipart payloads", () => {
+    const { error, value } = eventValidator.validate(
+      { ...validEvent, maxAttendees: "50" },
+      { abortEarly: false }
+    );
+
+    expect(error).toBeUndefined();
+    expect(value.maxAttendees).toBe(50);
+  });
+
+  it("rejects empty attendee counts from multipart payloads", () => {
+    const { error } = eventValidator.validate(
+      { ...validEvent, maxAttendees: "" },
+      { abortEarly: false }
+    );
+
+    expect(error.details.map(detail => detail.message)).toContain(
+      "\"maxAttendees\" must be a number"
+    );
+  });
+
   it("accepts banner removal payloads for event updates", () => {
     const updateSchema = eventValidator.fork(
       ["name", "description", "eventDate", "type", "maxAttendees"],
