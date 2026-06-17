@@ -2,6 +2,42 @@ import { Types } from "mongoose";
 import Event from "./event.mongo.js";
 import logger from "../config/logger.js";
 import { recomputeAutoTicketExpiries } from "../services/eventTicketLogic.js";
+import {
+  buildEventSlug,
+  buildEventSlugFamilyFilter,
+  buildUniqueEventSlug,
+  toRomanLower,
+} from "../utils/eventSlug.js";
+
+function isDuplicateSlugError(error) {
+  return error?.code === 11000 && Boolean(error?.keyPattern?.slug);
+}
+
+async function generateUniqueEventSlug(name) {
+  const baseSlug = buildEventSlug(name);
+  const existingCount = await Event.countDocuments(
+    buildEventSlugFamilyFilter(baseSlug)
+  );
+
+  let slug = buildUniqueEventSlug(baseSlug, existingCount);
+  let suffixNumber = existingCount + 2;
+
+  while (await Event.exists({ slug })) {
+    slug = `${baseSlug}-${toRomanLower(suffixNumber)}`;
+    suffixNumber += 1;
+  }
+
+  return slug;
+}
+
+async function createEventWithSlug(payload, adminId) {
+  return Event.create({
+    ...payload,
+    slug: await generateUniqueEventSlug(payload.name),
+    status: "draft",
+    createdBy: adminId,
+  });
+}
 
 export async function createEvent(eventData, adminId) {
   try {
@@ -10,12 +46,17 @@ export async function createEvent(eventData, adminId) {
     delete payload.registrationFormId;
     delete payload.volunteerFormId;
 
-    return await Event.create({
-      ...payload,
-      status: "draft",
-      createdBy: adminId,
-    });
+    return await createEventWithSlug(payload, adminId);
   } catch (error) {
+    if (isDuplicateSlugError(error)) {
+      const payload = { ...eventData };
+      delete payload.ticketTypes;
+      delete payload.registrationFormId;
+      delete payload.volunteerFormId;
+
+      return await createEventWithSlug(payload, adminId);
+    }
+
     logger.error(`[event.model] Error creating event: ${error.message}`);
     throw error;
   }
@@ -33,6 +74,17 @@ export async function getEventById(id) {
       .populate("volunteerFormId");
   } catch (error) {
     logger.error(`[event.model] Error finding event ${id}: ${error.message}`);
+    throw error;
+  }
+}
+
+export async function getEventBySlug(slug) {
+  try {
+    return await Event.findOne({ slug })
+      .populate("registrationFormId")
+      .populate("volunteerFormId");
+  } catch (error) {
+    logger.error(`[event.model] Error finding event ${slug}: ${error.message}`);
     throw error;
   }
 }
@@ -100,6 +152,7 @@ export async function updateEvent(id, updates) {
 
     delete payload.createdBy;
     delete payload.status;
+    delete payload.slug;
     delete payload.ticketTypes;
     delete payload.registrationFormId;
     delete payload.volunteerFormId;
