@@ -16,6 +16,7 @@ import { eventRegistrationValidator } from "../validators/eventRegistration.vali
 import { volunteerApplicationStatusValidator } from "../validators/volunteerApplication.validator.js";
 import { volunteerApplicationSubmitValidator } from "../validators/volunteerApplicationSubmit.validator.js";
 import { formatResponse } from "../utils/responseFormatter.js";
+import { cleanupUploadedEventBanner } from "./upload.middleware.js";
 
 export function validateUser(req, res, next) {
   const { error } = userValidator.validate(req.body, { abortEarly: false });
@@ -108,7 +109,7 @@ export function validateBespoke(req, res, next) {
   next();
 }
 
-export function validateEvent(req, res, next) {
+export async function validateEvent(req, res, next) {
   const isUpdate = req.method === "PATCH" || req.method === "PUT";
   const schema = isUpdate
     ? eventValidator.fork(
@@ -117,12 +118,13 @@ export function validateEvent(req, res, next) {
       )
     : eventValidator;
 
-  const { error } = schema.validate(req.body, {
+  const { error, value } = schema.validate(req.body, {
     abortEarly: false,
     allowUnknown: true,
   });
 
   if (error) {
+    await cleanupUploadedEventBanner(req);
     return res.status(400).json(
       formatResponse({
         success: false,
@@ -131,6 +133,7 @@ export function validateEvent(req, res, next) {
     );
   }
 
+  req.body = value;
   next();
 }
 
