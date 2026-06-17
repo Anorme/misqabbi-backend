@@ -16,6 +16,7 @@ describe("eventPublicLogic", () => {
   };
   const event = {
     _id: "64a000000000000000000010",
+    slug: "public-event",
     name: "Public Event",
     description: "A public event",
     eventDate: "2026-08-01T18:00:00.000Z",
@@ -56,6 +57,7 @@ describe("eventPublicLogic", () => {
   it("shapes public list items without internal event relationships", () => {
     expect(toPublicEventListItem(event)).toEqual({
       _id: event._id,
+      slug: event.slug,
       name: event.name,
       description: event.description,
       eventDate: event.eventDate,
