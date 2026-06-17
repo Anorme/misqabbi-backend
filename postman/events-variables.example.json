@@ -1,0 +1,87 @@
+{
+  "description": "Optional variables for the Misqabbi Events Postman collection. The collection already defines these as collection variables; copy them into your existing Postman environment only if you prefer environment-level variables.",
+  "recommendedBaseUrl": "http://localhost:5000/api/v1",
+  "variables": [
+    {
+      "key": "baseUrl",
+      "initialValue": "http://localhost:5000/api/v1",
+      "currentValue": "http://localhost:5000/api/v1",
+      "notes": "Reuse your existing baseUrl if it is already defined."
+    },
+    {
+      "key": "healthEventId",
+      "initialValue": "",
+      "currentValue": "",
+      "notes": "Set by Seed - Her Health Circle / Create Her Health Circle event."
+    },
+    {
+      "key": "healthEventSlug",
+      "initialValue": "",
+      "currentValue": "",
+      "notes": "Set by Seed - Her Health Circle / Create Her Health Circle event. Used by public event routes."
+    },
+    {
+      "key": "popupEventId",
+      "initialValue": "",
+      "currentValue": "",
+      "notes": "Set by Seed - Misqabbi Pop UP / Create Misqabbi Pop UP event."
+    },
+    {
+      "key": "popupEventSlug",
+      "initialValue": "",
+      "currentValue": "",
+      "notes": "Set by Seed - Misqabbi Pop UP / Create Misqabbi Pop UP event. Used by public event routes."
+    },
+    {
+      "key": "healthTicketTypeId",
+      "initialValue": "",
+      "currentValue": "",
+      "notes": "Set by Seed - Her Health Circle / Add GHC 100 General Registration ticket type."
+    },
+    {
+      "key": "checkoutReference",
+      "initialValue": "",
+      "currentValue": "",
+      "notes": "Set by Public - Guest flows / Initialize Her Health Circle checkout as guest."
+    },
+    {
+      "key": "popupRegistrationId",
+      "initialValue": "",
+      "currentValue": "",
+      "notes": "Set by Public - Guest flows / RSVP for Misqabbi Pop UP as guest."
+    },
+    {
+      "key": "healthRegistrationId",
+      "initialValue": "",
+      "currentValue": "",
+      "notes": "Set by Public - Guest flows / Initialize Her Health Circle checkout as guest."
+    },
+    {
+      "key": "volunteerApplicationId",
+      "initialValue": "",
+      "currentValue": "",
+      "notes": "Set by Public - Guest flows / Submit Misqabbi Pop UP volunteer application as guest."
+    },
+    {
+      "key": "popupVolunteerApplicationId",
+      "initialValue": "",
+      "currentValue": "",
+      "notes": "Alias for the saved Pop UP volunteer application ID."
+    }
+  ],
+  "runOrder": [
+    "Run your existing Admin Login request first so auth_token is present in the cookie jar.",
+    "Run Seed - Her Health Circle (paid).",
+    "Run Seed - Misqabbi Pop UP (free).",
+    "Run Public - Read.",
+    "Run Public - Guest flows (full flow).",
+    "Run Admin - Verify seeded data."
+  ],
+  "notes": [
+    "Admin routes use auth_token cookie authentication.",
+    "Public write routes require auth_token or guest_token.",
+    "Create Guest Session sets guest_token for public guest requests.",
+    "Banner uploads are intentionally excluded from this collection.",
+    "Paystack webhook simulation is intentionally excluded; use the logged authorizationUrl and then run payment verify."
+  ]
+}
