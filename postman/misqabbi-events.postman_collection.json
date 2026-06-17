@@ -6,7 +6,11 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:5000/api/v1", "type": "string" },
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api/v1",
+      "type": "string"
+    },
     { "key": "healthEventId", "value": "", "type": "string" },
     { "key": "healthEventSlug", "value": "", "type": "string" },
     { "key": "popupEventId", "value": "", "type": "string" },
@@ -55,9 +59,7 @@
           "name": "Create Her Health Circle event",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Her Health Circle\",\n  \"description\": \"An intimate Misqabbi health gathering for women focused on fibroid awareness. Join us for candid conversation, a panel of medical and wellness speakers, complimentary fibroid screening scans on site, and a clear referral pathway for treatment and ongoing care. A supportive space to learn, ask questions, and connect.\",\n  \"eventDate\": \"2026-07-26T10:00:00.000Z\",\n  \"type\": \"paid\",\n  \"maxAttendees\": 80,\n  \"venue\": {\n    \"name\": \"Accra Wellness Centre\",\n    \"address\": \"14 Independence Avenue, Accra, Ghana\",\n    \"url\": \"\"\n  }\n}"
@@ -92,9 +94,7 @@
           "name": "Set Her Health Circle registration form",
           "request": {
             "method": "PUT",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"builtinFields\": [\n    { \"field\": \"name\", \"required\": true },\n    { \"field\": \"email\", \"required\": true }\n  ],\n  \"customQuestions\": [\n    {\n      \"id\": \"fibroid_screening_history\",\n      \"label\": \"Have you previously had a fibroid screening or diagnosis?\",\n      \"type\": \"select\",\n      \"required\": true,\n      \"options\": [\"Yes\", \"No\", \"Not sure\"]\n    },\n    {\n      \"id\": \"scan_interest\",\n      \"label\": \"Would you like to be considered for a complimentary scan during the event?\",\n      \"type\": \"select\",\n      \"required\": true,\n      \"options\": [\"Yes, I would like a scan\", \"No, information only\"]\n    },\n    {\n      \"id\": \"panel_questions\",\n      \"label\": \"What would you like the panel to address?\",\n      \"type\": \"textarea\",\n      \"required\": false,\n      \"options\": []\n    }\n  ]\n}"
@@ -121,9 +121,7 @@
           "name": "Set Her Health Circle volunteer form",
           "request": {
             "method": "PUT",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"builtinFields\": [\n    { \"field\": \"name\", \"required\": true },\n    { \"field\": \"email\", \"required\": true }\n  ],\n  \"customQuestions\": [\n    {\n      \"id\": \"volunteer_role\",\n      \"label\": \"Preferred volunteer role\",\n      \"type\": \"select\",\n      \"required\": true,\n      \"options\": [\"Registration desk\", \"Usher\", \"Medical liaison\", \"Photography\"]\n    },\n    {\n      \"id\": \"availability\",\n      \"label\": \"Tell us when you are available on event day\",\n      \"type\": \"textarea\",\n      \"required\": true,\n      \"options\": []\n    }\n  ]\n}"
@@ -150,9 +148,7 @@
           "name": "Add GHC 100 General Registration ticket type",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"General Registration\",\n  \"pricePesewas\": 10000,\n  \"maxQuantity\": 80,\n  \"isActive\": true\n}"
@@ -183,9 +179,7 @@
           "name": "Publish Her Health Circle",
           "request": {
             "method": "PATCH",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"status\": \"published\"\n}"
@@ -218,9 +212,7 @@
           "name": "Create Misqabbi Pop UP event",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Misqabbi Pop UP\",\n  \"description\": \"A free Misqabbi shopping pop-up. Browse new arrivals, exclusive in-person discounts, and meet the team. No ticket required; RSVP to reserve your spot.\",\n  \"eventDate\": \"2026-06-28T11:00:00.000Z\",\n  \"type\": \"free\",\n  \"maxAttendees\": 150,\n  \"venue\": {\n    \"name\": \"Jamestown Creative Hub\",\n    \"address\": \"32 Smith Lane, Accra, Ghana\",\n    \"url\": \"https://misqabbi.com\"\n  }\n}"
@@ -254,9 +246,7 @@
           "name": "Set Misqabbi Pop UP registration form",
           "request": {
             "method": "PUT",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"builtinFields\": [\n    { \"field\": \"name\", \"required\": true },\n    { \"field\": \"email\", \"required\": true }\n  ],\n  \"customQuestions\": [\n    {\n      \"id\": \"shopping_interest\",\n      \"label\": \"What are you most interested in at the pop-up?\",\n      \"type\": \"select\",\n      \"required\": true,\n      \"options\": [\"New arrivals\", \"Exclusive discounts\", \"Styling session\", \"Just browsing\"]\n    },\n    {\n      \"id\": \"bringing_guest\",\n      \"label\": \"Are you bringing a guest?\",\n      \"type\": \"checkbox\",\n      \"required\": false,\n      \"options\": []\n    }\n  ]\n}"
@@ -283,9 +273,7 @@
           "name": "Set Misqabbi Pop UP volunteer form",
           "request": {
             "method": "PUT",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"builtinFields\": [\n    { \"field\": \"name\", \"required\": true },\n    { \"field\": \"email\", \"required\": true }\n  ],\n  \"customQuestions\": [\n    {\n      \"id\": \"volunteer_role\",\n      \"label\": \"Preferred volunteer role\",\n      \"type\": \"select\",\n      \"required\": true,\n      \"options\": [\"Setup\", \"Sales floor\", \"Fitting assistant\"]\n    },\n    {\n      \"id\": \"shift_preference\",\n      \"label\": \"Preferred shift\",\n      \"type\": \"select\",\n      \"required\": true,\n      \"options\": [\"Morning\", \"Afternoon\", \"Full day\"]\n    }\n  ]\n}"
@@ -312,9 +300,7 @@
           "name": "Publish Misqabbi Pop UP",
           "request": {
             "method": "PATCH",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"status\": \"published\"\n}"
@@ -447,9 +433,7 @@
           "name": "RSVP for Misqabbi Pop UP as guest",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"guestInfo\": {\n    \"name\": \"Ama Serwaa\",\n    \"email\": \"ama.serwaa+popup@test.example.com\"\n  },\n  \"formResponses\": {\n    \"customAnswers\": {\n      \"shopping_interest\": \"New arrivals\",\n      \"bringing_guest\": true\n    }\n  }\n}"
@@ -482,9 +466,7 @@
           "name": "Initialize Her Health Circle checkout as guest",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"ticketTypeId\": \"{{healthTicketTypeId}}\",\n  \"quantity\": 1,\n  \"guestInfo\": {\n    \"name\": \"Esi Mensah\",\n    \"email\": \"esi.mensah+health@test.example.com\"\n  },\n  \"formResponses\": {\n    \"customAnswers\": {\n      \"fibroid_screening_history\": \"Not sure\",\n      \"scan_interest\": \"Yes, I would like a scan\",\n      \"panel_questions\": \"What symptoms should prompt a woman to seek screening?\"\n    }\n  }\n}"
@@ -543,9 +525,7 @@
           "name": "Submit Misqabbi Pop UP volunteer application as guest",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"applicantInfo\": {\n    \"name\": \"Kofi Boateng\",\n    \"email\": \"kofi.boateng+popup-volunteer@test.example.com\"\n  },\n  \"formResponses\": {\n    \"customAnswers\": {\n      \"volunteer_role\": \"Sales floor\",\n      \"shift_preference\": \"Afternoon\"\n    }\n  }\n}"
@@ -583,7 +563,11 @@
       "item": [
         {
           "name": "Get Her Health Circle admin detail",
-          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/admin/events/{{healthEventId}}" },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/events/{{healthEventId}}"
+          },
           "event": [
             {
               "listen": "test",
@@ -603,7 +587,11 @@
         },
         {
           "name": "Get Misqabbi Pop UP admin detail",
-          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/admin/events/{{popupEventId}}" },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/events/{{popupEventId}}"
+          },
           "event": [
             {
               "listen": "test",
@@ -623,23 +611,33 @@
         },
         {
           "name": "List Misqabbi Pop UP attendees",
-          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/admin/events/{{popupEventId}}/attendees?page=1&limit=20" }
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/events/{{popupEventId}}/attendees?page=1&limit=20"
+          }
         },
         {
           "name": "List Her Health Circle attendees",
-          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/admin/events/{{healthEventId}}/attendees?page=1&limit=20" }
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/events/{{healthEventId}}/attendees?page=1&limit=20"
+          }
         },
         {
           "name": "List Misqabbi Pop UP volunteer applications",
-          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/admin/events/{{popupEventId}}/volunteer-applications?page=1&limit=20" }
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/events/{{popupEventId}}/volunteer-applications?page=1&limit=20"
+          }
         },
         {
           "name": "Accept saved volunteer application",
           "request": {
             "method": "PATCH",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"status\": \"accepted\"\n}"
@@ -655,15 +653,17 @@
       "item": [
         {
           "name": "List admin events - published paid",
-          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/admin/events?page=1&limit=10&status=published&type=paid&q=health" }
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/events?page=1&limit=10&status=published&type=paid&q=health"
+          }
         },
         {
           "name": "Update Her Health Circle core fields",
           "request": {
             "method": "PATCH",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"description\": \"Updated description for local testing. Re-run seed if you want the original copy back.\",\n  \"venue\": {\n    \"name\": \"Accra Wellness Centre\",\n    \"address\": \"14 Independence Avenue, Accra, Ghana\",\n    \"url\": \"\"\n  }\n}"
@@ -673,19 +673,25 @@
         },
         {
           "name": "Get Her Health Circle registration form",
-          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/admin/events/{{healthEventId}}/registration-form" }
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/events/{{healthEventId}}/registration-form"
+          }
         },
         {
           "name": "Get Misqabbi Pop UP volunteer form",
-          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/admin/events/{{popupEventId}}/volunteer-form" }
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/events/{{popupEventId}}/volunteer-form"
+          }
         },
         {
           "name": "Update Her Health Circle ticket type capacity",
           "request": {
             "method": "PATCH",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"maxQuantity\": 85,\n  \"isActive\": true\n}"
@@ -706,9 +712,7 @@
           "name": "Admin checkout test for Her Health Circle",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"ticketTypeId\": \"{{healthTicketTypeId}}\",\n  \"quantity\": 1,\n  \"guestInfo\": {\n    \"name\": \"Admin Test Buyer\",\n    \"email\": \"admin-test-buyer@test.example.com\"\n  },\n  \"formResponses\": {\n    \"customAnswers\": {\n      \"fibroid_screening_history\": \"No\",\n      \"scan_interest\": \"No, information only\",\n      \"panel_questions\": \"Admin route checkout smoke test\"\n    }\n  }\n}"
@@ -741,19 +745,25 @@
       "item": [
         {
           "name": "List free public events",
-          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/events?page=1&limit=10&type=free" }
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/events?page=1&limit=10&type=free"
+          }
         },
         {
           "name": "Search public events",
-          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/events?page=1&limit=10&q=Misqabbi" }
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/events?page=1&limit=10&q=Misqabbi"
+          }
         },
         {
           "name": "Authenticated user RSVP variant - Pop UP",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"guestInfo\": {\n    \"name\": \"Logged In RSVP\"\n  },\n  \"formResponses\": {\n    \"customAnswers\": {\n      \"shopping_interest\": \"Styling session\",\n      \"bringing_guest\": false\n    }\n  }\n}"
@@ -766,9 +776,7 @@
           "name": "Submit Her Health Circle volunteer application",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"applicantInfo\": {\n    \"name\": \"Akua Health Volunteer\",\n    \"email\": \"akua.health-volunteer@test.example.com\"\n  },\n  \"formResponses\": {\n    \"customAnswers\": {\n      \"volunteer_role\": \"Registration desk\",\n      \"availability\": \"Available from 8am through event close.\"\n    }\n  }\n}"
