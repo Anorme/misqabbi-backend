@@ -1,6 +1,6 @@
 import {
   countEvents,
-  getEventById,
+  getEventBySlug,
   getPaginatedEvents,
 } from "../models/event.model.js";
 import logger from "../config/logger.js";
@@ -16,6 +16,12 @@ import { submitVolunteerApplication } from "../services/volunteerApplicationServ
 import { formatResponse } from "../utils/responseFormatter.js";
 
 const PUBLISHED_EVENT_FILTER = "published";
+
+async function resolvePublishedEventBySlug(slug) {
+  const event = await getEventBySlug(slug);
+  assertEventIsPublic(event);
+  return event;
+}
 
 export async function getPublishedEvents(req, res) {
   try {
@@ -62,10 +68,9 @@ export async function getPublishedEvents(req, res) {
   }
 }
 
-export async function getPublishedEventById(req, res) {
+export async function getPublishedEventBySlug(req, res) {
   try {
-    const event = await getEventById(req.params.id);
-    assertEventIsPublic(event);
+    const event = await resolvePublishedEventBySlug(req.params.slug);
 
     const confirmedCount = await getConfirmedCount(event._id);
 
@@ -85,7 +90,7 @@ export async function getPublishedEventById(req, res) {
     }
 
     logger.error(
-      `[events.public.controller] Error loading public event ${req.params.id}: ${error.message}`
+      `[events.public.controller] Error loading public event ${req.params.slug}: ${error.message}`
     );
     res.status(500).json(
       formatResponse({
@@ -98,8 +103,9 @@ export async function getPublishedEventById(req, res) {
 
 export async function registerForFreeEventPublic(req, res) {
   try {
+    const event = await resolvePublishedEventBySlug(req.params.slug);
     const registration = await registerForFreeEvent({
-      eventId: req.params.id,
+      eventId: event._id,
       principal: req.principal,
       guestInfo: req.body.guestInfo,
       formResponses: req.body.formResponses,
@@ -122,7 +128,7 @@ export async function registerForFreeEventPublic(req, res) {
     }
 
     logger.error(
-      `[events.public.controller] Error registering for event ${req.params.id}: ${error.message}`
+      `[events.public.controller] Error registering for event ${req.params.slug}: ${error.message}`
     );
     res.status(400).json(
       formatResponse({
@@ -135,8 +141,9 @@ export async function registerForFreeEventPublic(req, res) {
 
 export async function initializeEventTicketCheckoutPublic(req, res) {
   try {
+    const event = await resolvePublishedEventBySlug(req.params.slug);
     const checkout = await initializeEventTicketCheckout({
-      eventId: req.params.id,
+      eventId: event._id,
       principal: req.principal,
       ticketTypeId: req.body.ticketTypeId,
       quantity: req.body.quantity,
@@ -161,7 +168,7 @@ export async function initializeEventTicketCheckoutPublic(req, res) {
     }
 
     logger.error(
-      `[events.public.controller] Error initializing checkout for event ${req.params.id}: ${error.message}`
+      `[events.public.controller] Error initializing checkout for event ${req.params.slug}: ${error.message}`
     );
     res.status(400).json(
       formatResponse({
@@ -174,8 +181,9 @@ export async function initializeEventTicketCheckoutPublic(req, res) {
 
 export async function submitVolunteerApplicationPublic(req, res) {
   try {
+    const event = await resolvePublishedEventBySlug(req.params.slug);
     const application = await submitVolunteerApplication({
-      eventId: req.params.id,
+      eventId: event._id,
       applicantInfo: req.body.applicantInfo,
       formResponses: req.body.formResponses,
     });
@@ -197,7 +205,7 @@ export async function submitVolunteerApplicationPublic(req, res) {
     }
 
     logger.error(
-      `[events.public.controller] Error submitting volunteer application for event ${req.params.id}: ${error.message}`
+      `[events.public.controller] Error submitting volunteer application for event ${req.params.slug}: ${error.message}`
     );
     res.status(400).json(
       formatResponse({

@@ -1,7 +1,7 @@
 import express from "express";
 import { rateLimiters } from "../config/rateLimiter.js";
 import {
-  getPublishedEventById,
+  getPublishedEventBySlug,
   getPublishedEvents,
   initializeEventTicketCheckoutPublic,
   registerForFreeEventPublic,
@@ -18,26 +18,26 @@ const router = express.Router();
 
 router.get("/", getPublishedEvents);
 router.post(
-  "/:id/register",
+  "/:slug/register",
   rateLimiters.strict,
   validateEventRegistration,
   authenticateOptionalPrincipal,
   registerForFreeEventPublic
 );
 router.post(
-  "/:id/checkout",
+  "/:slug/checkout",
   rateLimiters.strict,
   validateEventTicketCheckout,
   authenticateOptionalPrincipal,
   initializeEventTicketCheckoutPublic
 );
 router.post(
-  "/:id/volunteer-applications",
+  "/:slug/volunteer-applications",
   rateLimiters.strict,
   validateVolunteerApplicationSubmit,
   authenticateOptionalPrincipal,
   submitVolunteerApplicationPublic
 );
-router.get("/:id", getPublishedEventById);
+router.get("/:slug", getPublishedEventBySlug);
 
 export default router;
