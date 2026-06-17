@@ -52,6 +52,7 @@ export function toPublicEventListItem(event) {
 
   return {
     _id: getId(publicEvent),
+    slug: publicEvent.slug,
     name: publicEvent.name,
     description: publicEvent.description,
     eventDate: publicEvent.eventDate,
