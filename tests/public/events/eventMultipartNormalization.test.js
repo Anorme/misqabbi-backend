@@ -1,30 +1,23 @@
 /*eslint-disable no-undef */
-import { jest } from "@jest/globals";
-import { normalizeEventMultipartBody } from "../../../src/middleware/upload.middleware.js";
+import { normalizeEventMultipartFields } from "../../../src/utils/eventMultipartBody.js";
 
 function normalize(body) {
-  const req = { body };
-  const next = jest.fn();
-
-  normalizeEventMultipartBody(req, {}, next);
-
-  return { body: req.body, next };
+  return normalizeEventMultipartFields({ ...body });
 }
 
 describe("event multipart normalization", () => {
   it("strips empty optional banner and venue placeholders", () => {
-    const { body, next } = normalize({
+    const body = normalize({
       banner: "",
       venue: "",
       name: "Summer Pop-up",
     });
 
     expect(body).toEqual({ name: "Summer Pop-up" });
-    expect(next).toHaveBeenCalledTimes(1);
   });
 
   it("strips null string banner placeholders", () => {
-    const { body } = normalize({
+    const body = normalize({
       banner: "null",
       name: "Summer Pop-up",
     });
@@ -37,7 +30,7 @@ describe("event multipart normalization", () => {
       url: "https://res.cloudinary.com/demo/image/upload/v1/event/banner",
       publicId: "misqabbi/events/banner",
     };
-    const { body } = normalize({
+    const body = normalize({
       banner,
       venue: { name: "Studio" },
     });
