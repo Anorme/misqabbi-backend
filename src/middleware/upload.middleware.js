@@ -1,5 +1,6 @@
 import logger from "../config/logger.js";
 import cloudinary, { deleteAssets } from "../config/cloudinary.js";
+import { normalizeEventMultipartFields } from "../utils/eventMultipartBody.js";
 
 export const getOptimisedUrl = (publicId, options = {}) => {
   return cloudinary.url(publicId, {
@@ -91,14 +92,7 @@ export const attachEventBannerToBody = (req, res, next) => {
 };
 
 export const normalizeEventMultipartBody = (req, res, next) => {
-  if (req.body.banner === "" || req.body.banner === "null") {
-    delete req.body.banner;
-  }
-
-  if (req.body.venue === "") {
-    delete req.body.venue;
-  }
-
+  normalizeEventMultipartFields(req.body);
   next();
 };
 
