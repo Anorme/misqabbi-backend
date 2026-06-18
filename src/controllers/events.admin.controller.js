@@ -400,12 +400,7 @@ export async function getEventRegistrationFormAdmin(req, res) {
 
     const registrationFormId = getLinkedFormId(event);
     if (!registrationFormId) {
-      return res.status(404).json(
-        formatResponse({
-          success: false,
-          error: "Registration form not configured",
-        })
-      );
+      return res.status(200).json(formatResponse({ data: null }));
     }
 
     const registrationForm = await getFormSchemaById(registrationFormId);
@@ -479,12 +474,7 @@ export async function getEventVolunteerFormAdmin(req, res) {
 
     const volunteerFormId = getLinkedFormId(event, "volunteerFormId");
     if (!volunteerFormId) {
-      return res.status(404).json(
-        formatResponse({
-          success: false,
-          error: "Volunteer form not configured",
-        })
-      );
+      return res.status(200).json(formatResponse({ data: null }));
     }
 
     const volunteerForm = await getFormSchemaById(volunteerFormId);
