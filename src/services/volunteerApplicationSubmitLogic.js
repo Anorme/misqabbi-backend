@@ -1,11 +1,13 @@
 import { hasLinkedForm } from "./eventFormLogic.js";
 import { assertEventIsPublic } from "./eventPublicLogic.js";
+import { assertEventRegistrationOpen } from "./eventRegistrationWindowLogic.js";
 import { normalizeEmail } from "./eventRegistrationLogic.js";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function assertVolunteerApplicationAllowed(event) {
+export function assertVolunteerApplicationAllowed(event, now = new Date()) {
   assertEventIsPublic(event);
+  assertEventRegistrationOpen(event, now);
 
   if (!hasLinkedForm(event, "volunteerFormId")) {
     throw new Error("Volunteer applications are not enabled for this event");
