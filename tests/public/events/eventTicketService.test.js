@@ -20,9 +20,9 @@ describe("eventTicketLogic", () => {
     ticketTypes: [],
   };
 
-  it("computes the default ticket expiry one day after the event date", () => {
+  it("computes the default ticket expiry as the event date", () => {
     expect(computeDefaultExpiry(eventDate).toISOString()).toBe(
-      "2026-08-02T18:00:00.000Z"
+      "2026-08-01T18:00:00.000Z"
     );
   });
 
@@ -44,7 +44,7 @@ describe("eventTicketLogic", () => {
       expirySource: "auto",
       isActive: true,
     });
-    expect(payload.expiresAt.toISOString()).toBe("2026-08-02T18:00:00.000Z");
+    expect(payload.expiresAt.toISOString()).toBe("2026-08-01T18:00:00.000Z");
   });
 
   it("marks ticket expiry as manual when an override is provided", () => {
@@ -68,7 +68,7 @@ describe("eventTicketLogic", () => {
         {
           _id: "auto-ticket",
           name: "Early Bird",
-          expiresAt: new Date("2026-08-02T18:00:00.000Z"),
+          expiresAt: new Date("2026-08-01T18:00:00.000Z"),
           expirySource: "auto",
         },
         {
@@ -82,7 +82,7 @@ describe("eventTicketLogic", () => {
     );
 
     expect(tickets[0].expiresAt.toISOString()).toBe(
-      "2026-09-02T18:00:00.000Z"
+      "2026-09-01T18:00:00.000Z"
     );
     expect(tickets[1].expiresAt.toISOString()).toBe(
       "2026-07-15T18:00:00.000Z"

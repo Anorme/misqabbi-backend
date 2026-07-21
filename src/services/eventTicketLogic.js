@@ -1,5 +1,3 @@
-const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
-
 export function computeDefaultExpiry(eventDate) {
   const parsedEventDate = new Date(eventDate);
 
@@ -7,7 +5,7 @@ export function computeDefaultExpiry(eventDate) {
     throw new Error("Invalid event date");
   }
 
-  return new Date(parsedEventDate.getTime() + ONE_DAY_IN_MS);
+  return parsedEventDate;
 }
 
 export function canDeleteTicketType(ticketType) {
