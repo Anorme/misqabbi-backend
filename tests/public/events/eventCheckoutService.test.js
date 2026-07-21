@@ -7,10 +7,13 @@ import {
 } from "../../../src/services/eventCheckoutLogic.js";
 
 describe("eventCheckoutLogic", () => {
+  const eventDate = "2026-08-01T18:00:00.000Z";
+  const beforeEvent = new Date("2026-07-01T00:00:00.000Z");
   const event = {
     _id: "64a000000000000000000010",
     type: "paid",
     status: "published",
+    eventDate,
     maxAttendees: 10,
   };
   const ticketType = {
@@ -52,19 +55,31 @@ describe("eventCheckoutLogic", () => {
 
   it("allows checkout when event and ticket capacities are available", () => {
     expect(() =>
-      assertEventTicketCheckoutAllowed(event, ticketType, 2, 8)
+      assertEventTicketCheckoutAllowed(event, ticketType, 2, 8, beforeEvent)
     ).not.toThrow();
   });
 
   it("rejects checkout when event capacity is exceeded", () => {
     expect(() =>
-      assertEventTicketCheckoutAllowed(event, ticketType, 2, 9)
+      assertEventTicketCheckoutAllowed(event, ticketType, 2, 9, beforeEvent)
     ).toThrow("Event does not have enough remaining capacity");
   });
 
   it("rejects checkout when ticket capacity is exceeded", () => {
     expect(() =>
-      assertEventTicketCheckoutAllowed(event, ticketType, 4, 1)
+      assertEventTicketCheckoutAllowed(event, ticketType, 4, 1, beforeEvent)
     ).toThrow("Ticket type is not available for purchase");
+  });
+
+  it("rejects checkout after eventDate", () => {
+    expect(() =>
+      assertEventTicketCheckoutAllowed(
+        event,
+        ticketType,
+        1,
+        0,
+        new Date(eventDate)
+      )
+    ).toThrow("Registration for this event has closed");
   });
 });
