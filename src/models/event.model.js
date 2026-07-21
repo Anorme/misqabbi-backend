@@ -89,24 +89,52 @@ export async function getEventBySlug(slug) {
   }
 }
 
+function buildEventListFilter(params = {}) {
+  const filter = {};
+
+  if (params.status) {
+    filter.status = params.status;
+  }
+
+  if (params.type) {
+    filter.type = params.type;
+  }
+
+  if (params.q && typeof params.q === "string") {
+    filter.$text = { $search: params.q };
+  }
+
+  if (params.when === "upcoming") {
+    filter.eventDate = { $gt: params.now ?? new Date() };
+  } else if (params.when === "past") {
+    filter.eventDate = { $lte: params.now ?? new Date() };
+  }
+
+  return filter;
+}
+
+function buildEventListSort(params = {}) {
+  const sort = {};
+
+  if (params.q && typeof params.q === "string") {
+    sort.score = { $meta: "textScore" };
+  }
+
+  if (params.when === "past") {
+    sort.eventDate = -1;
+  } else {
+    sort.eventDate = 1;
+  }
+
+  sort.createdAt = -1;
+  return sort;
+}
+
 export async function getPaginatedEvents(page = 1, limit = 10, params = {}) {
   try {
-    const filter = {};
-    const sort = { eventDate: 1, createdAt: -1 };
+    const filter = buildEventListFilter(params);
+    const sort = buildEventListSort(params);
     const skip = (page - 1) * limit;
-
-    if (params.status) {
-      filter.status = params.status;
-    }
-
-    if (params.type) {
-      filter.type = params.type;
-    }
-
-    if (params.q && typeof params.q === "string") {
-      filter.$text = { $search: params.q };
-      sort.score = { $meta: "textScore" };
-    }
 
     return await Event.find(filter)
       .sort(sort)
@@ -121,20 +149,7 @@ export async function getPaginatedEvents(page = 1, limit = 10, params = {}) {
 
 export async function countEvents(params = {}) {
   try {
-    const filter = {};
-
-    if (params.status) {
-      filter.status = params.status;
-    }
-
-    if (params.type) {
-      filter.type = params.type;
-    }
-
-    if (params.q && typeof params.q === "string") {
-      filter.$text = { $search: params.q };
-    }
-
+    const filter = buildEventListFilter(params);
     return await Event.countDocuments(filter);
   } catch (error) {
     logger.error(`[event.model] Error counting events: ${error.message}`);

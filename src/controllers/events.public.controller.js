@@ -13,6 +13,7 @@ import {
 import { initializeEventTicketCheckout } from "../services/eventCheckoutService.js";
 import { registerForFreeEvent } from "../services/eventRegistrationService.js";
 import { submitVolunteerApplication } from "../services/volunteerApplicationService.js";
+import { resolvePublicWhenFilter } from "../services/eventWhenLogic.js";
 import { formatResponse } from "../utils/responseFormatter.js";
 
 const PUBLISHED_EVENT_FILTER = "published";
@@ -25,13 +26,15 @@ async function resolvePublishedEventBySlug(slug) {
 
 export async function getPublishedEvents(req, res) {
   try {
-    const { page, limit, type, q } = req.query;
+    const { page, limit, type, q, when } = req.query;
     const pageNum = Math.max(parseInt(page) || 1, 1);
     const limitNum = Math.max(parseInt(limit) || 10, 1);
+    const whenFilter = resolvePublicWhenFilter(when);
     const filters = {
       status: PUBLISHED_EVENT_FILTER,
       type: type?.trim() || undefined,
       q: q?.trim() || undefined,
+      when: whenFilter === "all" ? undefined : whenFilter,
     };
 
     const total = await countEvents(filters);
@@ -56,6 +59,15 @@ export async function getPublishedEvents(req, res) {
       })
     );
   } catch (error) {
+    if (error.message.startsWith("Invalid when filter")) {
+      return res.status(400).json(
+        formatResponse({
+          success: false,
+          error: error.message,
+        })
+      );
+    }
+
     logger.error(
       `[events.public.controller] Error listing public events: ${error.message}`
     );
