@@ -10,6 +10,7 @@ describe("eventRegistrationLogic", () => {
   const freeEvent = {
     type: "free",
     status: "published",
+    eventDate: "2026-08-01T18:00:00.000Z",
   };
 
   it("normalizes email addresses for duplicate checks", () => {
@@ -47,12 +48,24 @@ describe("eventRegistrationLogic", () => {
   });
 
   it("allows free RSVP only for published free events", () => {
-    expect(() => assertFreeEventRegistration(freeEvent)).not.toThrow();
+    const beforeEvent = new Date("2026-07-01T00:00:00.000Z");
     expect(() =>
-      assertFreeEventRegistration({ ...freeEvent, type: "paid" })
+      assertFreeEventRegistration(freeEvent, beforeEvent)
+    ).not.toThrow();
+    expect(() =>
+      assertFreeEventRegistration({ ...freeEvent, type: "paid" }, beforeEvent)
     ).toThrow("Free RSVP is only available for free events");
     expect(() =>
-      assertFreeEventRegistration({ ...freeEvent, status: "draft" })
+      assertFreeEventRegistration({ ...freeEvent, status: "draft" }, beforeEvent)
     ).toThrow("Only published events accept registrations");
+  });
+
+  it("blocks free RSVP after eventDate", () => {
+    expect(() =>
+      assertFreeEventRegistration(
+        freeEvent,
+        new Date("2026-08-01T18:00:00.000Z")
+      )
+    ).toThrow("Registration for this event has closed");
   });
 });

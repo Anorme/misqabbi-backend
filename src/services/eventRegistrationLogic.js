@@ -1,4 +1,5 @@
 import { assertEventAcceptsRegistrations } from "./eventCapacityLogic.js";
+import { assertEventRegistrationOpen } from "./eventRegistrationWindowLogic.js";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -26,8 +27,9 @@ export function assertNoDuplicateRegistration(existingRegistration) {
   }
 }
 
-export function assertFreeEventRegistration(event) {
+export function assertFreeEventRegistration(event, now = new Date()) {
   assertEventAcceptsRegistrations(event);
+  assertEventRegistrationOpen(event, now);
 
   if (event.type !== "free") {
     throw new Error("Free RSVP is only available for free events");
